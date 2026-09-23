@@ -94,7 +94,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
       {isVisible && (
         <div
           role="tooltip"
-          className={`absolute ${getPositionClasses()} z-50 w-72 max-w-[85vw] p-3 rounded-lg bg-[var(--bg-surface)] border border-[var(--accent)] shadow-2xl backdrop-blur-md text-left text-xs font-mono pointer-events-auto transition-all animate-in fade-in zoom-in-95 duration-150`}
+          className={`absolute ${getPositionClasses()} z-50 w-72 max-w-[85vw] p-3 rounded-lg bg-[var(--bg-surface)] border border-[var(--accent)] shadow-[var(--shadow-overlay)] backdrop-blur-md text-left text-xs font-mono pointer-events-auto transition-all animate-in fade-in zoom-in-95 duration-150`}
         >
           {/* Header Row */}
           {(title || badge) && (

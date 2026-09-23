@@ -649,7 +649,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
       {/* ========================================================================= */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade">
-          <div className="w-full max-w-md bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-xl p-5 shadow-2xl space-y-4">
+          <div className="w-full max-w-md bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-xl p-5 shadow-[var(--shadow-overlay)] space-y-4">
             <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-3">
               <div className="flex items-center gap-2">
                 <UserPlus className="w-5 h-5 text-[var(--accent)]" />
@@ -778,7 +778,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
       {/* ========================================================================= */}
       {editingUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade">
-          <div className="w-full max-w-md bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-xl p-5 shadow-2xl space-y-4">
+          <div className="w-full max-w-md bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-xl p-5 shadow-[var(--shadow-overlay)] space-y-4">
             <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-3">
               <div className="flex items-center gap-2">
                 <Edit2 className="w-4 h-4 text-[var(--accent)]" />
@@ -897,7 +897,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
       {/* ========================================================================= */}
       {deletingUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade">
-          <div className="w-full max-w-md bg-[var(--bg-canvas)] border border-[var(--bearish-border)] rounded-xl p-5 shadow-2xl space-y-4">
+          <div className="w-full max-w-md bg-[var(--bg-canvas)] border border-[var(--bearish-border)] rounded-xl p-5 shadow-[var(--shadow-overlay)] space-y-4">
             <div className="flex items-center gap-3 text-[var(--bearish)]">
               <div className="p-2 rounded-full bg-[var(--bearish-bg)] border border-[var(--bearish-border)]">
                 <Trash2 className="w-5 h-5 text-[var(--bearish)]" />
@@ -951,7 +951,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
       {/* ========================================================================= */}
       {passwordResetUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade">
-          <div className="w-full max-w-md bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-xl p-5 shadow-2xl space-y-4">
+          <div className="w-full max-w-md bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-xl p-5 shadow-[var(--shadow-overlay)] space-y-4">
             <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-3">
               <div className="flex items-center gap-2">
                 <Key className="w-4 h-4 text-[var(--warning)]" />
@@ -1042,7 +1042,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
       {/* ========================================================================= */}
       {showSmtpModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto animate-fade">
-          <div className="w-full max-w-3xl bg-[var(--bg-canvas)] border border-[var(--accent)] rounded-2xl p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
+          <div className="w-full max-w-3xl bg-[var(--bg-canvas)] border border-[var(--accent)] rounded-2xl p-6 shadow-[var(--shadow-overlay)] space-y-4 max-h-[92vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-3">
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-[var(--accent)]" />

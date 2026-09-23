@@ -73,7 +73,7 @@ export const BreakingNewsAlertPopup: React.FC<BreakingNewsAlertPopupProps> = ({
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 10, scale: 0.95 }}
         transition={{ type: 'spring', damping: 24, stiffness: 350 }}
-        className={`relative overflow-hidden rounded-lg border shadow-xl backdrop-blur-md text-[var(--text-primary)] ${
+        className={`relative overflow-hidden rounded-lg border shadow-[var(--shadow-overlay)] backdrop-blur-md text-[var(--text-primary)] ${
           isCritical
             ? 'bg-[var(--bg-canvas)] border-[var(--bearish-border)] shadow-[var(--shadow-raised)] ring-1 ring-[var(--bearish-border)]'
             : isHigh

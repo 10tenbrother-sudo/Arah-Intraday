@@ -478,7 +478,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 
       {/* Main Authentication Container */}
       <main className="flex-1 flex items-center justify-center p-4 sm:p-8 z-10">
-        <Card className="w-full max-w-md bg-[var(--bg-surface)] border-[var(--border-subtle)] shadow-2xl p-6 sm:p-8 space-y-6">
+        <Card className="w-full max-w-md bg-[var(--bg-surface)] border-[var(--border-subtle)] shadow-[var(--shadow-overlay)] p-6 sm:p-8 space-y-6">
 
           {/* STATE 1: Token Verifying in Progress */}
           {tokenVerifying && (
@@ -541,7 +541,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
           {verificationPending ? (
             <div className="space-y-6">
               <div className="text-center space-y-2">
-                <div className="w-14 h-14 rounded-md bg-[var(--accent-subtle)]/90 border border-[var(--accent)]/60 flex items-center justify-center mx-auto text-[var(--accent)] mb-3 shadow-lg  relative">
+                <div className="w-14 h-14 rounded-md bg-[var(--accent-subtle)]/90 border border-[var(--accent)]/60 flex items-center justify-center mx-auto text-[var(--accent)] mb-3 shadow-[var(--shadow-raised)]  relative">
                   <Mail className="w-7 h-7" />
                   <span className="absolute -top-1 -right-1 w-4 h-4 bg-[var(--accent)] rounded-full border-2 border-[var(--border-subtle)] flex items-center justify-center">
                     <Clock className="w-2.5 h-2.5 text-white stroke-[3]" />
@@ -559,7 +559,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
               </div>
 
               {/* Form Input 6-Digit OTP Code */}
-              <form onSubmit={handleVerifyOtp} className="p-4 rounded-md bg-[var(--bg-surface)] border border-[var(--accent)] space-y-3.5 shadow-xl">
+              <form onSubmit={handleVerifyOtp} className="p-4 rounded-md bg-[var(--bg-surface)] border border-[var(--accent)] space-y-3.5 shadow-[var(--shadow-overlay)]">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-mono font-bold text-[var(--accent)] uppercase tracking-wider flex items-center gap-1.5">
                     <KeyRound className="w-3.5 h-3.5 text-[var(--accent)]" />
@@ -988,7 +988,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   type="button"
                   onClick={handleGoogleSignIn}
                   disabled={loading || googleLoading}
-                  className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-md bg-white hover:bg-[#f4f4f6] text-[#18181b] text-xs font-semibold font-sans transition-all duration-150 shadow-md hover:shadow-lg disabled:opacity-50 cursor-pointer border border-[#e4e4e7]"
+                  className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-md bg-white hover:bg-[#f4f4f6] text-[#18181b] text-xs font-semibold font-sans transition-all duration-150 shadow-[var(--shadow-raised)] hover:shadow-[var(--shadow-raised)] disabled:opacity-50 cursor-pointer border border-[#e4e4e7]"
                   id="google-signin-btn"
                 >
                   <svg className="w-4 h-4" viewBox="0 0 24 24">
