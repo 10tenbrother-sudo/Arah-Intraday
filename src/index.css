@@ -20,9 +20,12 @@
     --text-primary: #09090B;
     --text-secondary: #52525B;
     --text-muted: #71717A;
-    --border-subtle: #E4E4E7;
-    --border-strong: #A1A1AA;
-    --border-hairline: #F4F4F5;
+    /* Borders are semi-transparent rather than solid grey so they never cut a
+       hard line across white. A dense stroke is what made the panels read as a
+       grid; a soft one groups the same way without drawing attention. */
+    --border-subtle: rgba(9, 9, 11, 0.09);
+    --border-strong: rgba(9, 9, 11, 0.18);
+    --border-hairline: rgba(9, 9, 11, 0.055);
 
     --active-bg: #FBEEE8;
     --active-text: #09090B;
@@ -39,6 +42,7 @@
     --warning-border: #FCD34D;
     --accent: #E25C26;
     --accent-subtle: rgba(226, 92, 38, 0.08);
+    --accent-glow: 0 4px 14px -4px rgba(226, 92, 38, 0.4);
 
     --radius-sm: 2px;
     --radius-md: 4px;
@@ -60,9 +64,11 @@
     --text-primary: #FFFFFF;
     --text-secondary: #A1A1AA;
     --text-muted: #82828C;
-    --border-subtle: #222226;
-    --border-strong: #3A3A40;
-    --border-hairline: #1A1A1E;
+    /* Same approach as light: translucent strokes read as a soft seam instead
+       of a drawn line on the dark canvas. */
+    --border-subtle: rgba(255, 255, 255, 0.1);
+    --border-strong: rgba(255, 255, 255, 0.2);
+    --border-hairline: rgba(255, 255, 255, 0.06);
 
     --active-bg: #1F1F24;
     --active-text: #FAFAFA;
@@ -79,6 +85,7 @@
     --warning-border: rgba(245, 158, 11, 0.35);
     --accent: #F97316;
     --accent-subtle: rgba(249, 115, 22, 0.15);
+    --accent-glow: 0 4px 16px -4px rgba(249, 115, 22, 0.45);
   }
 
   body {
@@ -165,7 +172,7 @@
 .terminal-panel {
   background-color: var(--bg-surface);
   border: 1px solid var(--border-subtle);
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
 .terminal-header,
@@ -181,13 +188,13 @@
 .terminal-panel-elevated {
   background-color: var(--bg-surface-elevated);
   border: 1px solid var(--border-subtle);
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
 .terminal-panel-alt {
   background-color: var(--bg-section-alt);
   border: 1px solid var(--border-subtle);
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
 /* A framed panel inside another one should not draw a second box. Every nested
@@ -220,10 +227,10 @@
 .btn-primary-institutional {
   background-color: var(--accent);
   color: #FFFFFF;
-  border: 1px solid var(--accent);
+  border: 1px solid transparent;
   font-weight: 600;
-  box-shadow: var(--shadow-raised);
-  transition: opacity 120ms ease, transform 120ms ease;
+  box-shadow: var(--accent-glow);
+  transition: opacity 120ms ease, transform 120ms ease, box-shadow 160ms ease;
 }
 .btn-primary-institutional:hover {
   opacity: 0.92;
@@ -308,10 +315,11 @@
 .badge-accent {
   background-color: var(--accent);
   color: #FFFFFF;
-  border: 1px solid var(--accent);
+  border: 1px solid transparent;
   font-family: var(--font-mono);
   font-weight: 600;
   border-radius: 2px;
+  box-shadow: var(--accent-glow);
 }
 
 /* ============================================================
@@ -319,14 +327,14 @@
    ============================================================ */
 
 :root {
-  --shadow-raised: 0 1px 2px rgba(9, 9, 11, 0.06), 0 1px 1px rgba(9, 9, 11, 0.04);
-  --shadow-overlay: 0 12px 32px -8px rgba(9, 9, 11, 0.18), 0 2px 8px -2px rgba(9, 9, 11, 0.08);
+  --shadow-raised: 0 2px 8px -2px rgba(9, 9, 11, 0.08), 0 1px 3px rgba(9, 9, 11, 0.05);
+  --shadow-overlay: 0 18px 48px -12px rgba(9, 9, 11, 0.16), 0 4px 14px -4px rgba(9, 9, 11, 0.08);
   --focus-ring: color-mix(in srgb, var(--accent) 65%, transparent);
 }
 
 html.dark {
-  --shadow-raised: 0 1px 2px rgba(0, 0, 0, 0.5), 0 1px 1px rgba(0, 0, 0, 0.3);
-  --shadow-overlay: 0 16px 40px -10px rgba(0, 0, 0, 0.75), 0 2px 10px -2px rgba(0, 0, 0, 0.4);
+  --shadow-raised: 0 2px 10px -2px rgba(0, 0, 0, 0.55), 0 1px 3px rgba(0, 0, 0, 0.35);
+  --shadow-overlay: 0 20px 56px -12px rgba(0, 0, 0, 0.7), 0 4px 16px -4px rgba(0, 0, 0, 0.45);
 }
 
 /* Visible focus for every keyboard-reachable control. */
