@@ -150,22 +150,22 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
           description="Cross-asset analysis across G8 currencies, US benchmark yields, technology equities, and gold. High-conviction setups prioritized based on intermarket yield differentials and liquidity flows."
           actions={
             <div
-              className="w-full lg:w-80 shrink-0 rounded p-3 space-y-2.5 font-mono text-xs"
+              className="w-full lg:w-80 shrink-0 rounded-lg p-3.5 space-y-3"
               style={{ backgroundColor: 'var(--bg-section-alt)' }}
             >
-              <div className="flex items-center justify-between pb-1.5 border-b" style={{ borderColor: 'var(--border-hairline)' }}>
-                <span className="metadata-label text-[10px] text-[var(--text-secondary)]">
-                  5-SECOND SCAN
+              <div className="flex items-center justify-between">
+                <span className="metadata-label text-[9px] text-[var(--text-muted)]">
+                  At a glance
                 </span>
-                <span className="text-[10px] font-semibold text-[var(--bullish)]">
-                  {kpiStats.bullishCount} BULL / {kpiStats.bearishCount} BEAR
+                <span className="text-[10px] font-semibold text-[var(--bullish)] tabular-nums">
+                  {kpiStats.bullishCount} bull / {kpiStats.bearishCount} bear
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 text-[11px] tabular-nums">
-                <div className="p-1.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-surface)]">
-                  <span className="text-[9.5px] uppercase tracking-wider text-[var(--text-muted)] block">
-                    US DOLLAR (DXY)
+              <div className="grid grid-cols-2 gap-x-3 gap-y-2.5 text-[11px] tabular-nums">
+                <div className="space-y-0.5">
+                  <span className="metadata-label text-[9px] text-[var(--text-muted)] block">
+                    US dollar · DXY
                   </span>
                   <span className="font-bold text-[var(--text-primary)]">
                     {kpiStats.dxy?.price.toFixed(2) || '101.24'}
@@ -176,9 +176,9 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
                   </span>
                 </div>
 
-                <div className="p-1.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-surface)]">
-                  <span className="text-[9.5px] uppercase tracking-wider text-[var(--text-muted)] block">
-                    GOLD (XAUUSD)
+                <div className="space-y-0.5">
+                  <span className="metadata-label text-[9px] text-[var(--text-muted)] block">
+                    Gold · XAUUSD
                   </span>
                   <span className="font-bold text-[var(--text-primary)]">
                     ${kpiStats.gold?.price.toFixed(1) || '2,654.8'}
@@ -189,9 +189,9 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
                   </span>
                 </div>
 
-                <div className="p-1.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-surface)]">
-                  <span className="text-[9.5px] uppercase tracking-wider text-[var(--text-muted)] block">
-                    NASDAQ (US100)
+                <div className="space-y-0.5">
+                  <span className="metadata-label text-[9px] text-[var(--text-muted)] block">
+                    Nasdaq · US100
                   </span>
                   <span className="font-bold text-[var(--text-primary)]">
                     {kpiStats.us100?.price.toLocaleString(undefined, { maximumFractionDigits: 0 }) || '23,421'}
@@ -202,9 +202,9 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
                   </span>
                 </div>
 
-                <div className="p-1.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-surface)]">
-                  <span className="text-[9.5px] uppercase tracking-wider text-[var(--text-muted)] block">
-                    10Y YIELD (US10Y)
+                <div className="space-y-0.5">
+                  <span className="metadata-label text-[9px] text-[var(--text-muted)] block">
+                    10Y yield · US10Y
                   </span>
                   <span className="font-bold text-[var(--text-primary)]">
                     {kpiStats.us10y?.price.toFixed(3) || '4.085'}%
@@ -226,7 +226,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
           <div className="pt-1 flex items-center gap-2 flex-wrap text-xs font-mono">
             <button
                 onClick={() => onNavigateTab('arah_market')}
-              className="h-7 px-3 rounded font-semibold text-xs flex items-center gap-1.5 transition cursor-pointer bg-[var(--accent)] text-white hover:opacity-90 shadow-xs"
+              className="h-8 px-3.5 rounded-md font-semibold text-xs flex items-center gap-1.5 transition cursor-pointer bg-[var(--accent)] text-white hover:opacity-90 shadow-[var(--accent-glow)]"
               >
               <Target className="w-3.5 h-3.5" />
               <span>MARKET BIAS DOSSIER</span>
@@ -264,13 +264,13 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
       {/* ======================================================== */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {/* KPI 1: Market Regime */}
-        <div className="terminal-panel p-3 flex flex-col justify-between space-y-1.5">
+        <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3.5 flex flex-col justify-between gap-2">
           <div className="flex items-center justify-between">
             <span className="metadata-label text-[10px] text-[var(--text-muted)]">
-              REGIME
+              Regime
             </span>
             <span
-              className={`text-[9.5px] px-1 py-0 font-mono font-semibold rounded border ${
+              className={`text-[9px] px-2 py-0.5 rounded-full font-semibold ${
                 kpiStats.regimeStatus === 'BULLISH'
                   ? 'badge-bullish'
                   : kpiStats.regimeStatus === 'BEARISH'
@@ -281,19 +281,19 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
               {kpiStats.regimeStatus}
             </span>
           </div>
-          <div className="text-xs font-mono font-bold text-[var(--text-primary)]">
+          <div className="text-[15px] font-semibold text-[var(--text-primary)]">
             {kpiStats.overallRegime}
           </div>
-          <div className="text-[10px] font-mono text-[var(--text-muted)]">
+          <div className="text-[11px] text-[var(--text-muted)]">
             Distribution across 13 core tracking assets
           </div>
         </div>
 
         {/* KPI 2: Currency Divergence */}
-        <div className="terminal-panel p-3 flex flex-col justify-between space-y-1.5">
+        <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3.5 flex flex-col justify-between gap-2">
           <div className="flex items-center justify-between">
             <span className="metadata-label text-[10px] text-[var(--text-muted)]">
-              G8 DIVERGENCE
+              G8 divergence
             </span>
             <button
               onClick={() => onNavigateTab('currency')}
@@ -310,13 +310,13 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
               Δ {((kpiStats.strongest?.strength_score ?? 6) - (kpiStats.weakest?.strength_score ?? 2)).toFixed(1)}pt
             </span>
           </div>
-          <div className="text-[10px] font-mono text-[var(--text-muted)]">
+          <div className="text-[11px] text-[var(--text-muted)]">
             Maximum directional divergence basket
           </div>
         </div>
 
         {/* KPI 3: Key Imminent Catalyst */}
-        <div className="terminal-panel p-3 flex flex-col justify-between space-y-1.5">
+        <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3.5 flex flex-col justify-between gap-2">
           <div className="flex items-center justify-between">
             <span className="metadata-label text-[10px] text-[var(--text-muted)]">
               NEXT HIGH IMPACT
@@ -330,7 +330,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
           <div className="text-xs font-mono font-bold text-[var(--text-primary)] truncate" title={kpiStats.upcomingHigh?.event_name}>
             {kpiStats.upcomingHigh?.event_name || 'No imminent high-impact data'}
           </div>
-          <div className="text-[10px] font-mono text-[var(--text-muted)]">
+          <div className="text-[11px] text-[var(--text-muted)]">
             {kpiStats.upcomingHigh ? (
               `${new Date(kpiStats.upcomingHigh.date_time_utc).toLocaleTimeString('id-ID', {
                 timeZone: 'Asia/Jakarta',
@@ -343,7 +343,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
         </div>
 
         {/* KPI 4: Intermarket Flow Transmissions */}
-        <div className="terminal-panel p-3 flex flex-col justify-between space-y-1.5">
+        <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3.5 flex flex-col justify-between gap-2">
           <div className="flex items-center justify-between">
             <span className="metadata-label text-[10px] text-[var(--text-muted)]">
               CROSS-ASSET ENGINE
@@ -355,10 +355,10 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
               Flows →
             </button>
           </div>
-          <div className="text-xs font-mono font-bold text-[var(--text-primary)]">
+          <div className="text-[15px] font-semibold text-[var(--text-primary)]">
             US10Y → US100 / XAU
           </div>
-          <div className="text-[10px] font-mono text-[var(--text-muted)]">
+          <div className="text-[11px] text-[var(--text-muted)]">
             Bond yield discount anchor active
           </div>
         </div>
@@ -383,11 +383,11 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         {/* Left Column: Real-Time Wire Feed (8 Columns) */}
         <div className="lg:col-span-8 space-y-3">
-          <div className="terminal-panel p-3.5 space-y-3">
+          <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4 space-y-3">
             {/* Header with Switcher Tabs & Impact Filter */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2.5 border-b" style={{ borderColor: 'var(--border-hairline)' }}>
               <div className="flex items-center gap-2">
-                <div className="flex items-center rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] p-0.5 text-xs font-mono">
+                <div className="flex items-center gap-0.5 rounded-md bg-[var(--bg-section-alt)] p-0.5">
                   <button
                     onClick={() => setNewsFeedTab('news')}
                     className={`h-6 px-2.5 rounded font-semibold transition cursor-pointer flex items-center gap-1.5 ${
@@ -595,12 +595,12 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
         {/* Right Column: Macro Catalysts Radar & AI Digest (4 Columns) */}
         <div className="lg:col-span-4 space-y-3">
           {/* Today's Key Catalysts */}
-          <div className="terminal-panel p-3.5 space-y-2.5">
+          <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4 space-y-3">
             <div className="flex items-center justify-between pb-2 border-b" style={{ borderColor: 'var(--border-hairline)' }}>
               <div className="flex items-center gap-1.5">
                 <Zap className="w-3.5 h-3.5 text-[var(--accent)]" />
-                <h3 className="metadata-label text-[10px] text-[var(--text-primary)]">
-                  TODAY'S CATALYSTS
+                <h3 className="text-[13px] font-semibold text-[var(--text-primary)]">
+                  Today's catalysts
                 </h3>
               </div>
               <button
@@ -647,16 +647,16 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
 
           {/* AI Macro Synthesis Digest */}
           {overview && (
-            <div className="terminal-panel p-3.5 space-y-2">
+            <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4 space-y-3">
               <div className="flex items-center justify-between pb-1.5 border-b" style={{ borderColor: 'var(--border-hairline)' }}>
-                <span className="metadata-label text-[10px] text-[var(--text-primary)] flex items-center gap-1">
-                  <span>AI MACRO SYNTHESIS</span>
+                <span className="text-[13px] font-semibold text-[var(--text-primary)]">
+                  AI macro synthesis
                 </span>
                 <button
                   onClick={() => onNavigateTab('intelligence')}
-                  className="text-[10px] font-mono text-[var(--accent)] hover:underline cursor-pointer"
+                  className="text-[11px] font-medium text-[var(--accent)] hover:underline cursor-pointer"
                 >
-                  Deep Analysis →
+                  Full analysis
                 </button>
               </div>
               <p className="text-[11px] text-[var(--text-secondary)] font-sans leading-relaxed line-clamp-3">
