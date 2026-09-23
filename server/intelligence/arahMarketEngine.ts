@@ -231,32 +231,32 @@ export class ArahMarketEngine {
 
     // 3. Klasifikasi Rezim Pasar Global
     let regimeTitle = 'BALANCED ROTATIONAL REGIME';
-    let regimeBadgeColor = 'bg-cyan-950 text-cyan-300 border-cyan-800';
+    let regimeBadgeColor = 'text-cyan-700 bg-cyan-50 border-cyan-200';
     let riskScore = 15;
     let summaryNarrative =
       'Intraday capital flows rotate evenly across asset classes. No dominant panic or excess euphoria ahead of the next session\'s key data.';
 
     if (us10yChange > 0.4 && dxyChange > 0.2) {
       regimeTitle = 'HAWKISH YIELD PRESSURE';
-      regimeBadgeColor = 'bg-amber-950 text-amber-300 border-amber-800';
+      regimeBadgeColor = 'text-amber-700 bg-amber-50 border-amber-200';
       riskScore = -45;
       summaryNarrative =
         'Rising US Treasury yields and a DXY above the session open dominate market direction. Non-USD pairs and low-yielding assets stay pressured.';
     } else if (sp500Change > 0.4 && dxyChange < -0.15) {
       regimeTitle = 'RISK-ON EXPANSION';
-      regimeBadgeColor = 'bg-emerald-950 text-emerald-300 border-emerald-800';
+      regimeBadgeColor = 'text-emerald-700 bg-emerald-50 border-emerald-200';
       riskScore = +65;
       summaryNarrative =
         'High risk appetite. The dollar weakens as global capital flows into equities and commodity currencies (AUD, CAD, NZD).';
     } else if (sp500Change < -0.5 && goldChange > 0.3) {
       regimeTitle = 'GLOBAL FLIGHT TO SAFETY';
-      regimeBadgeColor = 'bg-rose-950 text-rose-300 border-rose-800';
+      regimeBadgeColor = 'text-rose-700 bg-rose-50 border-rose-200';
       riskScore = -75;
       summaryNarrative =
         'Geopolitical worries or a macro slowdown drive equity selling and a hunt for safe havens (gold and the Swiss franc).';
     } else if (dxyChange < -0.3 && us10yChange < -0.5) {
       regimeTitle = 'DOVISH LIQUIDITY EASING';
-      regimeBadgeColor = 'bg-indigo-950 text-indigo-300 border-indigo-800';
+      regimeBadgeColor = 'text-indigo-700 bg-indigo-50 border-indigo-200';
       riskScore = +35;
       summaryNarrative =
         'A sharp fall in US Treasury yields and the dollar releases global liquidity pressure, sparking a rebound in gold and the majors.';
