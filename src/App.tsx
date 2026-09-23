@@ -38,7 +38,7 @@ import { CurrencyPairOpportunityMatrix } from './components/CurrencyPairOpportun
 import { IntermarketRelationshipMatrix } from './components/IntermarketRelationshipMatrix';
 import { MarketHistoryView } from './components/MarketHistoryView';
 import { OverviewDashboard } from './components/OverviewDashboard';
-import { PublicLandingPage } from './components/PublicLandingPage';
+import { LandingPage } from './components/LandingPage';
 import { AuthPage } from './components/AuthPage';
 import { AutoTriggerNewsModal } from './components/AutoTriggerNewsModal';
 import { BreakingNewsAlertPopup } from './components/BreakingNewsAlertPopup';
@@ -240,8 +240,9 @@ export default function App() {
         navigate('/login', true);
       }
     } else {
-      // Authenticated user
-      if (path === '/' || path === '/login' || path === '/register') {
+      // Authenticated user: private routes stay reachable, marketing routes stay browsable,
+      // and the auth screens redirect into the workspace.
+      if (path === '/login' || path === '/register') {
         navigate('/dashboard', true);
       } else if (isPrivateRoute(path)) {
         const expectedTab = routeToTab(path);
@@ -386,12 +387,12 @@ export default function App() {
     );
   }
 
-  // Screen 2: Unauthenticated Visitor Flow (Auth Pages & Optional Public Landing)
-  if (!user) {
+  // Screen 2: Marketing & Auth Routes (render for visitors and signed-in users alike)
+  {
     const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
     const hasToken = searchParams ? searchParams.has('token') : false;
 
-    if (hasToken && path !== '/reset-password') {
+    if (!user && hasToken && path !== '/reset-password') {
       return (
         <AuthPage
           mode="verify-email"
@@ -456,17 +457,14 @@ export default function App() {
       return null;
     }
 
-    if (path === '/landing' || path === '/features') {
+    if (path === '/landing' || path === '/features' || path === '/') {
       return (
-        <PublicLandingPage
-          currentPath={path}
+        <LandingPage
           onNavigate={navigate}
-          user={user}
+          onOpenAuth={() => navigate('/login')}
         />
       );
     }
-
-    // Default flow: direct access to the Linear Pro Terminal workspace for all visitors & traders
   }
 
   return (
