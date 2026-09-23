@@ -144,7 +144,7 @@ export const BreakingNewsAlertPopup: React.FC<BreakingNewsAlertPopupProps> = ({
               onDismiss(activeAlert.id);
             }}
             className="text-[11.5px] font-medium text-[var(--text-primary)] hover:text-[var(--accent)] transition leading-snug line-clamp-2 cursor-pointer"
-            title="Klik untuk membuka analisis lengkap"
+            title="Click to open the full analysis"
           >
             {event.title}
           </h4>

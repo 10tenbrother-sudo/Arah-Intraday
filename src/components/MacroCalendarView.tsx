@@ -266,7 +266,7 @@ export const MacroCalendarView: React.FC<MacroCalendarViewProps> = React.memo(({
       const target = new Date(utcIso).getTime();
       const diff = target - currentTimeMs;
 
-      if (diff <= 0) return { text: 'Sudah Rilis', isUrgent: false, isNear: false };
+      if (diff <= 0) return { text: 'Released', isUrgent: false, isNear: false };
 
       const sec = Math.floor(diff / 1000);
       const min = Math.floor(sec / 60);
@@ -561,10 +561,10 @@ export const MacroCalendarView: React.FC<MacroCalendarViewProps> = React.memo(({
                   {timingFilter === 'TODAY' ? (
                     <div className="space-y-3 py-4 max-w-md mx-auto">
                       <div className="p-2.5 rounded-md bg-[var(--warning-bg)] border border-[var(--warning-border)] text-[var(--warning)] font-medium">
-                        Tidak ada rilis makro berdampak signifikan pada sesi hari ini (Pasar tutup / Akhir Pekan).
+                        No significant macro releases in today's session (market closed / weekend).
                       </div>
                       <p className="text-[var(--text-secondary)] text-[11px]">
-                        Rilis terjadwal berikutnya dimulai pada sesi kerja aktif berikutnya (Waktu Indonesia Barat).
+                        The next scheduled release falls in the next active working session (Western Indonesian Time).
                       </p>
                       <div className="flex items-center justify-center gap-2 pt-1">
                         <button
@@ -583,7 +583,7 @@ export const MacroCalendarView: React.FC<MacroCalendarViewProps> = React.memo(({
                     </div>
                   ) : (
                     <div className="py-6">
-                      Tidak ada event yang cocok dengan filter saat ini. Coba ubah pencarian atau filter mata uang.
+                      No events match the current filters. Try changing the search or currency filter.
                     </div>
                   )}
                 </td>
@@ -834,7 +834,7 @@ export const MacroCalendarView: React.FC<MacroCalendarViewProps> = React.memo(({
                                   {item.fundamental_implication ||
                                     (hasActual
                                       ? `Rilis aktual ${item.actual} mengindikasikan pergeseran baseline fundamental terhadap ekspektasi konsensus (${item.forecast || 'N/A'}).`
-                                      : 'Menunggu rilis data resmi sebelum menetapkan implikasi transmisi kebijakan moneter.')}
+                                      : 'Awaiting the official release before setting policy transmission implications.')}
                                 </p>
                               </div>
 
@@ -847,7 +847,7 @@ export const MacroCalendarView: React.FC<MacroCalendarViewProps> = React.memo(({
                                   {item.actual_market_reaction ||
                                     (hasActual
                                       ? `Volatilitas tercatat pada pasangan ${item.currency} segera setelah rilis dengan pergeseran bid-ask spread dan eksekusi algoritmik.`
-                                      : 'Likuiditas pasar berada dalam status pre-event positioning.')}
+                                      : 'Market liquidity is in pre-event positioning.')}
                                 </p>
                               </div>
                             </div>

@@ -179,7 +179,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
       });
 
       if (res.success) {
-        showToast(`Akses akun ${res.user.email} berhasil diperbarui.`);
+        showToast(`Access for ${res.user.email} updated.`);
         setEditingUser(null);
         loadUsers();
         onUserModified?.();
@@ -230,7 +230,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
       setLoading(true);
       const res = await api.deleteAdminUser(deletingUser.id);
       if (res.success) {
-        showToast(res.message || `User ${deletingUser.email} berhasil dihapus.`);
+        showToast(res.message || `User ${deletingUser.email} deleted.`);
         setDeletingUser(null);
         loadUsers();
         onUserModified?.();
@@ -264,7 +264,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
       const res = await api.resetAdminUserPassword(passwordResetUser.id, resetPasswordInput || undefined);
       if (res.success) {
         setGeneratedTempPass(res.temporary_password || resetPasswordInput);
-        showToast(`Password untuk ${passwordResetUser.email} berhasil diperbarui.`);
+        showToast(`Password for ${passwordResetUser.email} updated.`);
         loadUsers();
       }
     } catch (err: any) {
@@ -442,7 +442,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
           <button
             onClick={loadUsers}
             disabled={loading}
-            title="Muat ulang data pengguna"
+            title="Reload user data"
             className="p-1.5 bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-secondary)] rounded-lg border border-[var(--border-strong)] transition cursor-pointer disabled:opacity-50"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-[var(--accent)]' : ''}`} />
@@ -465,7 +465,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
             className="px-3 py-1.5 bg-[var(--accent)] hover:bg-[var(--accent)] text-white rounded-lg font-semibold flex items-center gap-1.5 shadow-sm transition cursor-pointer"
           >
             <UserPlus className="w-3.5 h-3.5" />
-            <span>Tambah User</span>
+            <span>Add user</span>
           </button>
         </div>
       </div>
@@ -481,7 +481,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
                 <th className="p-3 font-semibold">Subscription Tier</th>
                 <th className="p-3 font-semibold">Status Akun</th>
                 <th className="p-3 font-semibold">Email Verifikasi</th>
-                <th className="p-3 font-semibold text-right">Kelola Akses</th>
+                <th className="p-3 font-semibold text-right">Manage access</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border-subtle)] text-[var(--text-secondary)]">
@@ -491,7 +491,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
                     {loading ? (
                       <div className="flex items-center justify-center gap-2 text-[var(--accent)]">
                         <RefreshCw className="w-4 h-4 animate-spin" />
-                        <span>Memuat data pengguna...</span>
+                        <span>Loading user data...</span>
                       </div>
                     ) : (
                       'No user accounts match the current filter.'
@@ -696,7 +696,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    placeholder="Minimal 6 karakter"
+                    placeholder="At least 6 characters"
                     value={createForm.password}
                     onChange={e => setCreateForm({ ...createForm, password: e.target.value })}
                     className="flex-1 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded px-3 py-2 text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
@@ -747,7 +747,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
                   className="rounded bg-[var(--bg-surface)] border-[var(--border-subtle)] text-[var(--accent)] focus:ring-0 cursor-pointer"
                 />
                 <label htmlFor="create-is-verified" className="text-[var(--text-secondary)] cursor-pointer">
-                  Langsung verifikasi email akun ini (tidak perlu konfirmasi)
+                  Verify this account email immediately (no confirmation needed)
                 </label>
               </div>
 
@@ -756,9 +756,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
                   type="button"
                   onClick={() => setShowCreateModal(false)}
                   className="px-3 py-1.5 bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-secondary)] rounded transition cursor-pointer"
-                >
-                  Batal
-                </button>
+                >Cancel</button>
                 <button
                   type="submit"
                   disabled={loading}
@@ -875,16 +873,14 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
                   type="button"
                   onClick={() => setEditingUser(null)}
                   className="px-3 py-1.5 bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-secondary)] rounded transition cursor-pointer"
-                >
-                  Batal
-                </button>
+                >Cancel</button>
                 <button
                   type="submit"
                   disabled={loading}
                   className="px-4 py-1.5 bg-[var(--accent)] hover:bg-[var(--accent)] text-white font-semibold rounded flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50"
                 >
                   {loading && <RefreshCw className="w-3 h-3 animate-spin" />}
-                  <span>Simpan Perubahan</span>
+                  <span>Save changes</span>
                 </button>
               </div>
             </form>
@@ -912,7 +908,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
 
             <div className="bg-[var(--bearish-bg)] border border-[var(--bearish-border)] rounded-lg p-3 font-mono text-xs space-y-2 text-[var(--text-secondary)]">
               <div>
-                Apakah Anda yakin ingin menghapus akun berikut secara permanen?
+                Delete the following account permanently?
               </div>
               <div className="p-2 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-1">
                 <div className="text-[var(--text-primary)] font-bold">{deletingUser.name || 'Trader'}</div>
@@ -920,7 +916,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
                 <div className="text-[10px] text-[var(--text-muted)]">ID: {deletingUser.id} • Role: {deletingUser.role}</div>
               </div>
               <p className="text-[11px] text-[var(--text-secondary)]">
-                Seluruh data watchlist, token verifikasi, preferensi antarmuka, dan sesi login pengguna ini akan dihapus dari sistem.
+                All watchlist data, verification tokens, interface preferences, and login sessions for this user will be removed from the system.
               </p>
             </div>
 
@@ -929,9 +925,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
                 type="button"
                 onClick={() => setDeletingUser(null)}
                 className="px-3 py-1.5 bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-secondary)] rounded text-xs font-mono transition cursor-pointer"
-              >
-                Batal
-              </button>
+              >Cancel</button>
               <button
                 type="button"
                 onClick={handleDeleteUser}
@@ -939,7 +933,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
                 className="px-4 py-1.5 bg-[var(--bearish)] hover:bg-[var(--bearish)] text-white font-mono text-xs font-semibold rounded flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50"
               >
                 {loading && <RefreshCw className="w-3 h-3 animate-spin" />}
-                <span>Hapus Permanen</span>
+                <span>Delete permanently</span>
               </button>
             </div>
           </div>
@@ -995,14 +989,14 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
                     </button>
                   </div>
                   <p className="text-[10px] text-[var(--text-secondary)]">
-                    Berikan kata sandi ini kepada pengguna untuk masuk ke terminal.
+                    Give this password to the user so they can sign in to the terminal.
                   </p>
                 </div>
               ) : (
                 <form onSubmit={handleExecutePasswordReset} className="space-y-3">
                   <div>
                     <label className="block text-[var(--text-secondary)] mb-1">
-                      Password Baru (Kosongkan untuk membuat password otomatis)
+                      New password (leave blank to generate one automatically)
                     </label>
                     <input
                       type="text"
@@ -1018,9 +1012,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
                       type="button"
                       onClick={() => setPasswordResetUser(null)}
                       className="px-3 py-1.5 bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-secondary)] rounded transition cursor-pointer"
-                    >
-                      Batal
-                    </button>
+                    >Cancel</button>
                     <button
                       type="submit"
                       disabled={loading}

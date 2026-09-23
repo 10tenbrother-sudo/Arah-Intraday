@@ -54,14 +54,14 @@ const PRESET_TRIGGER_OPTIONS = [
   {
     id: 'live_telegram',
     title: 'Telegram Live Wire (Berita Asli Terkini)',
-    desc: 'Tarik langsung pesan breaking real-time dari @financialjuice, @WatcherGuru, @SM_News_24h, @fxstreetforexindonesia',
+    desc: 'Pull live breaking messages from @financialjuice, @WatcherGuru, @SM_News_24h, @fxstreetforexindonesia',
     icon: Send,
     color: 'text-[var(--accent)] border-[var(--accent)] bg-[var(--accent)] hover:bg-[var(--accent)]',
   },
   {
     id: 'central_bank',
     title: 'Kebijakan Bank Sentral (Fed / RBA / BoJ)',
-    desc: 'Keputusan suku bunga, stance hawkish/dovish, intervensi valas',
+    desc: 'Rate decisions, hawkish/dovish stance, FX intervention',
     category: 'CENTRAL_BANK',
     icon: Building2,
     color: 'text-[var(--accent)] border-[var(--border-subtle)] bg-[var(--accent)] hover:bg-[var(--accent)]',
@@ -72,7 +72,7 @@ const PRESET_TRIGGER_OPTIONS = [
     desc: 'Divergensi RBA vs BoC dan momentum ekspor bahan mentah',
     category: 'CENTRAL_BANK',
     customTitle: 'RBA Pertahankan Sikap Hawkish di Tengah Moderasi Global; AUD/CAD Melonjak Signifikan',
-    customContent: 'Reserve Bank of Australia menegaskan komitmen pengetatan moneter akibat kekakuan inflasi jasa domestik, memperlebar divergensi yield terhadap Bank of Canada.',
+    customContent: 'The Reserve Bank of Australia reaffirmed its tightening stance as domestic services inflation stays sticky, widening the yield divergence against the Bank of Canada.',
     affected_assets: ['AUDCAD', 'AUDUSD'],
     affected_currencies: ['AUD', 'CAD'],
     icon: Coins,
@@ -80,11 +80,11 @@ const PRESET_TRIGGER_OPTIONS = [
   },
   {
     id: 'us_macro',
-    title: 'US Macro Flash (CPI / NFP / Imbal Hasil)',
-    desc: 'Kejutan inflasi US Core CPI dan pergerakan yield obligasi US10Y',
+    title: 'US Macro Flash (CPI / NFP / Yields)',
+    desc: 'US Core CPI inflation surprises and US10Y bond yield moves',
     category: 'MACRO',
-    customTitle: 'US Core CPI Rilis di Bawah Konsensus; US Dollar Index (DXY) Melemah dan Emas Naik Tajam',
-    customContent: 'Data inflasi inti bulanan AS yang melambat memicu lonjakan probabilitas pemangkasan suku bunga Fed. Imbal hasil obligasi AS terkoreksi di seluruh kurva.',
+    customTitle: 'US Core CPI Prints Below Consensus; Dollar Index (DXY) Slides and Gold Jumps',
+    customContent: 'Slowing US monthly core inflation lifted the probability of a Fed rate cut. Treasury yields corrected across the curve.',
     affected_assets: ['XAUUSD', 'EURUSD', 'USDJPY', 'US30'],
     affected_currencies: ['USD', 'EUR', 'JPY'],
     icon: Globe2,
@@ -189,7 +189,7 @@ export const AutoTriggerNewsModal: React.FC<AutoTriggerNewsModalProps> = ({
                 </Badge>
               </div>
               <p className="text-[11px] text-[var(--text-secondary)]">
-                Picu berita breaking secara berkala & tampilkan popup real-time di terminal
+                Fire breaking news on a schedule and show a real-time popup in the terminal
               </p>
             </div>
           </div>
@@ -220,7 +220,7 @@ export const AutoTriggerNewsModal: React.FC<AutoTriggerNewsModalProps> = ({
                 )}
               </div>
               <p className="text-[11px] text-[var(--text-secondary)]">
-                Aplikasi akan otomatis menyuntikkan breaking news & memicu popup notifikasi sesuai interval.
+                The app injects breaking news automatically and triggers the alert popup on each interval.
               </p>
             </div>
 
@@ -334,7 +334,7 @@ export const AutoTriggerNewsModal: React.FC<AutoTriggerNewsModalProps> = ({
                     soundManager.setMuted(!checked);
                     if (checked) soundManager.playBreakingNewsChime();
                   }}
-                  aria-label="Toggle suara notifikasi"
+                  aria-label="Toggle alert sound"
                 />
               </div>
             </div>
@@ -348,7 +348,7 @@ export const AutoTriggerNewsModal: React.FC<AutoTriggerNewsModalProps> = ({
                 PILIH & TRIGER BERITA SEKARANG (INSTANT ACTION)
               </h3>
               <span className="text-[11px] text-[var(--text-secondary)]">
-                Total Ter-Triger: <strong className="text-[var(--accent)]">{totalTriggeredCount}</strong>
+                Total triggered: <strong className="text-[var(--accent)]">{totalTriggeredCount}</strong>
               </span>
             </div>
 
@@ -414,7 +414,7 @@ export const AutoTriggerNewsModal: React.FC<AutoTriggerNewsModalProps> = ({
                       required
                       value={customTitle}
                       onChange={e => setCustomTitle(e.target.value)}
-                      placeholder="Contoh: RBA Isyaratkan Pemotongan Suku Bunga Lebih Cepat..."
+                      placeholder="e.g. RBA signals a faster pace of rate cuts..."
                       className="w-full px-3 py-1.5 bg-[var(--bg-surface)] border border-[var(--border-strong)] rounded text-xs text-[var(--text-primary)] placeholder-slate-500 focus:outline-none focus:border-[var(--accent)]"
                     />
                   </div>
@@ -427,7 +427,7 @@ export const AutoTriggerNewsModal: React.FC<AutoTriggerNewsModalProps> = ({
                       rows={2}
                       value={customContent}
                       onChange={e => setCustomContent(e.target.value)}
-                      placeholder="Uraian dampak terhadap AUD, CAD, atau komoditas terkait..."
+                      placeholder="Describe the impact on AUD, CAD, or related commodities..."
                       className="w-full px-3 py-1.5 bg-[var(--bg-surface)] border border-[var(--border-strong)] rounded text-xs text-[var(--text-primary)] placeholder-slate-500 focus:outline-none focus:border-[var(--accent)]"
                     />
                   </div>
@@ -450,7 +450,7 @@ export const AutoTriggerNewsModal: React.FC<AutoTriggerNewsModalProps> = ({
                       className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--accent)] hover:bg-[var(--accent)] disabled:opacity-50 text-white rounded font-bold text-xs cursor-pointer shadow-[var(--shadow-raised)]"
                     >
                       <Send className="w-3.5 h-3.5" />
-                      <span>Kirim & Triger Popup</span>
+                      <span>Send &amp; trigger popup</span>
                     </button>
                   </div>
                 </motion.form>
@@ -471,7 +471,7 @@ export const AutoTriggerNewsModal: React.FC<AutoTriggerNewsModalProps> = ({
               onClick={onClose}
               className="px-4 py-1.5 rounded-lg bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-primary)] font-bold transition cursor-pointer"
             >
-              Selesai & Tutup
+              Done &amp; close
             </button>
           </div>
         </div>

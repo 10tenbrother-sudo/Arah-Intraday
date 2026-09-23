@@ -58,7 +58,7 @@ export function LoadingState({
     return (
       <span className={cn('inline-flex items-center gap-2 text-xs font-mono text-[var(--text-secondary)]', className)}>
         <Loader2 className="w-3.5 h-3.5 animate-spin text-[var(--accent)]" />
-        {message || 'Memuat...'}
+        {message || 'Loading...'}
       </span>
     );
   }
@@ -67,7 +67,7 @@ export function LoadingState({
     <div className={cn('flex flex-col items-center justify-center py-10 text-center', className)}>
       <Loader2 className="w-6 h-6 animate-spin text-[var(--accent)] mb-3" />
       <p className="text-xs font-mono text-[var(--text-secondary)]">
-        {message || 'Memuat data...'}
+        {message || 'Loading data...'}
       </p>
     </div>
   );

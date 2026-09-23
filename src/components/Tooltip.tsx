@@ -176,7 +176,7 @@ export const MetricTooltip: React.FC<MetricTooltipProps> = ({
   const glossaryItem: GlossaryItem | undefined = MARKET_GLOSSARY[term.toUpperCase()];
 
   const title = glossaryItem?.term || term;
-  const content = customText || glossaryItem?.definition || 'Istilah atau metrik pasar terukur.';
+  const content = customText || glossaryItem?.definition || 'A measurable market term or metric.';
   const badge = glossaryItem?.category || 'METRIC';
   const formula = glossaryItem?.formulaOrInterpretation;
   const whyItMatters = glossaryItem?.whyItMatters;
@@ -223,7 +223,7 @@ export const MetricInfoIcon: React.FC<MetricInfoIconProps> = ({
   const glossaryItem: GlossaryItem | undefined = MARKET_GLOSSARY[term.toUpperCase()];
 
   const title = glossaryItem?.term || term;
-  const content = glossaryItem?.definition || 'Penjelasan metrik pasar.';
+  const content = glossaryItem?.definition || 'Explanation of a market metric.';
   const badge = glossaryItem?.category || 'METRIC';
   const formula = glossaryItem?.formulaOrInterpretation;
   const whyItMatters = glossaryItem?.whyItMatters;

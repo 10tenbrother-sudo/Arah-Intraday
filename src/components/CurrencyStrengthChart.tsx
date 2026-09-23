@@ -397,7 +397,7 @@ export const CurrencyStrengthChart: React.FC<CurrencyStrengthChartProps> = React
           <div className="absolute inset-0 z-20 flex items-center justify-center bg-[var(--bg-canvas)] backdrop-blur-xs">
             <div className="flex items-center gap-2 text-xs text-[var(--warning)] font-mono">
               <RefreshCw className="w-4 h-4 animate-spin" />
-              <span>Memuat data grafik dari currency-strength.com...</span>
+              <span>Loading chart data from currency-strength.com...</span>
             </div>
           </div>
         )}
