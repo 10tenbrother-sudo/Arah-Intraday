@@ -13,7 +13,7 @@ function SkeletonBlock({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        'animate-pulse rounded-lg border border-neutral-800 bg-neutral-900/60',
+        'animate-pulse rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)]',
         className
       )}
     />
@@ -56,8 +56,8 @@ export function LoadingState({
 
   if (variant === 'inline') {
     return (
-      <span className={cn('inline-flex items-center gap-2 text-xs font-mono text-neutral-400', className)}>
-        <Loader2 className="w-3.5 h-3.5 animate-spin text-cyan-400" />
+      <span className={cn('inline-flex items-center gap-2 text-xs font-mono text-[var(--text-secondary)]', className)}>
+        <Loader2 className="w-3.5 h-3.5 animate-spin text-[var(--accent)]" />
         {message || 'Memuat...'}
       </span>
     );
@@ -65,8 +65,8 @@ export function LoadingState({
 
   return (
     <div className={cn('flex flex-col items-center justify-center py-10 text-center', className)}>
-      <Loader2 className="w-6 h-6 animate-spin text-cyan-400 mb-3" />
-      <p className="text-xs font-mono text-neutral-400">
+      <Loader2 className="w-6 h-6 animate-spin text-[var(--accent)] mb-3" />
+      <p className="text-xs font-mono text-[var(--text-secondary)]">
         {message || 'Memuat data...'}
       </p>
     </div>
@@ -75,8 +75,8 @@ export function LoadingState({
 
 function LoadingMessage({ message }: { message: string }) {
   return (
-    <div className="flex items-center gap-2 text-xs font-mono text-neutral-400">
-      <Loader2 className="w-3.5 h-3.5 animate-spin text-cyan-400" />
+    <div className="flex items-center gap-2 text-xs font-mono text-[var(--text-secondary)]">
+      <Loader2 className="w-3.5 h-3.5 animate-spin text-[var(--accent)]" />
       {message}
     </div>
   );
