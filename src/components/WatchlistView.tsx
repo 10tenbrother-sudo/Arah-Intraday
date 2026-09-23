@@ -41,66 +41,70 @@ export const WatchlistView: React.FC<WatchlistViewProps> = React.memo(({
   const commonAssets = ['XAUUSD', 'BTC', 'US30', 'US500', 'US100', 'EUR', 'GBP', 'JPY'];
 
   return (
-    <div className="terminal-panel p-4 space-y-4 font-sans">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b" style={{ borderColor: 'var(--border-subtle)' }}>
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 bg-[var(--accent)] rounded-xs" />
-            <h2 className="section-title text-xs sm:text-sm text-[var(--text-primary)]">
-              PORTFOLIO & WATCHLIST ({watchlist.length}/{limits.watchlistLimit})
-            </h2>
+    <section className="space-y-5 font-sans">
+      {/* Header */}
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 pb-3 border-b" style={{ borderColor: 'var(--border-hairline)' }}>
+        <div className="space-y-1">
+          <div className="flex items-center gap-2.5">
+            <h2 className="headline-h3 text-[var(--text-primary)]">Watchlist</h2>
+            <span className="text-[11px] text-[var(--text-muted)] tabular-nums">
+              {watchlist.length} of {limits.watchlistLimit}
+            </span>
             {isAtLimit && (
-              <span className="badge-warning text-[9.5px]">
-                QUOTA REACHED
+              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-[var(--warning-bg)] text-[var(--warning)]">
+                Quota reached
               </span>
             )}
           </div>
-          <p className="text-xs font-mono text-[var(--text-secondary)] mt-1">
-            Real-time price streams and correlation tracking for user-curated assets.
+          <p className="text-xs text-[var(--text-muted)]">
+            Real-time quotes and 24-hour ranges for the instruments you track.
           </p>
         </div>
 
         {/* Add custom symbol form */}
-        <form onSubmit={handleAdd} className="flex items-center gap-1.5 font-mono">
+        <form onSubmit={handleAdd} className="flex items-center gap-2">
           <input
             type="text"
-            placeholder="Add Ticker (e.g. XAUUSD)"
+            placeholder="Add ticker, e.g. XAUUSD"
             value={newSymbol}
             onChange={(e) => setNewSymbol(e.target.value)}
-            className="bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] px-2.5 py-1 rounded text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none w-44"
+            className="bg-[var(--bg-section-alt)] border border-transparent focus:border-[var(--border-strong)] px-3 h-9 rounded-md text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none w-48 transition"
           />
           <button
             type="submit"
-            className="px-3 py-1 rounded bg-[var(--accent)] hover:opacity-90 text-white font-bold text-xs transition cursor-pointer shadow-xs"
+            className="px-3.5 h-9 rounded-md bg-[var(--accent)] hover:opacity-90 text-white font-semibold text-xs transition cursor-pointer shadow-[var(--accent-glow)]"
           >
-            + ADD
+            Add
           </button>
         </form>
       </div>
 
       {/* Guest Mode Notice */}
       {!user && (
-        <div className="p-3 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs font-mono">
-          <div className="flex items-center gap-2 text-[var(--text-secondary)]">
+        <div
+          className="p-3.5 rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs"
+          style={{ backgroundColor: 'var(--accent-subtle)' }}
+        >
+          <div className="flex items-center gap-2.5 text-[var(--text-secondary)]">
             <LogIn className="w-4 h-4 text-[var(--accent)] shrink-0" />
             <span>
-              Guest mode active: Sign in to sync your personal watchlist across devices and save to Cloud.
+              You are browsing as a guest. Sign in to sync this watchlist across devices.
             </span>
           </div>
           {onOpenAuth && (
             <button
               onClick={onOpenAuth}
-              className="px-3 py-1 rounded bg-[var(--accent)] text-white font-bold text-[11px] transition cursor-pointer shrink-0"
+              className="px-3 py-1.5 rounded-md bg-[var(--accent)] text-white font-semibold text-[11px] transition cursor-pointer shrink-0 shadow-[var(--accent-glow)]"
             >
-              AUTHENTICATE
+              Sign in
             </button>
           )}
         </div>
       )}
 
       {/* Quick Add Pills */}
-      <div className="flex items-center gap-1.5 flex-wrap text-xs font-mono">
-        <span className="metadata-label text-[10px] text-[var(--text-muted)]">QUICK ADD:</span>
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="metadata-label text-[9px] text-[var(--text-muted)]">Quick add</span>
         {commonAssets.map(sym => {
           const isAdded = watchlist.some(w => w.symbol === sym);
           return (
@@ -108,10 +112,10 @@ export const WatchlistView: React.FC<WatchlistViewProps> = React.memo(({
               key={sym}
               disabled={isAdded}
               onClick={() => onAdd(sym, 'ASSET')}
-              className={`px-2 py-0.5 rounded border text-[11px] transition cursor-pointer ${
+              className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition ${
                 isAdded
-                  ? 'bg-[var(--bg-section-alt)] text-[var(--text-muted)] border-[var(--border-subtle)] opacity-60 cursor-default'
-                  : 'bg-[var(--bg-section-alt)] hover:bg-[var(--bg-surface-elevated)] hover:text-[var(--text-primary)] hover:border-[var(--border-strong)] text-[var(--text-secondary)] border-[var(--border-subtle)]'
+                  ? 'bg-[var(--bg-section-alt)] text-[var(--text-muted)] cursor-default'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-section-alt)] cursor-pointer'
               }`}
             >
               {isAdded ? `✓ ${sym}` : `+ ${sym}`}
@@ -122,93 +126,88 @@ export const WatchlistView: React.FC<WatchlistViewProps> = React.memo(({
 
       {/* Watchlist Table */}
       {watchlist.length === 0 ? (
-        <div className="py-12 text-center text-xs font-mono text-[var(--text-muted)] bg-[var(--bg-section-alt)] rounded border border-[var(--border-subtle)]">
-          Your personal watchlist is empty. Add instruments above to monitor live quotes and spreads.
+        <div className="py-14 text-center text-xs text-[var(--text-muted)]">
+          Nothing tracked yet. Add an instrument above to follow its live quote.
         </div>
       ) : (
-        <div className="rounded border overflow-hidden" style={{ borderColor: 'var(--border-subtle)' }}>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs font-mono">
-              <thead>
-                <tr className="table-header border-b" style={{ borderColor: 'var(--border-subtle)' }}>
-                  <th className="py-2 px-3">SYMBOL / ASSET</th>
-                  <th className="py-2 px-3 text-right">LAST PRICE</th>
-                  <th className="py-2 px-3 text-right">24H CHANGE</th>
-                  <th className="py-2 px-3 text-right">24H HIGH</th>
-                  <th className="py-2 px-3 text-right">24H LOW</th>
-                  <th className="py-2 px-3 text-center">FEED</th>
-                  <th className="py-2 px-3 text-right">ACTION</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y" style={{ borderColor: 'var(--border-hairline)' }}>
-                {watchlist.map(item => {
-                  const price = prices.find(p => p.symbol === item.symbol) || item.market_data;
-                  const isPos = price ? price.change_24h_pct > 0 : false;
-                  const isNeg = price ? price.change_24h_pct < 0 : false;
+        <div className="overflow-x-auto rounded-lg border" style={{ borderColor: 'var(--border-subtle)' }}>
+          <table className="terminal-table">
+            <thead>
+              <tr>
+                <th>Instrument</th>
+                <th className="text-right">Last</th>
+                <th className="text-right">24h change</th>
+                <th className="text-right">24h high</th>
+                <th className="text-right">24h low</th>
+                <th className="text-center">Feed</th>
+                <th className="text-right"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {watchlist.map(item => {
+                const price = prices.find(p => p.symbol === item.symbol) || item.market_data;
+                const isPos = price ? price.change_24h_pct > 0 : false;
+                const isNeg = price ? price.change_24h_pct < 0 : false;
 
-                  return (
-                    <tr
-                      key={item.symbol}
-                      onClick={() => onSelectSymbol(item.symbol)}
-                      className="table-row transition cursor-pointer"
-                    >
-                      <td className="py-2 px-3">
-                        <div className="font-bold text-[var(--text-primary)] text-sm">{item.symbol}</div>
-                        <div className="text-[10px] text-[var(--text-muted)]">{price?.display_name || item.asset_type}</div>
-                      </td>
+                return (
+                  <tr key={item.symbol} onClick={() => onSelectSymbol(item.symbol)} className="cursor-pointer">
+                    <td>
+                      <div className="font-semibold text-[var(--text-primary)]">{item.symbol}</div>
+                      <div className="text-[10px] text-[var(--text-muted)]">{price?.display_name || item.asset_type}</div>
+                    </td>
 
-                      <td className="py-2 px-3 text-right font-bold text-[var(--text-primary)] tabular-nums">
-                        {price ? price.price.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '—'}
-                      </td>
+                    <td className="text-right font-semibold text-[var(--text-primary)] tabular-nums">
+                      {price ? price.price.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '—'}
+                    </td>
 
-                      <td className="py-2 px-3 text-right tabular-nums">
-                        {price ? (
-                          <span className={`font-bold tabular-nums ${
-                            isPos ? 'text-[var(--bullish)]' : isNeg ? 'text-[var(--bearish)]' : 'text-[var(--text-muted)]'
-                          }`}>
-                            {isPos ? '+' : ''}{price.change_24h_pct.toFixed(2)}%
-                          </span>
-                        ) : (
-                          '—'
-                        )}
-                      </td>
-
-                      <td className="py-2 px-3 text-right text-[var(--text-secondary)] tabular-nums">
-                        {price?.high_24h.toFixed(1) || '—'}
-                      </td>
-
-                      <td className="py-2 px-3 text-right text-[var(--text-secondary)] tabular-nums">
-                        {price?.low_24h.toFixed(1) || '—'}
-                      </td>
-
-                      <td className="py-2 px-3 text-center">
-                        <span className={`text-[9.5px] px-1.5 py-0.2 rounded font-bold ${
-                          price?.status === 'LIVE' ? 'badge-bullish' : 'badge-neutral'
+                    <td className="text-right tabular-nums">
+                      {price ? (
+                        <span className={`font-semibold tabular-nums ${
+                          isPos ? 'text-[var(--bullish)]' : isNeg ? 'text-[var(--bearish)]' : 'text-[var(--text-muted)]'
                         }`}>
-                          {price?.status || 'SAVED'}
+                          {isPos ? '+' : ''}{price.change_24h_pct.toFixed(2)}%
                         </span>
-                      </td>
+                      ) : (
+                        '—'
+                      )}
+                    </td>
 
-                      <td className="py-2 px-3 text-right">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onRemove(item.symbol);
-                          }}
-                          className="p-1 rounded text-[var(--text-muted)] hover:text-[var(--bearish)] hover:bg-[var(--bg-section-alt)] transition cursor-pointer"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                    <td className="text-right text-[var(--text-secondary)] tabular-nums">
+                      {price?.high_24h.toFixed(1) || '—'}
+                    </td>
+
+                    <td className="text-right text-[var(--text-secondary)] tabular-nums">
+                      {price?.low_24h.toFixed(1) || '—'}
+                    </td>
+
+                    <td className="text-center">
+                      <span className={`text-[9.5px] px-2 py-0.5 rounded-full font-semibold ${
+                        price?.status === 'LIVE' ? 'badge-bullish' : 'badge-neutral'
+                      }`}>
+                        {price?.status || 'SAVED'}
+                      </span>
+                    </td>
+
+                    <td className="text-right">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onRemove(item.symbol);
+                        }}
+                        className="p-1.5 rounded-md text-[var(--text-muted)] hover:text-[var(--bearish)] hover:bg-[var(--bg-section-alt)] transition cursor-pointer"
+                        title="Remove from watchlist"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       )}
-    </div>
+    </section>
   );
 });
 
