@@ -34,24 +34,24 @@ export function EmptyState({
       return Icon;
     }
     const IconComp = Icon as LucideIcon;
-    return <IconComp className="w-5 h-5 text-neutral-400" />;
+    return <IconComp className="w-5 h-5 text-[var(--text-secondary)]" />;
   };
 
   return (
     <div
       className={cn(
-        'flex flex-col items-center justify-center p-8 text-center rounded-xl border border-neutral-800 bg-neutral-900/40 my-3',
+        'flex flex-col items-center justify-center p-8 text-center rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] my-3',
         className
       )}
     >
-      <div className="h-10 w-10 rounded-lg bg-neutral-850 border border-neutral-750 flex items-center justify-center text-neutral-400 mb-3 shadow-inner">
+      <div className="h-10 w-10 rounded-lg bg-[var(--bg-section-alt)] border border-[var(--border-strong)] flex items-center justify-center text-[var(--text-secondary)] mb-3 shadow-inner">
         {renderIcon()}
       </div>
-      <h3 className="text-sm font-semibold text-neutral-200 font-mono tracking-tight">
+      <h3 className="text-sm font-semibold text-[var(--text-primary)] font-mono tracking-tight">
         {title}
       </h3>
       {description && (
-        <p className="text-xs text-neutral-400 max-w-sm mt-1 leading-relaxed">
+        <p className="text-xs text-[var(--text-secondary)] max-w-sm mt-1 leading-relaxed">
           {description}
         </p>
       )}
