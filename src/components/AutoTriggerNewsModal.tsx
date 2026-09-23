@@ -167,7 +167,7 @@ export const AutoTriggerNewsModal: React.FC<AutoTriggerNewsModalProps> = ({
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.95, opacity: 0, y: 15 }}
         transition={{ type: 'spring', damping: 24, stiffness: 300 }}
-        className="relative w-full max-w-2xl bg-[var(--bg-surface)] border border-[var(--border-strong)] rounded-xl shadow-2xl shadow-cyan-950/50 flex flex-col max-h-[90vh] overflow-hidden text-[var(--text-primary)] font-mono z-10"
+        className="relative w-full max-w-2xl bg-[var(--bg-surface)] border border-[var(--border-strong)] rounded-xl shadow-2xl shadow-[var(--shadow-overlay)] flex flex-col max-h-[90vh] overflow-hidden text-[var(--text-primary)] font-mono z-10"
         id="auto-trigger-news-modal"
       >
         {/* Modal Header */}
