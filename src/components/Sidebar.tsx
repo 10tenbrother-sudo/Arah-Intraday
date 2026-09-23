@@ -1,8 +1,6 @@
 import React from 'react';
 import {
   LayoutDashboard,
-  Compass,
-  Zap,
   Activity,
   TrendingUp,
   Calendar,
@@ -25,8 +23,6 @@ import { ThemeToggle } from './ThemeToggle';
 export type NavTabId =
   | 'terminal'
   | 'arah_market'
-  | 'intraday_map'
-  | 'today_catalysts'
   | 'markets'
   | 'intermarket'
   | 'currency'
@@ -44,8 +40,6 @@ interface SidebarProps {
   onClose: () => void;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
-  marketMapCount?: number;
-  catalystsCount?: number;
   user?: User | null;
   onOpenAuth?: () => void;
   onLogout?: () => void;
@@ -60,8 +54,6 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
   onClose,
   isCollapsed,
   onToggleCollapse,
-  marketMapCount = 13,
-  catalystsCount,
   user,
   onOpenAuth,
   onLogout,
@@ -115,20 +107,6 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
           icon: Target,
           badge: 'BIAS',
           badgeClass: 'badge-neutral',
-        },
-        {
-          id: 'intraday_map' as NavTabId,
-          label: 'Market Map',
-          icon: Compass,
-          badge: `${marketMapCount}`,
-          badgeClass: 'badge-neutral',
-        },
-        {
-          id: 'today_catalysts' as NavTabId,
-          label: 'Catalysts',
-          icon: Zap,
-          badge: catalystsCount !== undefined ? `${catalystsCount}` : null,
-          badgeClass: 'badge-warning',
         },
         {
           id: 'intermarket' as NavTabId,

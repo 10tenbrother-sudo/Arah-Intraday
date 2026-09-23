@@ -33,8 +33,6 @@ import { AIIntelligenceView } from './components/AIIntelligenceView';
 import { AdminPanel } from './components/AdminPanel';
 import { WatchlistView } from './components/WatchlistView';
 import { TradingViewChartModal } from './components/TradingViewChartModal';
-import { IntradayMarketMapView } from './components/IntradayMarketMapView';
-import { TodayCatalystsView } from './components/TodayCatalystsView';
 import { ArahMarketView } from './components/ArahMarketView';
 import { CurrencyPairOpportunityMatrix } from './components/CurrencyPairOpportunityMatrix';
 import { IntermarketRelationshipMatrix } from './components/IntermarketRelationshipMatrix';
@@ -481,8 +479,6 @@ export default function App() {
         onClose={() => setIsSidebarOpen(false)}
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-        marketMapCount={intradayMap.length || 13}
-        catalystsCount={todayCatalysts.length}
         user={user}
         onOpenAuth={() => navigate('/login')}
         onLogout={handleLogout}
@@ -578,28 +574,6 @@ export default function App() {
               isLoading={initialLoading}
               onRefresh={refreshArahMarket}
               isRefreshing={isRefreshingArah}
-              onOpenChart={handleOpenChart}
-            />
-          )}
-
-          {/* VIEW 2: DEDICATED INTRADAY MARKET MAP (13 ASSETS) */}
-          {activeTab === 'intraday_map' && (
-            <IntradayMarketMapView
-              data={intradayMap}
-              prices={prices}
-              onRefresh={refreshIntradayMap}
-              isRefreshing={isRefreshingIntraday}
-              onOpenChart={handleOpenChart}
-            />
-          )}
-
-          {/* VIEW 3: TODAY'S KEY CATALYSTS */}
-          {activeTab === 'today_catalysts' && (
-            <TodayCatalystsView
-              catalysts={todayCatalysts}
-              onRefresh={refreshCatalysts}
-              isRefreshing={isRefreshingCatalysts}
-              onSelectAsset={handleSelectSymbol}
               onOpenChart={handleOpenChart}
             />
           )}
