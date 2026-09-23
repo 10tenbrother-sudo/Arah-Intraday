@@ -301,35 +301,35 @@ export const IntermarketRelationshipMatrix: React.FC<IntermarketRelationshipMatr
       return {
         regime: 'PRO-CYCLICAL RISK-ON',
         description: 'Equity expansion & commodity carry demand dominating; safe-havens subdued.',
-        badgeColor: 'bg-emerald-950/80 text-emerald-400 border-emerald-700/60',
+        badgeColor: 'bg-[var(--bullish-bg)] text-[var(--bullish)] border-[var(--bullish-border)]',
         sentiment: 'RISK_ON',
       };
     } else if (goldChg > 0.3 && dxyChg > 0.2) {
       return {
         regime: 'SOVEREIGN SAFE-HAVEN ACCUMULATION',
         description: 'Gold & US Dollar surging together; indicates acute geopolitical tension or systemic liquidity caution.',
-        badgeColor: 'bg-amber-950/80 text-amber-400 border-amber-700/60',
+        badgeColor: 'bg-[var(--warning-bg)] text-[var(--warning)] border-[var(--warning-border)]',
         sentiment: 'DEFENSIVE_FLIGHT',
       };
     } else if (riskBeta < -0.3 || (jpyScore > 65 && spxChg < -0.2)) {
       return {
         regime: 'DEFENSIVE RISK-OFF & DELEVERAGING',
         description: 'Capital fleeing to JPY and treasuries; risk assets and carry currencies under pressure.',
-        badgeColor: 'bg-rose-950/80 text-rose-400 border-rose-700/60',
+        badgeColor: 'bg-[var(--bearish-bg)] text-[var(--bearish)] border-[var(--bearish-border)]',
         sentiment: 'RISK_OFF',
       };
     } else if (dxyChg > 0.35 && goldChg < -0.3) {
       return {
         regime: 'DOLLAR SUPREMACY TIGHTENING',
         description: 'Higher yield and dollar demand suppressing global asset prices and emerging flows.',
-        badgeColor: 'bg-cyan-950/80 text-cyan-400 border-cyan-700/60',
+        badgeColor: 'bg-[var(--accent-subtle)] text-[var(--accent)] border-[var(--accent)]',
         sentiment: 'USD_DOMINANCE',
       };
     } else {
       return {
         regime: 'CONSOLIDATION / BALANCED FLOWS',
         description: 'Intermarket cross-currents neutral; awaiting catalyst from central bank speeches or upcoming macro tier-1 data.',
-        badgeColor: 'bg-slate-800 text-slate-300 border-slate-700',
+        badgeColor: 'bg-[var(--bg-section-alt)] text-[var(--text-secondary)] border-[var(--border-subtle)]',
         sentiment: 'BALANCED',
       };
     }

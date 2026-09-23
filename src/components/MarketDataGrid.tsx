@@ -192,7 +192,7 @@ export const MarketDataGrid: React.FC<MarketDataGridProps> = React.memo(({
                         onToggleWatchlist(item.symbol, item.asset_type);
                       }}
                       className={`p-1 rounded transition cursor-pointer ${
-                        isBookmarked ? 'text-amber-400' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+                        isBookmarked ? 'text-[var(--warning)]' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                       }`}
                     >
                       <Star className="w-3 h-3" fill={isBookmarked ? 'currentColor' : 'none'} />

@@ -73,41 +73,41 @@ export const BreakingNewsAlertPopup: React.FC<BreakingNewsAlertPopupProps> = ({
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 10, scale: 0.95 }}
         transition={{ type: 'spring', damping: 24, stiffness: 350 }}
-        className={`relative overflow-hidden rounded-lg border shadow-xl backdrop-blur-md text-slate-100 ${
+        className={`relative overflow-hidden rounded-lg border shadow-xl backdrop-blur-md text-[var(--text-primary)] ${
           isCritical
-            ? 'bg-slate-950/95 border-rose-500/70 shadow-rose-950/40 ring-1 ring-rose-500/20'
+            ? 'bg-[var(--bg-canvas)] border-[var(--bearish-border)] shadow-rose-950/40 ring-1 ring-[var(--bearish-border)]'
             : isHigh
-            ? 'bg-slate-950/95 border-amber-500/70 shadow-amber-950/40 ring-1 ring-amber-500/20'
-            : 'bg-slate-950/95 border-cyan-500/60 shadow-cyan-950/40 ring-1 ring-cyan-500/20'
+            ? 'bg-[var(--bg-canvas)] border-[var(--warning-border)] shadow-amber-950/40 ring-1 ring-[var(--warning-border)]'
+            : 'bg-[var(--bg-canvas)] border-[var(--accent)] shadow-cyan-950/40 ring-1 ring-[var(--accent)]'
         }`}
       >
         {/* Compact Header Bar */}
-        <div className="flex items-center justify-between px-2.5 py-1.5 border-b border-slate-800/80 bg-slate-900/90 text-[10px]">
+        <div className="flex items-center justify-between px-2.5 py-1.5 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[10px]">
           <div className="flex items-center gap-1.5 min-w-0">
             <span className="relative flex h-2 w-2 shrink-0">
               <span
                 className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
-                  isCritical ? 'bg-rose-400' : isHigh ? 'bg-amber-400' : 'bg-cyan-400'
+                  isCritical ? 'bg-[var(--bearish)]' : isHigh ? 'bg-[var(--warning)]' : 'bg-[var(--accent)]'
                 }`}
               />
               <span
                 className={`relative inline-flex rounded-full h-2 w-2 ${
-                  isCritical ? 'bg-rose-500' : isHigh ? 'bg-amber-500' : 'bg-cyan-500'
+                  isCritical ? 'bg-[var(--bearish)]' : isHigh ? 'bg-[var(--warning)]' : 'bg-[var(--accent)]'
                 }`}
               />
             </span>
             <span
               className={`px-1 py-0.2 rounded text-[9px] font-bold tracking-wider shrink-0 ${
                 isCritical
-                  ? 'bg-rose-950 text-rose-300 border border-rose-800/60'
+                  ? 'bg-[var(--bearish-bg)] text-[var(--bearish)] border border-[var(--bearish-border)]'
                   : isHigh
-                  ? 'bg-amber-950 text-amber-300 border border-amber-800/60'
-                  : 'bg-cyan-950 text-cyan-300 border border-cyan-800/60'
+                  ? 'bg-[var(--warning-bg)] text-[var(--warning)] border border-[var(--warning-border)]'
+                  : 'bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent)]'
               }`}
             >
               {event.impact_level || 'FLASH'}
             </span>
-            <span className="truncate text-slate-400 text-[10px]">
+            <span className="truncate text-[var(--text-secondary)] text-[10px]">
               {sourceName || event.source_names?.[0] || 'Terminal Wire'}
             </span>
           </div>
@@ -118,7 +118,7 @@ export const BreakingNewsAlertPopup: React.FC<BreakingNewsAlertPopupProps> = ({
                 href={activeAlert.sourceUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-slate-400 hover:text-sky-300 transition p-0.5"
+                className="text-[var(--text-secondary)] hover:text-[var(--accent)] transition p-0.5"
                 title="Buka sumber asli"
               >
                 <ExternalLink className="w-3 h-3" />
@@ -126,7 +126,7 @@ export const BreakingNewsAlertPopup: React.FC<BreakingNewsAlertPopupProps> = ({
             )}
             <button
               onClick={() => onDismiss(activeAlert.id)}
-              className="p-0.5 rounded text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition cursor-pointer"
+              className="p-0.5 rounded text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-section-alt)] transition cursor-pointer"
               title="Tutup Alert"
               id="close-alert-toast-btn"
             >
@@ -143,14 +143,14 @@ export const BreakingNewsAlertPopup: React.FC<BreakingNewsAlertPopupProps> = ({
               onOpenEventDetail(event);
               onDismiss(activeAlert.id);
             }}
-            className="text-[11.5px] font-medium text-slate-200 hover:text-cyan-300 transition leading-snug line-clamp-2 cursor-pointer"
+            className="text-[11.5px] font-medium text-[var(--text-primary)] hover:text-[var(--accent)] transition leading-snug line-clamp-2 cursor-pointer"
             title="Klik untuk membuka analisis lengkap"
           >
             {event.title}
           </h4>
 
           {/* Footer: Asset Tags & Quick Action */}
-          <div className="flex items-center justify-between pt-1 border-t border-slate-800/60 text-[10px]">
+          <div className="flex items-center justify-between pt-1 border-t border-[var(--border-subtle)] text-[10px]">
             <div className="flex items-center gap-1 overflow-hidden">
               {event.affected_assets?.slice(0, 2).map((asset) => (
                 <span
@@ -160,7 +160,7 @@ export const BreakingNewsAlertPopup: React.FC<BreakingNewsAlertPopupProps> = ({
                     onOpenChart?.(asset);
                     onDismiss(activeAlert.id);
                   }}
-                  className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-900 text-cyan-300 border border-slate-700 hover:border-cyan-500/50 cursor-pointer flex items-center gap-0.5 transition shrink-0"
+                  className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-[var(--bg-surface)] text-[var(--accent)] border border-[var(--border-strong)] hover:border-[var(--accent)] cursor-pointer flex items-center gap-0.5 transition shrink-0"
                   title={`Chart ${asset}`}
                 >
                   <span>{asset}</span>
@@ -171,7 +171,7 @@ export const BreakingNewsAlertPopup: React.FC<BreakingNewsAlertPopupProps> = ({
                 event.affected_currencies?.slice(0, 2).map((curr) => (
                   <span
                     key={curr}
-                    className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-slate-900 text-slate-300 border border-slate-800 shrink-0"
+                    className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-[var(--bg-surface)] text-[var(--text-secondary)] border border-[var(--border-subtle)] shrink-0"
                   >
                     {curr}
                   </span>
@@ -184,7 +184,7 @@ export const BreakingNewsAlertPopup: React.FC<BreakingNewsAlertPopupProps> = ({
                 onOpenEventDetail(event);
                 onDismiss(activeAlert.id);
               }}
-              className="text-[10px] font-semibold text-cyan-400 hover:text-cyan-300 flex items-center gap-0.5 transition cursor-pointer py-0.5 px-1 rounded hover:bg-cyan-950/50"
+              className="text-[10px] font-semibold text-[var(--accent)] hover:text-[var(--accent)] flex items-center gap-0.5 transition cursor-pointer py-0.5 px-1 rounded hover:bg-[var(--accent-subtle)]"
               id="alert-view-detail-btn"
             >
               <span>Detail</span>
@@ -194,14 +194,14 @@ export const BreakingNewsAlertPopup: React.FC<BreakingNewsAlertPopupProps> = ({
         </div>
 
         {/* Slim Auto-Dismiss Countdown Bar */}
-        <div className="h-0.5 w-full bg-slate-900 overflow-hidden">
+        <div className="h-0.5 w-full bg-[var(--bg-surface)] overflow-hidden">
           <motion.div
             key={activeAlert.id}
             initial={{ width: '100%' }}
             animate={{ width: isHovered ? undefined : '0%' }}
             transition={{ duration: 7, ease: 'linear' }}
             className={`h-full ${
-              isCritical ? 'bg-rose-500' : isHigh ? 'bg-amber-400' : 'bg-cyan-400'
+              isCritical ? 'bg-[var(--bearish)]' : isHigh ? 'bg-[var(--warning)]' : 'bg-[var(--accent)]'
             }`}
           />
         </div>

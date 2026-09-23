@@ -21,7 +21,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
   content,
   title,
   badge,
-  badgeColor = 'text-cyan-400 bg-cyan-950/80 border-cyan-800/60',
+  badgeColor = 'text-[var(--accent)] bg-[var(--accent-subtle)] border-[var(--accent)]',
   whyItMatters,
   formula,
   position = 'top',
@@ -94,14 +94,14 @@ export const Tooltip: React.FC<TooltipProps> = ({
       {isVisible && (
         <div
           role="tooltip"
-          className={`absolute ${getPositionClasses()} z-50 w-72 max-w-[85vw] p-3 rounded-lg bg-slate-900/95 border border-cyan-800/80 shadow-2xl backdrop-blur-md text-left text-xs font-mono pointer-events-auto transition-all animate-in fade-in zoom-in-95 duration-150`}
+          className={`absolute ${getPositionClasses()} z-50 w-72 max-w-[85vw] p-3 rounded-lg bg-[var(--bg-surface)] border border-[var(--accent)] shadow-2xl backdrop-blur-md text-left text-xs font-mono pointer-events-auto transition-all animate-in fade-in zoom-in-95 duration-150`}
         >
           {/* Header Row */}
           {(title || badge) && (
-            <div className="flex items-center justify-between gap-2 border-b border-slate-800 pb-1.5 mb-2">
+            <div className="flex items-center justify-between gap-2 border-b border-[var(--border-subtle)] pb-1.5 mb-2">
               {title && (
-                <div className="flex items-center gap-1.5 font-bold text-slate-100 text-xs truncate">
-                  <BookOpen className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                <div className="flex items-center gap-1.5 font-bold text-[var(--text-primary)] text-xs truncate">
+                  <BookOpen className="w-3.5 h-3.5 text-[var(--accent)] shrink-0" />
                   <span className="truncate">{title}</span>
                 </div>
               )}
@@ -114,31 +114,31 @@ export const Tooltip: React.FC<TooltipProps> = ({
           )}
 
           {/* Definition Body */}
-          <div className="text-slate-300 text-[11px] leading-relaxed">
+          <div className="text-[var(--text-secondary)] text-[11px] leading-relaxed">
             {content}
           </div>
 
           {/* Formula or Interpretation */}
           {formula && (
-            <div className="mt-2 p-1.5 rounded bg-slate-950/80 border border-slate-800/80 text-[10px] text-slate-400">
-              <span className="text-cyan-400 font-semibold block mb-0.5">Rumus / Interpretasi:</span>
-              <span className="text-slate-300">{formula}</span>
+            <div className="mt-2 p-1.5 rounded bg-[var(--bg-canvas)] border border-[var(--border-subtle)] text-[10px] text-[var(--text-secondary)]">
+              <span className="text-[var(--accent)] font-semibold block mb-0.5">Rumus / Interpretasi:</span>
+              <span className="text-[var(--text-secondary)]">{formula}</span>
             </div>
           )}
 
           {/* Why It Matters */}
           {whyItMatters && (
-            <div className="mt-2 pt-1.5 border-t border-slate-800/70 text-[10px] text-amber-300/90 flex items-start gap-1.5">
-              <Sparkles className="w-3 h-3 text-amber-400 shrink-0 mt-0.5" />
+            <div className="mt-2 pt-1.5 border-t border-[var(--border-subtle)] text-[10px] text-[var(--warning)] flex items-start gap-1.5">
+              <Sparkles className="w-3 h-3 text-[var(--warning)] shrink-0 mt-0.5" />
               <span>
-                <strong className="text-amber-400">Pentingnya:</strong> {whyItMatters}
+                <strong className="text-[var(--warning)]">Pentingnya:</strong> {whyItMatters}
               </span>
             </div>
           )}
 
           {/* Arrow */}
           <div
-            className={`absolute w-2 h-2 bg-slate-900 border-cyan-800/80 rotate-45 ${
+            className={`absolute w-2 h-2 bg-[var(--bg-surface)] border-[var(--accent)] rotate-45 ${
               position === 'bottom'
                 ? '-top-1 left-1/2 -translate-x-1/2 border-t border-l'
                 : position === 'left'
@@ -196,12 +196,12 @@ export const MetricTooltip: React.FC<MetricTooltipProps> = ({
       <span
         className={`inline-flex items-center gap-1 cursor-help transition-colors ${
           underline
-            ? 'border-b border-dotted border-slate-500/80 hover:border-cyan-400 hover:text-cyan-300'
+            ? 'border-b border-dotted border-[var(--border-strong)] hover:border-[var(--accent)] hover:text-[var(--accent)]'
             : ''
         }`}
       >
         <span>{displayText}</span>
-        {showIcon && <HelpCircle className="w-3 h-3 text-slate-500 hover:text-cyan-400" />}
+        {showIcon && <HelpCircle className="w-3 h-3 text-[var(--text-muted)] hover:text-[var(--accent)]" />}
       </span>
     </Tooltip>
   );
@@ -218,7 +218,7 @@ export const MetricInfoIcon: React.FC<MetricInfoIconProps> = ({
   term,
   position = 'top',
   className = '',
-  iconClassName = 'w-3 h-3 text-slate-500 hover:text-cyan-400',
+  iconClassName = 'w-3 h-3 text-[var(--text-muted)] hover:text-[var(--accent)]',
 }) => {
   const glossaryItem: GlossaryItem | undefined = MARKET_GLOSSARY[term.toUpperCase()];
 
@@ -241,7 +241,7 @@ export const MetricInfoIcon: React.FC<MetricInfoIconProps> = ({
       <button
         type="button"
         aria-label={`Info ${term}`}
-        className="p-0.5 rounded text-slate-500 hover:text-cyan-400 hover:bg-slate-800/60 transition cursor-help flex items-center justify-center"
+        className="p-0.5 rounded text-[var(--text-muted)] hover:text-[var(--accent)] hover:bg-[var(--bg-section-alt)] transition cursor-help flex items-center justify-center"
       >
         <HelpCircle className={iconClassName} />
       </button>

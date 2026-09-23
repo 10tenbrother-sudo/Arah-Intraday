@@ -4,14 +4,14 @@ import { api } from '../lib/api';
 import { RefreshCw, TrendingUp, Sparkles, ExternalLink, Calendar, SlidersHorizontal } from 'lucide-react';
 
 export const CURRENCY_COLORS: Record<string, { hex: string; bg: string; text: string; border: string; name: string }> = {
-  USD: { hex: '#ff9900', bg: 'bg-amber-500/10', text: 'text-amber-400', border: 'border-amber-500/30', name: 'US Dollar' },
-  EUR: { hex: '#ff0000', bg: 'bg-red-500/10', text: 'text-red-400', border: 'border-red-500/30', name: 'Euro' },
-  JPY: { hex: '#00ccff', bg: 'bg-cyan-500/10', text: 'text-cyan-400', border: 'border-cyan-500/30', name: 'Japanese Yen' },
-  GBP: { hex: '#00cc00', bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/30', name: 'British Pound' },
-  AUD: { hex: '#0033ff', bg: 'bg-blue-600/10', text: 'text-blue-400', border: 'border-blue-500/30', name: 'Australian Dollar' },
-  CHF: { hex: '#996600', bg: 'bg-yellow-800/15', text: 'text-amber-600', border: 'border-amber-700/30', name: 'Swiss Franc' },
-  CAD: { hex: '#9900ff', bg: 'bg-purple-500/10', text: 'text-purple-400', border: 'border-purple-500/30', name: 'Canadian Dollar' },
-  NZD: { hex: '#ff33cc', bg: 'bg-pink-500/10', text: 'text-pink-400', border: 'border-pink-500/30', name: 'New Zealand Dollar' },
+  USD: { hex: '#ff9900', bg: 'bg-[var(--warning)]', text: 'text-[var(--warning)]', border: 'border-[var(--warning-border)]', name: 'US Dollar' },
+  EUR: { hex: '#ff0000', bg: 'bg-[var(--bearish)]', text: 'text-[var(--bearish)]', border: 'border-[var(--bearish-border)]', name: 'Euro' },
+  JPY: { hex: '#00ccff', bg: 'bg-[var(--accent)]', text: 'text-[var(--accent)]', border: 'border-[var(--accent)]', name: 'Japanese Yen' },
+  GBP: { hex: '#00cc00', bg: 'bg-[var(--bullish)]', text: 'text-[var(--bullish)]', border: 'border-[var(--bullish-border)]', name: 'British Pound' },
+  AUD: { hex: '#0033ff', bg: 'bg-[var(--accent)]', text: 'text-[var(--accent)]', border: 'border-[var(--accent)]', name: 'Australian Dollar' },
+  CHF: { hex: '#996600', bg: 'bg-[var(--warning-bg)]', text: 'text-[var(--warning)]', border: 'border-[var(--warning-border)]', name: 'Swiss Franc' },
+  CAD: { hex: '#9900ff', bg: 'bg-[var(--accent)]', text: 'text-[var(--accent)]', border: 'border-[var(--border-subtle)]', name: 'Canadian Dollar' },
+  NZD: { hex: '#ff33cc', bg: 'bg-[var(--accent)]', text: 'text-[var(--accent)]', border: 'border-[var(--border-subtle)]', name: 'New Zealand Dollar' },
 };
 
 export const G8_CURRENCIES = ['USD', 'EUR', 'JPY', 'GBP', 'AUD', 'CHF', 'CAD', 'NZD'];
@@ -291,27 +291,27 @@ export const CurrencyStrengthChart: React.FC<CurrencyStrengthChartProps> = React
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5">
-            <TrendingUp className="w-4 h-4 text-amber-400" />
-            <span className="font-bold text-slate-100 uppercase tracking-wider text-[11px]">
+            <TrendingUp className="w-4 h-4 text-[var(--warning)]" />
+            <span className="font-bold text-[var(--text-primary)] uppercase tracking-wider text-[11px]">
               CURRENCY STRENGTH CHART
             </span>
           </div>
 
-          <div className="hidden sm:flex items-center gap-1 text-[10px] text-slate-400">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <div className="hidden sm:flex items-center gap-1 text-[10px] text-[var(--text-secondary)]">
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--bullish)] animate-pulse" />
             <span>Open Parity 04:00 WIB</span>
           </div>
         </div>
 
         {/* Range Selector: Today (1 Day) vs Yesterday (2 Days) - Exactly like currency-strength.com */}
         <div className="flex items-center gap-2">
-          <div className="flex items-center bg-slate-950 p-0.5 rounded border border-slate-800 text-[10px]">
+          <div className="flex items-center bg-[var(--bg-canvas)] p-0.5 rounded border border-[var(--border-subtle)] text-[10px]">
             <button
               onClick={() => setRange('2d')}
               className={`px-2.5 py-1 rounded transition cursor-pointer font-semibold ${
                 range === '2d'
-                  ? 'bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40 shadow-xs'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-[var(--warning)] text-[var(--warning)] font-bold border border-[var(--warning-border)] shadow-xs'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
               }`}
               title="View past 48 hours (yesterday + today)"
             >
@@ -321,8 +321,8 @@ export const CurrencyStrengthChart: React.FC<CurrencyStrengthChartProps> = React
               onClick={() => setRange('1d')}
               className={`px-2.5 py-1 rounded transition cursor-pointer font-semibold ${
                 range === '1d'
-                  ? 'bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40 shadow-xs'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-[var(--warning)] text-[var(--warning)] font-bold border border-[var(--warning-border)] shadow-xs'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
               }`}
               title="View current trading session from 04:00 WIB open"
             >
@@ -334,15 +334,15 @@ export const CurrencyStrengthChart: React.FC<CurrencyStrengthChartProps> = React
             onClick={handleManualRefresh}
             disabled={isLoading || externalRefreshing}
             title="Refresh Live Chart Data"
-            className="p-1.5 rounded bg-slate-950 hover:bg-slate-850 border border-slate-800 text-slate-400 hover:text-slate-200 transition disabled:opacity-50 cursor-pointer"
+            className="p-1.5 rounded bg-[var(--bg-canvas)] hover:bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition disabled:opacity-50 cursor-pointer"
           >
-            <RefreshCw className={`w-3 h-3 ${isLoading || externalRefreshing ? 'animate-spin text-amber-400' : ''}`} />
+            <RefreshCw className={`w-3 h-3 ${isLoading || externalRefreshing ? 'animate-spin text-[var(--warning)]' : ''}`} />
           </button>
         </div>
       </div>
 
       {/* Official 8-Currency Badges & Filters (With exact website hex colors) */}
-      <div className="flex items-center justify-between gap-1 flex-wrap pt-0.5 border-t border-slate-800/40">
+      <div className="flex items-center justify-between gap-1 flex-wrap pt-0.5 border-t border-[var(--border-subtle)]">
         <div className="flex items-center gap-1.5 flex-wrap">
           {G8_CURRENCIES.map(cur => {
             const isSelected = selectedCurrencies.has(cur);
@@ -361,7 +361,7 @@ export const CurrencyStrengthChart: React.FC<CurrencyStrengthChartProps> = React
                 className={`px-2 py-0.5 rounded text-[10px] font-bold border transition flex items-center gap-1.5 cursor-pointer ${
                   isSelected
                     ? `${style.bg} ${style.text} ${style.border} ${isHovered ? 'ring-1 ring-white/40' : ''}`
-                    : 'bg-slate-950/60 text-slate-600 border-slate-800/80 line-through opacity-50'
+                    : 'bg-[var(--bg-canvas)] text-[var(--text-muted)] border-[var(--border-subtle)] line-through opacity-50'
                 }`}
               >
                 <span
@@ -372,7 +372,7 @@ export const CurrencyStrengthChart: React.FC<CurrencyStrengthChartProps> = React
                 {liveDelta !== undefined && (
                   <span
                     className={`text-[9px] tabular-nums ${
-                      liveDelta > 0 ? 'text-emerald-400' : liveDelta < 0 ? 'text-rose-400' : 'text-slate-400'
+                      liveDelta > 0 ? 'text-[var(--bullish)]' : liveDelta < 0 ? 'text-[var(--bearish)]' : 'text-[var(--text-secondary)]'
                     }`}
                   >
                     {liveDelta > 0 ? `+${liveDelta.toFixed(1)}` : liveDelta.toFixed(1)}
@@ -385,17 +385,17 @@ export const CurrencyStrengthChart: React.FC<CurrencyStrengthChartProps> = React
 
         <button
           onClick={selectAll}
-          className="text-[9px] text-amber-400 hover:text-amber-300 hover:underline cursor-pointer px-1.5 py-0.5 rounded bg-slate-950 border border-slate-800"
+          className="text-[9px] text-[var(--warning)] hover:text-[var(--warning)] hover:underline cursor-pointer px-1.5 py-0.5 rounded bg-[var(--bg-canvas)] border border-[var(--border-subtle)]"
         >
           All (8)
         </button>
       </div>
 
       {/* SVG Multi-Line Chart Canvas */}
-      <div className="relative w-full bg-slate-950 rounded-xl border border-slate-800 p-2 overflow-hidden shadow-inner">
+      <div className="relative w-full bg-[var(--bg-canvas)] rounded-xl border border-[var(--border-subtle)] p-2 overflow-hidden shadow-inner">
         {isLoading && !chartData && (
-          <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-950/80 backdrop-blur-xs">
-            <div className="flex items-center gap-2 text-xs text-amber-400 font-mono">
+          <div className="absolute inset-0 z-20 flex items-center justify-center bg-[var(--bg-canvas)] backdrop-blur-xs">
+            <div className="flex items-center gap-2 text-xs text-[var(--warning)] font-mono">
               <RefreshCw className="w-4 h-4 animate-spin" />
               <span>Memuat data grafik dari currency-strength.com...</span>
             </div>
@@ -618,11 +618,11 @@ export const CurrencyStrengthChart: React.FC<CurrencyStrengthChartProps> = React
 
         {/* Live Hover Tooltip Display (Shows All 8 Currencies Sorted by Delta at That Exact Time) */}
         {activeTimestamp && sortedAtPoint.length > 0 && (
-          <div className="mt-2 pt-2 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-[10px]">
-            <div className="flex items-center gap-1.5 text-slate-400">
-              <Calendar className="w-3 h-3 text-amber-400" />
+          <div className="mt-2 pt-2 border-t border-[var(--border-subtle)] flex flex-wrap items-center justify-between gap-2 text-[10px]">
+            <div className="flex items-center gap-1.5 text-[var(--text-secondary)]">
+              <Calendar className="w-3 h-3 text-[var(--warning)]" />
               <span>TIME:</span>
-              <span className="text-amber-300 font-bold">
+              <span className="text-[var(--warning)] font-bold">
                 {new Date(activeTimestamp).toLocaleDateString('id-ID', {
                   timeZone: 'Asia/Jakarta',
                   day: 'numeric',
@@ -648,20 +648,20 @@ export const CurrencyStrengthChart: React.FC<CurrencyStrengthChartProps> = React
                   return (
                     <div
                       key={item.currency}
-                      className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800"
+                      className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)]"
                     >
                       <span
                         className="w-1.5 h-1.5 rounded-full"
                         style={{ backgroundColor: style?.hex || '#94a3b8' }}
                       />
-                      <span className="font-bold text-slate-200">{item.currency}</span>
+                      <span className="font-bold text-[var(--text-primary)]">{item.currency}</span>
                       <span
                         className={`font-bold tabular-nums ${
                           val > 0
-                            ? 'text-emerald-400'
+                            ? 'text-[var(--bullish)]'
                             : val < 0
-                            ? 'text-rose-400'
-                            : 'text-slate-400'
+                            ? 'text-[var(--bearish)]'
+                            : 'text-[var(--text-secondary)]'
                         }`}
                       >
                         {val > 0 ? `+${val.toFixed(2)}` : val.toFixed(2)}
@@ -676,20 +676,20 @@ export const CurrencyStrengthChart: React.FC<CurrencyStrengthChartProps> = React
 
       {/* Market Divergence Insight Card */}
       {sortedAtPoint.length >= 2 && (
-        <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800 flex items-center justify-between text-[10px]">
+        <div className="p-2 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex items-center justify-between text-[10px]">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-            <span className="text-slate-300">
+            <Sparkles className="w-3.5 h-3.5 text-[var(--warning)] shrink-0" />
+            <span className="text-[var(--text-secondary)]">
               <strong>Mata Uang Terkuat:</strong>{' '}
-              <span className="text-emerald-400 font-bold">{sortedAtPoint[0]?.currency}</span> ({sortedAtPoint[0]?.val > 0 ? `+${sortedAtPoint[0]?.val.toFixed(2)}` : sortedAtPoint[0]?.val.toFixed(2)}) &bull;{' '}
+              <span className="text-[var(--bullish)] font-bold">{sortedAtPoint[0]?.currency}</span> ({sortedAtPoint[0]?.val > 0 ? `+${sortedAtPoint[0]?.val.toFixed(2)}` : sortedAtPoint[0]?.val.toFixed(2)}) &bull;{' '}
               <strong>Terlemah:</strong>{' '}
-              <span className="text-rose-400 font-bold">{sortedAtPoint[sortedAtPoint.length - 1]?.currency}</span> ({sortedAtPoint[sortedAtPoint.length - 1]?.val.toFixed(2)})
+              <span className="text-[var(--bearish)] font-bold">{sortedAtPoint[sortedAtPoint.length - 1]?.currency}</span> ({sortedAtPoint[sortedAtPoint.length - 1]?.val.toFixed(2)})
             </span>
           </div>
 
-          <div className="text-amber-400 font-bold hidden sm:flex items-center gap-1">
+          <div className="text-[var(--warning)] font-bold hidden sm:flex items-center gap-1">
             <span>Divergensi Pair ({sortedAtPoint[0]?.currency}/{sortedAtPoint[sortedAtPoint.length - 1]?.currency}):</span>
-            <span className="text-slate-100 tabular-nums">
+            <span className="text-[var(--text-primary)] tabular-nums">
               +{(sortedAtPoint[0]?.val - sortedAtPoint[sortedAtPoint.length - 1]?.val).toFixed(2)} pt
             </span>
           </div>

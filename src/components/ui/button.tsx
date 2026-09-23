@@ -8,19 +8,19 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          'bg-cyan-500 text-slate-950 font-bold hover:bg-cyan-400 shadow-sm shadow-cyan-950/40 active:translate-y-px',
+          'bg-[var(--accent)] text-[var(--text-primary)] font-bold hover:bg-[var(--accent)] shadow-sm shadow-cyan-950/40 active:translate-y-px',
         destructive:
-          'bg-rose-950/80 text-rose-300 border border-rose-800 hover:bg-rose-900 active:translate-y-px',
+          'bg-[var(--bearish-bg)] text-[var(--bearish)] border border-[var(--bearish-border)] hover:bg-[var(--bearish-bg)] active:translate-y-px',
         outline:
-          'border border-slate-800 bg-slate-900/60 hover:bg-slate-800/80 text-slate-200 hover:text-white',
+          'border border-[var(--border-subtle)] bg-[var(--bg-surface)] hover:bg-[var(--bg-section-alt)] text-[var(--text-primary)] hover:text-white',
         secondary:
-          'bg-slate-800 text-slate-200 hover:bg-slate-750 border border-slate-700 active:translate-y-px',
+          'bg-[var(--bg-section-alt)] text-[var(--text-primary)] hover:bg-[var(--border-subtle)] border border-[var(--border-strong)] active:translate-y-px',
         ghost:
-          'hover:bg-slate-800/60 text-slate-300 hover:text-white',
+          'hover:bg-[var(--bg-section-alt)] text-[var(--text-secondary)] hover:text-white',
         link:
-          'text-cyan-400 underline-offset-4 hover:underline',
+          'text-[var(--accent)] underline-offset-4 hover:underline',
         subtle:
-          'bg-cyan-950/50 text-cyan-300 border border-cyan-800/60 hover:bg-cyan-900/50',
+          'bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent)] hover:bg-[var(--accent-subtle)]',
       },
       size: {
         default: 'h-8 px-3.5 py-1.5',
