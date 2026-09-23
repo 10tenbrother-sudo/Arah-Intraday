@@ -1,0 +1,297 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-display: 'Space Grotesk', 'Inter', sans-serif;
+    --font-mono: 'IBM Plex Mono', 'JetBrains Mono', monospace;
+
+    /* Light Theme (Clean Solid Pure White) */
+    --bg-canvas: #FFFFFF;
+    --bg-section-alt: #F4F4F6;
+    --bg-surface: #FFFFFF;
+    --bg-surface-elevated: #FFFFFF;
+    --bg-sidebar-base: #FFFFFF;
+    --bg-sidebar: #FFFFFF;
+    --bg-header-base: #FFFFFF;
+    --bg-header: #FFFFFF;
+    --bg-dark-primary: #121214;
+    --bg-dark-secondary: #1F1F23;
+    --text-primary: #09090B;
+    --text-secondary: #52525B;
+    --text-muted: #71717A;
+    --border-subtle: #E4E4E7;
+    --border-strong: #A1A1AA;
+    --border-hairline: #F4F4F5;
+
+    --active-bg: #09090B;
+    --active-text: #FFFFFF;
+    --active-border: #09090B;
+
+    --bullish: #15803D;
+    --bullish-bg: #DCFCE7;
+    --bullish-border: #86EFAC;
+    --bearish: #DC2626;
+    --bearish-bg: #FEE2E2;
+    --bearish-border: #FCA5A5;
+    --warning: #D97706;
+    --warning-bg: #FEF3C7;
+    --warning-border: #FCD34D;
+    --accent: #E25C26;
+    --accent-subtle: rgba(226, 92, 38, 0.08);
+
+    --radius-sm: 2px;
+    --radius-md: 4px;
+    --radius-lg: 6px;
+  }
+
+  html.dark {
+    /* Dark Theme (Clean Solid Pure Black) */
+    --bg-canvas: #000000;
+    --bg-section-alt: #0C0C0D;
+    --bg-surface: #0E0E10;
+    --bg-surface-elevated: #151518;
+    --bg-sidebar-base: #000000;
+    --bg-sidebar: #000000;
+    --bg-header-base: #000000;
+    --bg-header: #000000;
+    --bg-dark-primary: #000000;
+    --bg-dark-secondary: #0E0E10;
+    --text-primary: #FFFFFF;
+    --text-secondary: #A1A1AA;
+    --text-muted: #71717A;
+    --border-subtle: #27272A;
+    --border-strong: #3F3F46;
+    --border-hairline: #18181B;
+
+    --active-bg: #FFFFFF;
+    --active-text: #000000;
+    --active-border: #FFFFFF;
+
+    --bullish: #22C55E;
+    --bullish-bg: rgba(34, 197, 94, 0.15);
+    --bullish-border: rgba(34, 197, 94, 0.35);
+    --bearish: #EF4444;
+    --bearish-bg: rgba(239, 68, 68, 0.15);
+    --bearish-border: rgba(239, 68, 68, 0.35);
+    --warning: #F59E0B;
+    --warning-bg: rgba(245, 158, 11, 0.15);
+    --warning-border: rgba(245, 158, 11, 0.35);
+    --accent: #F97316;
+    --accent-subtle: rgba(249, 115, 22, 0.15);
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--bg-canvas);
+    color: var(--text-primary);
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background-color 150ms ease, color 150ms ease;
+  }
+
+  /* Professional Monospace Data Numerals */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Technical Precision Scrollbars */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-subtle);
+    border-radius: 2px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+  }
+}
+
+/* Typography Hierarchy Classes (Swiss Editorial System) */
+.font-display {
+  font-family: var(--font-display);
+}
+
+.headline-display {
+  font-family: var(--font-display);
+  font-size: clamp(2.25rem, 4.5vw, 3.75rem);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+}
+
+.headline-h1 {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 3.2vw, 2.25rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+
+.headline-h2 {
+  font-family: var(--font-display);
+  font-size: clamp(1.2rem, 2.2vw, 1.6rem);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.25;
+}
+
+.headline-h3 {
+  font-family: var(--font-sans);
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.35;
+}
+
+.metadata-label {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem; /* 11px */
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Institutional Terminal Surfaces & Structural Frames */
+.terminal-panel {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+}
+
+.terminal-header,
+#arah-market-header {
+  background-color: var(--bg-header);
+}
+
+.terminal-sidebar,
+#arah-market-sidebar {
+  background-color: var(--bg-sidebar);
+}
+
+.terminal-panel-elevated {
+  background-color: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+}
+
+.terminal-panel-alt {
+  background-color: var(--bg-section-alt);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+}
+
+/* Interactive Filter & Tab State (Harmonious contrast, replaces stark B&W invert) */
+.active-pill {
+  background-color: var(--active-bg);
+  color: var(--active-text);
+  border: 1px solid var(--active-border);
+  font-weight: 600;
+}
+
+/* Primary Action Buttons */
+.btn-primary-institutional {
+  background-color: var(--accent);
+  color: #FFFFFF;
+  border: 1px solid var(--accent);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+.btn-primary-institutional:hover {
+  opacity: 0.92;
+}
+
+/* Grid & Hairline Separators */
+.terminal-divider {
+  border-color: var(--border-subtle);
+}
+
+.terminal-divider-strong {
+  border-color: var(--border-strong);
+}
+
+/* Editorial Table System */
+.terminal-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.terminal-table th {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+
+.terminal-table td {
+  padding: 0.625rem 0.75rem;
+  border-bottom: 1px solid var(--border-hairline);
+  font-size: 0.8125rem;
+  color: var(--text-primary);
+}
+
+.terminal-table tr:hover td {
+  background-color: var(--bg-section-alt);
+}
+
+/* Bullish / Bearish / Warning Tags (Neo-Brutalist 2px radius, no candy pills) */
+.badge-bullish {
+  background-color: var(--bullish-bg);
+  color: var(--bullish);
+  border: 1px solid var(--bullish-border);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  border-radius: 2px;
+}
+
+.badge-bearish {
+  background-color: var(--bearish-bg);
+  color: var(--bearish);
+  border: 1px solid var(--bearish-border);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  border-radius: 2px;
+}
+
+.badge-warning {
+  background-color: var(--warning-bg);
+  color: var(--warning);
+  border: 1px solid var(--warning-border);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  border-radius: 2px;
+}
+
+.badge-neutral {
+  background-color: var(--bg-section-alt);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+  font-family: var(--font-mono);
+  font-weight: 500;
+  border-radius: 2px;
+}
+
+.badge-accent {
+  background-color: var(--accent);
+  color: #FFFFFF;
+  border: 1px solid var(--accent);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  border-radius: 2px;
+}
