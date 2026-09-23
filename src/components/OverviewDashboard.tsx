@@ -25,6 +25,7 @@ import { MarketDataGrid } from './MarketDataGrid';
 import { ExecutiveMarketBrief } from './ExecutiveMarketBrief';
 import { NavTabId } from './Sidebar';
 import { EmptyState } from './shared/EmptyState';
+import { PageHeader } from './shared/PageHeader';
 
 interface OverviewDashboardProps {
   intradayMap: IntradayAssetBias[];
@@ -142,141 +143,120 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
         className="terminal-panel p-4 sm:p-5 border transition-colors"
         id="editorial-market-overview"
       >
-        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5">
-          {/* Left Column: Bold Typography & Market Narrative */}
-          <div className="space-y-3 max-w-3xl">
-            <div className="flex items-center gap-2">
-              <span className="metadata-label text-[10px] text-[var(--text-muted)]">
-                MARKET INTELLIGENCE · SURVEILLANCE DESK
-              </span>
-              <span className="text-[var(--border-subtle)]">·</span>
-              <span className="text-[10px] font-mono text-[var(--accent)] font-semibold">
-                INTRADAY REGIME
-              </span>
-            </div>
+        <PageHeader
+          eyebrow="MARKET INTELLIGENCE · SURVEILLANCE DESK"
+          accentNote="INTRADAY REGIME"
+          title={`Today's market regime: ${kpiStats.overallRegime}`}
+          description="Cross-asset analysis across G8 currencies, US benchmark yields, technology equities, and gold. High-conviction setups prioritized based on intermarket yield differentials and liquidity flows."
+          actions={
+            <div
+              className="w-full lg:w-80 shrink-0 rounded p-3 space-y-2.5 font-mono text-xs"
+              style={{ backgroundColor: 'var(--bg-section-alt)' }}
+            >
+              <div className="flex items-center justify-between pb-1.5 border-b" style={{ borderColor: 'var(--border-hairline)' }}>
+                <span className="metadata-label text-[10px] text-[var(--text-secondary)]">
+                  5-SECOND SCAN
+                </span>
+                <span className="text-[10px] font-semibold text-[var(--bullish)]">
+                  {kpiStats.bullishCount} BULL / {kpiStats.bearishCount} BEAR
+                </span>
+              </div>
 
-            <div className="space-y-1">
-              <h1 className="headline-h2 text-[var(--text-primary)]">
-                TODAY'S MARKET REGIME: {kpiStats.overallRegime}
-              </h1>
-              <p className="text-xs sm:text-[13px] text-[var(--text-secondary)] leading-relaxed font-sans">
-                Cross-asset analysis across G8 currencies, US benchmark yields, technology equities, and gold. High-conviction setups prioritized based on intermarket yield differentials and liquidity flows.
-              </p>
-            </div>
+              <div className="grid grid-cols-2 gap-2 text-[11px] tabular-nums">
+                <div className="p-1.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-surface)]">
+                  <span className="text-[9.5px] uppercase tracking-wider text-[var(--text-muted)] block">
+                    US DOLLAR (DXY)
+                  </span>
+                  <span className="font-bold text-[var(--text-primary)]">
+                    {kpiStats.dxy?.price.toFixed(2) || '101.24'}
+                    <span className={`ml-1 text-[10px] ${((kpiStats.dxy?.change_24h_pct ?? 0) >= 0) ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}`}>
+                      {((kpiStats.dxy?.change_24h_pct ?? 0) >= 0) ? '+' : ''}
+                      {(kpiStats.dxy?.change_24h_pct ?? 0.18).toFixed(2)}%
+                    </span>
+                  </span>
+                </div>
 
-            {/* Quick Navigation Action Strip */}
-            <div className="pt-1 flex items-center gap-2 flex-wrap text-xs font-mono">
-              <button
+                <div className="p-1.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-surface)]">
+                  <span className="text-[9.5px] uppercase tracking-wider text-[var(--text-muted)] block">
+                    GOLD (XAUUSD)
+                  </span>
+                  <span className="font-bold text-[var(--text-primary)]">
+                    ${kpiStats.gold?.price.toFixed(1) || '2,654.8'}
+                    <span className={`ml-1 text-[10px] ${((kpiStats.gold?.change_24h_pct ?? 0) >= 0) ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}`}>
+                      {((kpiStats.gold?.change_24h_pct ?? 0) >= 0) ? '+' : ''}
+                      {(kpiStats.gold?.change_24h_pct ?? 0.73).toFixed(2)}%
+                    </span>
+                  </span>
+                </div>
+
+                <div className="p-1.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-surface)]">
+                  <span className="text-[9.5px] uppercase tracking-wider text-[var(--text-muted)] block">
+                    NASDAQ (US100)
+                  </span>
+                  <span className="font-bold text-[var(--text-primary)]">
+                    {kpiStats.us100?.price.toLocaleString(undefined, { maximumFractionDigits: 0 }) || '23,421'}
+                    <span className={`ml-1 text-[10px] ${((kpiStats.us100?.change_24h_pct ?? 0) >= 0) ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}`}>
+                      {((kpiStats.us100?.change_24h_pct ?? 0) >= 0) ? '+' : ''}
+                      {(kpiStats.us100?.change_24h_pct ?? 0.41).toFixed(2)}%
+                    </span>
+                  </span>
+                </div>
+
+                <div className="p-1.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-surface)]">
+                  <span className="text-[9.5px] uppercase tracking-wider text-[var(--text-muted)] block">
+                    10Y YIELD (US10Y)
+                  </span>
+                  <span className="font-bold text-[var(--text-primary)]">
+                    {kpiStats.us10y?.price.toFixed(3) || '4.085'}%
+                    <span className={`ml-1 text-[10px] ${((kpiStats.us10y?.change_24h_pct ?? 0) <= 0) ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}`}>
+                      {((kpiStats.us10y?.change_24h_pct ?? 0) >= 0) ? '+' : ''}
+                      {(kpiStats.us10y?.change_24h_pct ?? -0.32).toFixed(2)}%
+                    </span>
+                  </span>
+                </div>
+              </div>
+
+              <div className="pt-1 flex items-center justify-between text-[10px] text-[var(--text-muted)] border-t" style={{ borderColor: 'var(--border-hairline)' }}>
+                <span>LEAD: <strong className="text-[var(--bullish)]">{kpiStats.strongest?.currency || 'USD'} ({kpiStats.strongest?.strength_score.toFixed(1) || '7.8'})</strong></span>
+                <span>LAG: <strong className="text-[var(--bearish)]">{kpiStats.weakest?.currency || 'JPY'} ({kpiStats.weakest?.strength_score.toFixed(1) || '2.1'})</strong></span>
+              </div>
+            </div>
+          }
+        >
+          <div className="pt-1 flex items-center gap-2 flex-wrap text-xs font-mono">
+            <button
                 onClick={() => onNavigateTab('arah_market')}
-                className="h-7 px-3 rounded font-semibold text-xs flex items-center gap-1.5 transition cursor-pointer bg-[var(--accent)] text-white hover:opacity-90 shadow-xs"
+              className="h-7 px-3 rounded font-semibold text-xs flex items-center gap-1.5 transition cursor-pointer bg-[var(--accent)] text-white hover:opacity-90 shadow-xs"
               >
-                <Target className="w-3.5 h-3.5" />
-                <span>MARKET BIAS DOSSIER</span>
+              <Target className="w-3.5 h-3.5" />
+              <span>MARKET BIAS DOSSIER</span>
               </button>
 
-              <button
+            <button
                 onClick={() => onNavigateTab('currency')}
-                className="h-7 px-3 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-primary)] text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+              className="h-7 px-3 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-primary)] text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
               >
-                <TrendingUp className="w-3.5 h-3.5 text-[var(--bullish)]" />
-                <span>G8 CURRENCY MATRIX</span>
+              <TrendingUp className="w-3.5 h-3.5 text-[var(--bullish)]" />
+              <span>G8 CURRENCY MATRIX</span>
               </button>
 
-              <button
+            <button
                 onClick={() => onNavigateTab('intermarket')}
-                className="h-7 px-3 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-primary)] text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+              className="h-7 px-3 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-primary)] text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
               >
-                <Zap className="w-3.5 h-3.5 text-[var(--accent)]" />
-                <span>INTERMARKET FLOWS</span>
+              <Zap className="w-3.5 h-3.5 text-[var(--accent)]" />
+              <span>INTERMARKET FLOWS</span>
               </button>
 
-              <button
+            <button
                 onClick={() => onNavigateTab('events')}
-                className="h-7 px-3 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-primary)] text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+              className="h-7 px-3 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-primary)] text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
               >
-                <Radio className="w-3.5 h-3.5 text-[var(--text-muted)]" />
-                <span>CANONICAL WIRE</span>
+              <Radio className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+              <span>CANONICAL WIRE</span>
               </button>
-            </div>
           </div>
-
-          {/* Right Column: 5-Second Market Snapshot Table */}
-          <div
-            className="w-full lg:w-80 shrink-0 border rounded p-3 space-y-2.5 font-mono text-xs"
-            style={{
-              backgroundColor: 'var(--bg-section-alt)',
-              borderColor: 'var(--border-subtle)',
-            }}
-          >
-            <div className="flex items-center justify-between pb-1.5 border-b" style={{ borderColor: 'var(--border-hairline)' }}>
-              <span className="metadata-label text-[10px] text-[var(--text-secondary)]">
-                5-SECOND SCAN
-              </span>
-              <span className="text-[10px] font-semibold text-[var(--bullish)]">
-                {kpiStats.bullishCount} BULL / {kpiStats.bearishCount} BEAR
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 text-[11px] tabular-nums">
-              <div className="p-1.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-surface)]">
-                <span className="text-[9.5px] uppercase tracking-wider text-[var(--text-muted)] block">
-                  US DOLLAR (DXY)
-                </span>
-                <span className="font-bold text-[var(--text-primary)]">
-                  {kpiStats.dxy?.price.toFixed(2) || '101.24'}
-                  <span className={`ml-1 text-[10px] ${((kpiStats.dxy?.change_24h_pct ?? 0) >= 0) ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}`}>
-                    {((kpiStats.dxy?.change_24h_pct ?? 0) >= 0) ? '+' : ''}
-                    {(kpiStats.dxy?.change_24h_pct ?? 0.18).toFixed(2)}%
-                  </span>
-                </span>
-              </div>
-
-              <div className="p-1.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-surface)]">
-                <span className="text-[9.5px] uppercase tracking-wider text-[var(--text-muted)] block">
-                  GOLD (XAUUSD)
-                </span>
-                <span className="font-bold text-[var(--text-primary)]">
-                  ${kpiStats.gold?.price.toFixed(1) || '2,654.8'}
-                  <span className={`ml-1 text-[10px] ${((kpiStats.gold?.change_24h_pct ?? 0) >= 0) ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}`}>
-                    {((kpiStats.gold?.change_24h_pct ?? 0) >= 0) ? '+' : ''}
-                    {(kpiStats.gold?.change_24h_pct ?? 0.73).toFixed(2)}%
-                  </span>
-                </span>
-              </div>
-
-              <div className="p-1.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-surface)]">
-                <span className="text-[9.5px] uppercase tracking-wider text-[var(--text-muted)] block">
-                  NASDAQ (US100)
-                </span>
-                <span className="font-bold text-[var(--text-primary)]">
-                  {kpiStats.us100?.price.toLocaleString(undefined, { maximumFractionDigits: 0 }) || '23,421'}
-                  <span className={`ml-1 text-[10px] ${((kpiStats.us100?.change_24h_pct ?? 0) >= 0) ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}`}>
-                    {((kpiStats.us100?.change_24h_pct ?? 0) >= 0) ? '+' : ''}
-                    {(kpiStats.us100?.change_24h_pct ?? 0.41).toFixed(2)}%
-                  </span>
-                </span>
-              </div>
-
-              <div className="p-1.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-surface)]">
-                <span className="text-[9.5px] uppercase tracking-wider text-[var(--text-muted)] block">
-                  10Y YIELD (US10Y)
-                </span>
-                <span className="font-bold text-[var(--text-primary)]">
-                  {kpiStats.us10y?.price.toFixed(3) || '4.085'}%
-                  <span className={`ml-1 text-[10px] ${((kpiStats.us10y?.change_24h_pct ?? 0) <= 0) ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}`}>
-                    {((kpiStats.us10y?.change_24h_pct ?? 0) >= 0) ? '+' : ''}
-                    {(kpiStats.us10y?.change_24h_pct ?? -0.32).toFixed(2)}%
-                  </span>
-                </span>
-              </div>
-            </div>
-
-            <div className="pt-1 flex items-center justify-between text-[10px] text-[var(--text-muted)] border-t" style={{ borderColor: 'var(--border-hairline)' }}>
-              <span>LEAD: <strong className="text-[var(--bullish)]">{kpiStats.strongest?.currency || 'USD'} ({kpiStats.strongest?.strength_score.toFixed(1) || '7.8'})</strong></span>
-              <span>LAG: <strong className="text-[var(--bearish)]">{kpiStats.weakest?.currency || 'JPY'} ({kpiStats.weakest?.strength_score.toFixed(1) || '2.1'})</strong></span>
-            </div>
-          </div>
-        </div>
+        </PageHeader>
       </section>
 
       {/* ======================================================== */}
