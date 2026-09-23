@@ -436,7 +436,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
                       onClick={() => setWireImpactFilter('ALL')}
                       className={`h-6 px-2 rounded border transition cursor-pointer ${
                         wireImpactFilter === 'ALL'
-                          ? 'border-[var(--text-primary)] text-[var(--text-primary)] font-bold'
+                          ? 'bg-[var(--active-bg)] border-[var(--active-border)] text-[var(--active-text)] font-semibold'
                           : 'border-[var(--border-subtle)] text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                       }`}
                       title="Show all wire headlines"

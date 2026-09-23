@@ -27,7 +27,7 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
             : 'bg-[#F4F4F6] hover:bg-[#EAEBED] text-slate-700'
         } ${className}`}
         style={{ border: 'none', outline: 'none', boxShadow: 'none' }}
-        title={isDark ? 'Ganti ke Mode Terang (Putih)' : 'Ganti ke Mode Gelap (Hitam)'}
+        title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
         aria-label="Toggle Theme"
         id="theme-toggle-btn"
       >
@@ -57,18 +57,18 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
         }
       }}
       className={`inline-flex items-center p-0.5 rounded-full select-none cursor-pointer transition-colors duration-150 ${
-        isDark ? 'bg-[#18181B]' : 'bg-[#EFEFF2]'
+        'bg-[var(--bg-section-alt)]'
       } ${className}`}
       style={{ border: 'none', outline: 'none', boxShadow: 'none' }}
-      title={isDark ? 'Ganti ke Mode Terang (Putih)' : 'Ganti ke Mode Gelap (Hitam)'}
+      title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       id="theme-toggle-pill"
     >
       {/* Light Option */}
       <span
         className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold transition-all duration-150 ${
           !isDark
-            ? 'bg-[#FFFFFF] text-[#09090B] shadow-xs font-bold'
-            : 'text-[#71717A] hover:text-[#A1A1AA]'
+            ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm font-semibold'
+            : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
         }`}
         style={{ border: 'none', outline: 'none' }}
       >
@@ -76,15 +76,15 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
           className={`w-3 h-3 ${!isDark ? 'text-amber-500 fill-amber-500/20' : 'text-[#71717A]'}`}
           strokeWidth={2.2}
         />
-        <span className="hidden sm:inline">PUTIH</span>
+        <span className="hidden sm:inline">Terang</span>
       </span>
 
       {/* Dark Option */}
       <span
         className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold transition-all duration-150 ${
           isDark
-            ? 'bg-[#27272A] text-[#FFFFFF] shadow-xs font-bold'
-            : 'text-[#71717A] hover:text-[#09090B]'
+            ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm font-semibold'
+            : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
         }`}
         style={{ border: 'none', outline: 'none' }}
       >
@@ -92,7 +92,7 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
           className={`w-3 h-3 ${isDark ? 'text-indigo-400 fill-indigo-400/20' : 'text-[#71717A]'}`}
           strokeWidth={2.2}
         />
-        <span className="hidden sm:inline">GELAP</span>
+        <span className="hidden sm:inline">Gelap</span>
       </span>
     </div>
   );

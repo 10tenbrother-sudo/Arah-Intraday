@@ -552,7 +552,7 @@ export const IntermarketRelationshipMatrix: React.FC<IntermarketRelationshipMatr
                     onClick={() => setSelectedRelIndex(idx)}
                     className={`p-3 rounded border cursor-pointer transition ${
                       isSelected
-                        ? 'bg-[var(--bg-section-alt)] border-[var(--text-primary)] font-medium'
+                        ? 'bg-[var(--active-bg)] border-[var(--active-border)] font-medium text-[var(--active-text)]'
                         : 'bg-[var(--bg-surface)] border-[var(--border-subtle)] hover:border-[var(--text-secondary)]'
                     }`}
                   >

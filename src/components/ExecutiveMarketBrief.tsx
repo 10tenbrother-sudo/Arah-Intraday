@@ -526,7 +526,7 @@ export const ExecutiveMarketBrief: React.FC<ExecutiveMarketBriefProps> = ({
               <div
                 key={item.id}
                 className={`terminal-panel p-3.5 flex flex-col justify-between space-y-3 transition ${
-                  isPrime ? 'border-[var(--text-primary)]' : ''
+                  isPrime ? 'border-[var(--active-border)] bg-[var(--active-bg)]' : ''
                 }`}
               >
                 <div>
