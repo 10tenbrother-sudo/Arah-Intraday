@@ -197,22 +197,18 @@
   border-radius: 6px;
 }
 
-/* A framed panel inside another one should not draw a second box. Every nested
-   frame added another outline, which stacked into a grid-of-boxes look and made
-   the surfaces read as separate slabs instead of one page. Depth is conveyed by
-   fill and hairline separators instead. */
-.terminal-panel .terminal-panel,
-.terminal-panel .terminal-panel-alt,
-.terminal-panel .terminal-panel-elevated,
-.terminal-panel-alt .terminal-panel,
-.terminal-panel-alt .terminal-panel-alt,
-.terminal-panel-alt .terminal-panel-elevated,
-.terminal-panel-elevated .terminal-panel,
-.terminal-panel-elevated .terminal-panel-alt,
-.terminal-panel-elevated .terminal-panel-elevated {
+/* Nested panels stay flat only where a section frame would double up with its
+   own children. Views opt in with --flush; a blanket rule also flattened sibling
+   cards, which removed the frames those cards need. */
+.terminal-panel--flush {
   background-color: transparent;
   border-color: transparent;
   box-shadow: none;
+}
+.terminal-panel--flush > .terminal-panel,
+.terminal-panel--flush > .terminal-panel-alt,
+.terminal-panel--flush > .terminal-panel-elevated {
+  border-color: transparent;
 }
 
 /* Interactive Filter & Tab State (Harmonious contrast, replaces stark B&W invert) */
