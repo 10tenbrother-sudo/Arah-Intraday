@@ -75,10 +75,10 @@ export const BreakingNewsAlertPopup: React.FC<BreakingNewsAlertPopupProps> = ({
         transition={{ type: 'spring', damping: 24, stiffness: 350 }}
         className={`relative overflow-hidden rounded-lg border shadow-xl backdrop-blur-md text-[var(--text-primary)] ${
           isCritical
-            ? 'bg-[var(--bg-canvas)] border-[var(--bearish-border)] shadow-rose-950/40 ring-1 ring-[var(--bearish-border)]'
+            ? 'bg-[var(--bg-canvas)] border-[var(--bearish-border)] shadow-[var(--shadow-raised)] ring-1 ring-[var(--bearish-border)]'
             : isHigh
-            ? 'bg-[var(--bg-canvas)] border-[var(--warning-border)] shadow-amber-950/40 ring-1 ring-[var(--warning-border)]'
-            : 'bg-[var(--bg-canvas)] border-[var(--accent)] shadow-cyan-950/40 ring-1 ring-[var(--accent)]'
+            ? 'bg-[var(--bg-canvas)] border-[var(--warning-border)] shadow-[var(--shadow-raised)] ring-1 ring-[var(--warning-border)]'
+            : 'bg-[var(--bg-canvas)] border-[var(--accent)] shadow-[var(--shadow-raised)] ring-1 ring-[var(--accent)]'
         }`}
       >
         {/* Compact Header Bar */}
