@@ -56,7 +56,7 @@ const PRESET_TRIGGER_OPTIONS = [
     title: 'Telegram Live Wire (Berita Asli Terkini)',
     desc: 'Pull live breaking messages from @financialjuice, @WatcherGuru, @SM_News_24h, @fxstreetforexindonesia',
     icon: Send,
-    color: 'text-[var(--accent)] border-[var(--accent)] bg-[var(--accent)] hover:bg-[var(--accent)]',
+    color: 'text-[var(--accent-strong)] border-[var(--accent-border)] bg-[var(--accent-subtle)] hover:bg-[var(--accent)] hover:text-white',
   },
   {
     id: 'central_bank',
@@ -64,7 +64,7 @@ const PRESET_TRIGGER_OPTIONS = [
     desc: 'Rate decisions, hawkish/dovish stance, FX intervention',
     category: 'CENTRAL_BANK',
     icon: Building2,
-    color: 'text-[var(--accent)] border-[var(--border-subtle)] bg-[var(--accent)] hover:bg-[var(--accent)]',
+    color: 'text-[var(--accent-strong)] border-[var(--accent-border)] bg-[var(--accent-subtle)] hover:bg-[var(--accent)] hover:text-white',
   },
   {
     id: 'audcad',
@@ -76,7 +76,7 @@ const PRESET_TRIGGER_OPTIONS = [
     affected_assets: ['AUDCAD', 'AUDUSD'],
     affected_currencies: ['AUD', 'CAD'],
     icon: Coins,
-    color: 'text-[var(--bullish)] border-[var(--bullish-border)] bg-[var(--bullish)] hover:bg-[var(--bullish)]',
+    color: 'text-[var(--bullish)] border-[var(--bullish-border)] bg-[var(--bullish-bg)] hover:bg-[var(--bullish)] hover:text-white',
   },
   {
     id: 'us_macro',
@@ -88,7 +88,7 @@ const PRESET_TRIGGER_OPTIONS = [
     affected_assets: ['XAUUSD', 'EURUSD', 'USDJPY', 'US30'],
     affected_currencies: ['USD', 'EUR', 'JPY'],
     icon: Globe2,
-    color: 'text-[var(--accent)] border-[var(--accent)] bg-[var(--accent)] hover:bg-[var(--accent)]',
+    color: 'text-[var(--accent-strong)] border-[var(--accent-border)] bg-[var(--accent-subtle)] hover:bg-[var(--accent)] hover:text-white',
   },
   {
     id: 'gold_commodities',
@@ -100,7 +100,7 @@ const PRESET_TRIGGER_OPTIONS = [
     affected_assets: ['XAUUSD', 'USDCAD'],
     affected_currencies: ['USD', 'CAD'],
     icon: Sparkles,
-    color: 'text-[var(--warning)] border-[var(--warning-border)] bg-[var(--warning)] hover:bg-[var(--warning)]',
+    color: 'text-[var(--warning-strong)] border-[var(--warning-border)] bg-[var(--warning-bg)] hover:bg-[var(--warning)] hover:text-[var(--text-primary)]',
   },
 ];
 
@@ -173,7 +173,7 @@ export const AutoTriggerNewsModal: React.FC<AutoTriggerNewsModalProps> = ({
         {/* Modal Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border-subtle)] bg-[var(--bg-canvas)]">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-lg bg-[var(--accent)] text-[var(--accent)] border border-[var(--accent)]">
+            <div className="p-2 rounded-lg bg-[var(--accent-subtle)] text-[var(--accent-strong)] border border-[var(--accent-border)]">
               <Zap className="w-5 h-5 animate-pulse" />
             </div>
             <div>
@@ -265,7 +265,7 @@ export const AutoTriggerNewsModal: React.FC<AutoTriggerNewsModalProps> = ({
                     onClick={() => onUpdateConfig({ intervalSeconds: item.val })}
                     className={`py-1.5 px-2 rounded text-[11px] font-bold text-center border transition cursor-pointer ${
                       config.intervalSeconds === item.val
-                        ? 'bg-[var(--accent)] text-[var(--accent)] border-[var(--accent)]'
+                        ? 'bg-[var(--accent-subtle)] text-[var(--accent-strong)] border-[var(--accent-border)]'
                         : 'bg-[var(--bg-surface)] text-[var(--text-secondary)] border-[var(--border-subtle)] hover:bg-[var(--bg-section-alt)] hover:text-[var(--text-primary)]'
                     }`}
                   >
@@ -293,7 +293,7 @@ export const AutoTriggerNewsModal: React.FC<AutoTriggerNewsModalProps> = ({
                     onClick={() => onUpdateConfig({ minImpact: item.val })}
                     className={`py-1.5 px-1 rounded text-[10px] font-bold text-center border transition cursor-pointer ${
                       config.minImpact === item.val
-                        ? 'bg-[var(--warning)] text-[var(--warning)] border-[var(--warning-border)]'
+                        ? 'bg-[var(--warning-bg)] text-[var(--warning-strong)] border-[var(--warning-border)]'
                         : 'bg-[var(--bg-surface)] text-[var(--text-secondary)] border-[var(--border-subtle)] hover:bg-[var(--bg-section-alt)] hover:text-[var(--text-primary)]'
                     }`}
                   >

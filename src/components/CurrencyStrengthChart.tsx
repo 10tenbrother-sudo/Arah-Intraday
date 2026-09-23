@@ -4,14 +4,14 @@ import { api } from '../lib/api';
 import { RefreshCw, TrendingUp, Sparkles, ExternalLink, Calendar, SlidersHorizontal } from 'lucide-react';
 
 export const CURRENCY_COLORS: Record<string, { hex: string; bg: string; text: string; border: string; name: string }> = {
-  USD: { hex: '#ff9900', bg: 'bg-[var(--warning)]', text: 'text-[var(--warning)]', border: 'border-[var(--warning-border)]', name: 'US Dollar' },
-  EUR: { hex: '#ff0000', bg: 'bg-[var(--bearish)]', text: 'text-[var(--bearish)]', border: 'border-[var(--bearish-border)]', name: 'Euro' },
-  JPY: { hex: '#00ccff', bg: 'bg-[var(--accent)]', text: 'text-[var(--accent)]', border: 'border-[var(--accent)]', name: 'Japanese Yen' },
-  GBP: { hex: '#00cc00', bg: 'bg-[var(--bullish)]', text: 'text-[var(--bullish)]', border: 'border-[var(--bullish-border)]', name: 'British Pound' },
-  AUD: { hex: '#0033ff', bg: 'bg-[var(--accent)]', text: 'text-[var(--accent)]', border: 'border-[var(--accent)]', name: 'Australian Dollar' },
-  CHF: { hex: '#996600', bg: 'bg-[var(--warning-bg)]', text: 'text-[var(--warning)]', border: 'border-[var(--warning-border)]', name: 'Swiss Franc' },
-  CAD: { hex: '#9900ff', bg: 'bg-[var(--accent)]', text: 'text-[var(--accent)]', border: 'border-[var(--border-subtle)]', name: 'Canadian Dollar' },
-  NZD: { hex: '#ff33cc', bg: 'bg-[var(--accent)]', text: 'text-[var(--accent)]', border: 'border-[var(--border-subtle)]', name: 'New Zealand Dollar' },
+  USD: { hex: '#ff9900', bg: 'bg-[var(--warning-bg)]', text: 'text-[var(--warning-strong)]', border: 'border-[var(--warning-border)]', name: 'US Dollar' },
+  EUR: { hex: '#ff0000', bg: 'bg-[var(--bearish-bg)]', text: 'text-[var(--bearish)]', border: 'border-[var(--bearish-border)]', name: 'Euro' },
+  JPY: { hex: '#00ccff', bg: 'bg-[var(--accent-subtle)]', text: 'text-[var(--accent-strong)]', border: 'border-[var(--accent-border)]', name: 'Japanese Yen' },
+  GBP: { hex: '#00cc00', bg: 'bg-[var(--bullish-bg)]', text: 'text-[var(--bullish)]', border: 'border-[var(--bullish-border)]', name: 'British Pound' },
+  AUD: { hex: '#0033ff', bg: 'bg-[var(--accent-subtle)]', text: 'text-[var(--accent-strong)]', border: 'border-[var(--accent-border)]', name: 'Australian Dollar' },
+  CHF: { hex: '#996600', bg: 'bg-[var(--warning-bg)]', text: 'text-[var(--warning-strong)]', border: 'border-[var(--warning-border)]', name: 'Swiss Franc' },
+  CAD: { hex: '#9900ff', bg: 'bg-[var(--accent-subtle)]', text: 'text-[var(--accent-strong)]', border: 'border-[var(--accent-border)]', name: 'Canadian Dollar' },
+  NZD: { hex: '#ff33cc', bg: 'bg-[var(--accent-subtle)]', text: 'text-[var(--accent-strong)]', border: 'border-[var(--accent-border)]', name: 'New Zealand Dollar' },
 };
 
 export const G8_CURRENCIES = ['USD', 'EUR', 'JPY', 'GBP', 'AUD', 'CHF', 'CAD', 'NZD'];
@@ -310,7 +310,7 @@ export const CurrencyStrengthChart: React.FC<CurrencyStrengthChartProps> = React
               onClick={() => setRange('2d')}
               className={`px-2.5 py-1 rounded transition cursor-pointer font-semibold ${
                 range === '2d'
-                  ? 'bg-[var(--warning)] text-[var(--warning)] font-bold border border-[var(--warning-border)] shadow-xs'
+                  ? 'bg-[var(--warning-bg)] text-[var(--warning-strong)] font-bold border border-[var(--warning-border)] shadow-xs'
                   : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
               }`}
               title="View past 48 hours (yesterday + today)"
@@ -321,7 +321,7 @@ export const CurrencyStrengthChart: React.FC<CurrencyStrengthChartProps> = React
               onClick={() => setRange('1d')}
               className={`px-2.5 py-1 rounded transition cursor-pointer font-semibold ${
                 range === '1d'
-                  ? 'bg-[var(--warning)] text-[var(--warning)] font-bold border border-[var(--warning-border)] shadow-xs'
+                  ? 'bg-[var(--warning-bg)] text-[var(--warning-strong)] font-bold border border-[var(--warning-border)] shadow-xs'
                   : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
               }`}
               title="View current trading session from 04:00 WIB open"

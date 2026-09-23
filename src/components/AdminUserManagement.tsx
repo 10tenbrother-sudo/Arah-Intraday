@@ -531,7 +531,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
                         <span
                           className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold border ${
                             u.role === 'ADMIN'
-                              ? 'bg-[var(--warning)] text-[var(--warning)] border-[var(--warning-border)]'
+                              ? 'bg-[var(--warning-bg)] text-[var(--warning-strong)] border-[var(--warning-border)]'
                               : 'bg-[var(--bg-section-alt)] text-[var(--text-secondary)] border-[var(--border-strong)]'
                           }`}
                         >
@@ -549,9 +549,9 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
                         <span
                           className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
                             u.plan === 'INSTITUTIONAL'
-                              ? 'bg-[var(--accent)] text-[var(--accent)] border-[var(--border-subtle)]'
+                              ? 'bg-[var(--accent-subtle)] text-[var(--accent-strong)] border-[var(--accent-border)]'
                               : u.plan === 'PRO'
-                              ? 'bg-[var(--accent)] text-[var(--accent)] border-[var(--accent)]'
+                              ? 'bg-[var(--accent-subtle)] text-[var(--accent-strong)] border-[var(--accent-border)]'
                               : 'bg-[var(--bg-section-alt)] text-[var(--text-secondary)] border-[var(--border-strong)]'
                           }`}
                         >

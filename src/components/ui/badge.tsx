@@ -8,7 +8,7 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default:
-          'border-transparent bg-[var(--accent)] text-white font-bold',
+          'border-[var(--accent-border)] bg-[var(--accent-subtle)] text-[var(--accent-strong)] font-bold',
         secondary:
           'border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-secondary)]',
         destructive:
@@ -18,11 +18,11 @@ const badgeVariants = cva(
         outline:
           'border-[var(--border-subtle)] text-[var(--text-secondary)]',
         cyan:
-          'border-[var(--accent)] bg-[var(--accent-subtle)] text-[var(--accent)]',
+          'border-[var(--accent-border)] bg-[var(--accent-subtle)] text-[var(--accent-strong)]',
         emerald:
           'border-[var(--bullish-border)] bg-[var(--bullish-bg)] text-[var(--bullish)]',
         amber:
-          'border-[var(--warning-border)] bg-[var(--warning-bg)] text-[var(--warning)]',
+          'border-[var(--warning-border)] bg-[var(--warning-bg)] text-[var(--warning-strong)]',
       },
     },
     defaultVariants: {

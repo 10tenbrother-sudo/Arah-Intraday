@@ -47,7 +47,13 @@
     --warning-border: rgba(217, 119, 6, 0.32);
     --accent: #E25C26;
     --accent-subtle: rgba(226, 92, 38, 0.08);
+    --accent-border: rgba(226, 92, 38, 0.26);
     --accent-glow: 0 4px 14px -4px rgba(226, 92, 38, 0.4);
+    /* --accent and --warning are also used as solid fills under dark text
+       (buttons, dots, bars), so neither can be darkened in place. These are the
+       text-safe variants for sitting on their own tinted fill. */
+    --accent-strong: #B94B1F;
+    --warning-strong: #B45309;
 
     --radius-sm: 2px;
     --radius-md: 4px;
@@ -90,7 +96,12 @@
     --warning-border: rgba(245, 158, 11, 0.35);
     --accent: #F97316;
     --accent-subtle: rgba(249, 115, 22, 0.15);
+    --accent-border: rgba(249, 115, 22, 0.35);
     --accent-glow: 0 4px 16px -4px rgba(249, 115, 22, 0.45);
+    /* On a dark surface the accent already reads against its own tint, so it
+       needs no darkening here. */
+    --accent-strong: var(--accent);
+    --warning-strong: var(--warning);
   }
 
   body {
@@ -325,9 +336,9 @@ html.dark .badge-warning {
    badges, so it now shares their low-alpha treatment. The accent text is
    darkened so it holds its contrast against that near-white fill. */
 .badge-accent {
-  background-color: rgba(226, 92, 38, 0.1);
-  color: #B94B1F;
-  border: 1px solid rgba(226, 92, 38, 0.26);
+  background-color: var(--accent-subtle);
+  color: var(--accent-strong);
+  border: 1px solid var(--accent-border);
   font-family: var(--font-mono);
   font-weight: 600;
   border-radius: 2px;
@@ -336,9 +347,9 @@ html.dark .badge-warning {
 /* A near-white fill would be wrong here, so the dark theme tints toward the
    surface instead and lets the accent itself carry the text. */
 html.dark .badge-accent {
-  background-color: rgba(249, 115, 22, 0.12);
+  background-color: var(--accent-subtle);
   color: var(--accent);
-  border: 1px solid rgba(249, 115, 22, 0.3);
+  border: 1px solid var(--accent-border);
 }
 
 /* ============================================================
