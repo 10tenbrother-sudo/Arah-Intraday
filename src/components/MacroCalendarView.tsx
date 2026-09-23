@@ -846,7 +846,7 @@ export const MacroCalendarView: React.FC<MacroCalendarViewProps> = React.memo(({
                                 <p className="text-xs text-[var(--text-secondary)] leading-relaxed font-sans">
                                   {item.actual_market_reaction ||
                                     (hasActual
-                                      ? `Volatilitas tercatat pada pasangan ${item.currency} segera setelah rilis dengan pergeseran bid-ask spread dan eksekusi algoritmik.`
+                                      ? `Volatility was recorded on the ${item.currency} pair right after the release, with bid-ask spread shifts and algorithmic execution.`
                                       : 'Market liquidity is in pre-event positioning.')}
                                 </p>
                               </div>
