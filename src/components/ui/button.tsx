@@ -12,11 +12,11 @@ const buttonVariants = cva(
         destructive:
           'bg-[var(--bearish-bg)] text-[var(--bearish)] border border-[var(--bearish-border)] hover:bg-[var(--bearish-bg)] active:translate-y-px',
         outline:
-          'border border-[var(--border-subtle)] bg-[var(--bg-surface)] hover:bg-[var(--bg-section-alt)] text-[var(--text-primary)] hover:text-white',
+          'border border-[var(--border-subtle)] bg-[var(--bg-surface)] hover:bg-[var(--bg-section-alt)] text-[var(--text-primary)] hover:text-[var(--text-primary)]',
         secondary:
           'bg-[var(--bg-section-alt)] text-[var(--text-primary)] hover:bg-[var(--border-subtle)] border border-[var(--border-strong)] active:translate-y-px',
         ghost:
-          'hover:bg-[var(--bg-section-alt)] text-[var(--text-secondary)] hover:text-white',
+          'hover:bg-[var(--bg-section-alt)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]',
         link:
           'text-[var(--accent)] underline-offset-4 hover:underline',
         subtle:

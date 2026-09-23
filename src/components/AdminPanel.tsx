@@ -355,7 +355,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser }) => {
                       <button
                         onClick={() => handleScrapeChannel(ch.handle)}
                         title="Trigger manual scrape"
-                        className="px-2 py-1 rounded bg-[var(--bg-surface)] hover:bg-[var(--bg-section-alt)] border border-[var(--border-strong)] text-[var(--accent)] hover:text-white"
+                        className="px-2 py-1 rounded bg-[var(--bg-surface)] hover:bg-[var(--bg-section-alt)] border border-[var(--border-strong)] text-[var(--accent)] hover:opacity-80"
                       >
                         Scrape Now
                       </button>
