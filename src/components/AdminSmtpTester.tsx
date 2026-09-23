@@ -87,7 +87,7 @@ export const AdminSmtpTester: React.FC<AdminSmtpTesterProps> = ({
         success: false,
         connected: false,
         testEmailSent: false,
-        message: err.message || 'Gagal menghubungi server untuk uji SMTP.',
+        message: err.message || 'Could not reach the server for the SMTP test.',
         details: 'Pastikan server backend aktif dan token sesi admin valid.',
         config: config || {
           configured: false,
@@ -157,7 +157,7 @@ export const AdminSmtpTester: React.FC<AdminSmtpTesterProps> = ({
             className="px-3 py-1.5 rounded-lg bg-[var(--accent-subtle)] hover:bg-[var(--accent-subtle)] text-[var(--accent)] text-xs font-mono flex items-center gap-1.5 border border-[var(--accent)] transition cursor-pointer"
           >
             <HelpCircle className="w-3.5 h-3.5" />
-            <span>{showGuide ? 'Tutup Panduan' : 'Panduan Kredensial'}</span>
+            <span>{showGuide ? 'Close guide' : 'Panduan Kredensial'}</span>
           </button>
         </div>
       </div>
@@ -239,7 +239,7 @@ export const AdminSmtpTester: React.FC<AdminSmtpTesterProps> = ({
             {config?.userMasked || <span className="text-[var(--text-muted)] font-normal">Belum ditentukan</span>}
           </div>
           <div className="text-[10px] text-[var(--text-secondary)] truncate">
-            {config?.hasUser ? 'Kredensial akun email terpasang' : 'Variabel SMTP_USER kosong'}
+            {config?.hasUser ? 'Email account credentials configured' : 'Variabel SMTP_USER kosong'}
           </div>
         </div>
 
@@ -422,7 +422,7 @@ export const AdminSmtpTester: React.FC<AdminSmtpTesterProps> = ({
                 Pengirim: {testResult.config.userMasked || 'None'}
               </span>
               <span className="bg-[var(--bg-surface)] px-2 py-0.5 rounded border border-[var(--border-subtle)]">
-                Email Terkirim: {testResult.testEmailSent ? 'Ya (Sukses)' : 'Tidak'}
+                Email Terkirim: {testResult.testEmailSent ? 'Ya (Sukses)' : 'No'}
               </span>
             </div>
           </div>

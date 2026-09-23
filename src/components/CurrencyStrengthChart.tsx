@@ -357,7 +357,7 @@ export const CurrencyStrengthChart: React.FC<CurrencyStrengthChartProps> = React
                 onDoubleClick={() => isolateCurrency(cur)}
                 onMouseEnter={() => setHoveredCurrency(cur)}
                 onMouseLeave={() => setHoveredCurrency(null)}
-                title={`Klik untuk toggle, double-klik untuk fokus hanya ke ${cur}`}
+                title={`Click to toggle, double-click to focus ${cur}`}
                 className={`px-2 py-0.5 rounded text-[10px] font-bold border transition flex items-center gap-1.5 cursor-pointer ${
                   isSelected
                     ? `${style.bg} ${style.text} ${style.border} ${isHovered ? 'ring-1 ring-white/40' : ''}`
@@ -680,15 +680,15 @@ export const CurrencyStrengthChart: React.FC<CurrencyStrengthChartProps> = React
           <div className="flex items-center gap-2">
             <Sparkles className="w-3.5 h-3.5 text-[var(--warning)] shrink-0" />
             <span className="text-[var(--text-secondary)]">
-              <strong>Mata Uang Terkuat:</strong>{' '}
+              <strong>Strongest:</strong>{' '}
               <span className="text-[var(--bullish)] font-bold">{sortedAtPoint[0]?.currency}</span> ({sortedAtPoint[0]?.val > 0 ? `+${sortedAtPoint[0]?.val.toFixed(2)}` : sortedAtPoint[0]?.val.toFixed(2)}) &bull;{' '}
-              <strong>Terlemah:</strong>{' '}
+              <strong>Weakest:</strong>{' '}
               <span className="text-[var(--bearish)] font-bold">{sortedAtPoint[sortedAtPoint.length - 1]?.currency}</span> ({sortedAtPoint[sortedAtPoint.length - 1]?.val.toFixed(2)})
             </span>
           </div>
 
           <div className="text-[var(--warning)] font-bold hidden sm:flex items-center gap-1">
-            <span>Divergensi Pair ({sortedAtPoint[0]?.currency}/{sortedAtPoint[sortedAtPoint.length - 1]?.currency}):</span>
+            <span>Pair dispersion ({sortedAtPoint[0]?.currency}/{sortedAtPoint[sortedAtPoint.length - 1]?.currency}):</span>
             <span className="text-[var(--text-primary)] tabular-nums">
               +{(sortedAtPoint[0]?.val - sortedAtPoint[sortedAtPoint.length - 1]?.val).toFixed(2)} pt
             </span>

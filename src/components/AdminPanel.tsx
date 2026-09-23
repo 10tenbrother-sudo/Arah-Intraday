@@ -492,7 +492,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser }) => {
                   type="text"
                   value={testTitle}
                   onChange={(e) => setTestTitle(e.target.value)}
-                  placeholder="e.g. Inflasi AS naik 3,1% YoY pada rilis terbaru"
+                  placeholder="e.g. US inflation rose 3.1% YoY in the latest release"
                   required
                   className="w-full bg-[var(--bg-canvas)] border border-[var(--border-subtle)] px-3 py-2 rounded text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
                 />
@@ -503,7 +503,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser }) => {
                 <textarea
                   value={testContent}
                   onChange={(e) => setTestContent(e.target.value)}
-                  placeholder="e.g. Indeks harga konsumen Amerika Serikat naik 3,1% sesuai perkiraan konsensus."
+                  placeholder="e.g. The US consumer price index rose 3.1%, in line with consensus."
                   rows={2}
                   className="w-full bg-[var(--bg-canvas)] border border-[var(--border-subtle)] px-3 py-2 rounded text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
                 />
