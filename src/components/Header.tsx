@@ -75,7 +75,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
         year: 'numeric',
       }).toUpperCase();
 
-      const wibTime = now.toLocaleTimeString('id-ID', {
+      const wibTime = now.toLocaleTimeString('en-GB', {
         timeZone: 'Asia/Jakarta',
         hour12: false,
         hour: '2-digit',

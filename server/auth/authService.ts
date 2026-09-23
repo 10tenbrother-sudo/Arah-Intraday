@@ -134,14 +134,14 @@ export class AuthService {
         const tokenRecord = db.createVerificationToken(existing.id, existing.email, 24);
         const verificationUrl = `${baseUrl}/api/auth/verify-email?token=${encodeURIComponent(tokenRecord.token)}`;
         const mailResult = await mailService.sendVerificationEmail(existing.email, existing.name, tokenRecord.token, baseUrl, tokenRecord.code);
-        const err: any = new Error('Akun dengan email ini sudah terdaftar namun belum diverifikasi. Kode dan tautan aktivasi baru telah dikirimkan ke email Anda.');
+        const err: any = new Error('This email is already registered but not verified. A fresh activation code and link have been sent to your email.');
         err.code = 'EMAIL_NOT_VERIFIED';
         err.email = cleanEmail;
         err.code_otp = tokenRecord.code;
         err.verificationUrl = verificationUrl;
         throw err;
       }
-      throw new Error('Alamat email ini sudah terdaftar. Silakan langsung masuk (login) menggunakan kata sandi Anda.');
+      throw new Error('This email address is already registered. Sign in with your password instead.');
     }
 
     if (password.length < 6) {
@@ -190,7 +190,7 @@ export class AuthService {
     return {
       user: newUser,
       status: 'pending_verification',
-      message: 'Pendaftaran berhasil! Silakan periksa kotak masuk email Anda untuk mengaktifkan akun.',
+      message: 'Registration successful. Check your inbox to activate your account.',
       mailResult,
       code: tokenRecord.code,
       verificationUrl,
@@ -204,7 +204,7 @@ export class AuthService {
     const cleanEmail = email.toLowerCase().trim();
     let user = db.getUserByEmail(cleanEmail);
     if (!user) {
-      const err: any = new Error('Alamat email belum terdaftar di ArahMarket. Silakan daftar akun baru.');
+      const err: any = new Error('This email address is not registered with ArahMarket. Create a new account instead.');
       err.code = 'USER_NOT_FOUND';
       err.email = cleanEmail;
       throw err;
@@ -212,7 +212,7 @@ export class AuthService {
 
     const isValid = this.verifyPassword(password, user.password_hash, user.salt);
     if (!isValid) {
-      const err: any = new Error('Kata sandi salah untuk akun ini. Silakan periksa kembali atau gunakan fitur Reset Kata Sandi.');
+      const err: any = new Error('Incorrect password for this account. Check it again or use the password reset flow.');
       err.code = 'INVALID_PASSWORD';
       err.email = cleanEmail;
       throw err;
@@ -220,7 +220,7 @@ export class AuthService {
 
     // Enforce email verification check
     if (!user.is_verified || user.verification_status === 'pending_verification') {
-      const err: any = new Error('Akun Anda belum aktif. Silakan verifikasi email Anda terlebih dahulu melalui tautan yang kami kirimkan.');
+      const err: any = new Error('Your account is not active yet. Verify your email first using the link we sent.');
       err.code = 'EMAIL_NOT_VERIFIED';
       err.email = cleanEmail;
       throw err;
@@ -236,7 +236,7 @@ export class AuthService {
   public static verifyEmail(token: string): { success: boolean; user?: User; token?: string; error?: string } {
     const res = db.consumeVerificationToken(token);
     if (!res.success || !res.user) {
-      return { success: false, error: res.error || 'Token verifikasi tidak valid atau telah kedaluwarsa.' };
+      return { success: false, error: res.error || 'That verification token is invalid or has expired.' };
     }
 
     const sessionToken = this.generateToken(res.user);
@@ -253,7 +253,7 @@ export class AuthService {
   public static verifyCode(email: string, code: string): { success: boolean; user?: User; token?: string; error?: string } {
     const res = db.consumeVerificationCode(email, code);
     if (!res.success || !res.user) {
-      return { success: false, error: res.error || 'Kode verifikasi tidak sesuai atau telah kedaluwarsa.' };
+      return { success: false, error: res.error || 'That verification code is incorrect or has expired.' };
     }
 
     const sessionToken = this.generateToken(res.user);
@@ -274,7 +274,7 @@ export class AuthService {
     const cleanEmail = email.toLowerCase().trim();
     const user = db.getUserByEmail(cleanEmail);
     if (!user) {
-      const err: any = new Error('Alamat email belum terdaftar di ArahMarket.');
+      const err: any = new Error('This email address is not registered with ArahMarket.');
       err.code = 'USER_NOT_FOUND';
       err.email = cleanEmail;
       throw err;
@@ -290,7 +290,7 @@ export class AuthService {
 
     return {
       success: true,
-      message: 'Tautan pengaturan ulang kata sandi telah dikirim ke email Anda.',
+      message: 'A password reset link has been sent to your email.',
       resetUrl: result.resetUrl,
       email: user.email,
     };
@@ -304,12 +304,12 @@ export class AuthService {
     newPassword: string
   ): { success: boolean; message: string; user: User; token: string } {
     if (!newPassword || newPassword.length < 6) {
-      throw new Error('Kata sandi baru minimal harus 6 karakter.');
+      throw new Error('The new password must be at least 6 characters.');
     }
 
     const res = db.consumeToken(token, 'password_reset');
     if (!res.success || !res.user) {
-      throw new Error(res.error || 'Tautan reset kata sandi tidak valid atau telah kedaluwarsa.');
+      throw new Error(res.error || 'That password reset link is invalid or has expired.');
     }
 
     const { hash, salt } = this.hashPassword(newPassword);
@@ -321,13 +321,13 @@ export class AuthService {
     });
 
     if (!updated) {
-      throw new Error('Gagal memperbarui kata sandi pengguna.');
+      throw new Error('Could not update the user password.');
     }
 
     const sessionToken = this.generateToken(updated);
     return {
       success: true,
-      message: 'Kata sandi berhasil diperbarui! Anda telah otomatis masuk.',
+      message: 'Password updated. You have been signed in automatically.',
       user: updated,
       token: sessionToken,
     };
@@ -374,7 +374,7 @@ export class AuthService {
 
     return {
       success: true,
-      message: 'Tautan masuk langsung (Magic Link) telah dikirim ke email Anda.',
+      message: 'A magic sign-in link has been sent to your email.',
       magicUrl: result.magicUrl,
       email: user.email,
     };
@@ -386,7 +386,7 @@ export class AuthService {
   public static verifyMagicLink(token: string): { success: boolean; user?: User; token?: string; error?: string } {
     const res = db.consumeToken(token, 'magic_link');
     if (!res.success || !res.user) {
-      return { success: false, error: res.error || 'Tautan masuk tidak valid atau telah kedaluwarsa.' };
+      return { success: false, error: res.error || 'That sign-in link is invalid or has expired.' };
     }
 
     const updated = db.updateUser(res.user.id, {
@@ -412,12 +412,12 @@ export class AuthService {
     const cleanEmail = email.toLowerCase().trim();
     const user = db.getUserByEmail(cleanEmail);
     if (!user) {
-      const err: any = new Error('Akun dengan email ini tidak ditemukan.');
+      const err: any = new Error('No account found with this email.');
       err.code = 'USER_NOT_FOUND';
       throw err;
     }
     if (!newPassword || newPassword.length < 6) {
-      throw new Error('Kata sandi minimal 6 karakter.');
+      throw new Error('The password must be at least 6 characters.');
     }
     const { hash, salt } = this.hashPassword(newPassword);
     const updated = db.updateUser(user.id, {
@@ -427,7 +427,7 @@ export class AuthService {
       verification_status: 'verified',
     });
     if (!updated) {
-      throw new Error('Gagal memperbarui kata sandi.');
+      throw new Error('Could not update the password.');
     }
     const token = this.generateToken(updated);
     return { success: true, user: updated, token };
@@ -443,11 +443,11 @@ export class AuthService {
     const cleanEmail = email.toLowerCase().trim();
     const user = db.getUserByEmail(cleanEmail);
     if (!user) {
-      throw new Error('Akun dengan alamat email ini tidak ditemukan.');
+      throw new Error('No account found with this email address.');
     }
 
     if (user.is_verified && user.verification_status !== 'pending_verification') {
-      throw new Error('Akun Anda sudah terverifikasi sebelumnya. Silakan langsung masuk ke terminal.');
+      throw new Error('Your account was already verified. Sign in to the terminal directly.');
     }
 
     const tokenRecord = db.createVerificationToken(user.id, user.email, 24);
@@ -461,7 +461,7 @@ export class AuthService {
 
     return {
       success: true,
-      message: 'Kode dan tautan verifikasi baru telah dikirimkan ke email Anda.',
+      message: 'A new verification code and link have been sent to your email.',
       mailResult,
       code: tokenRecord.code,
       verificationUrl: mailResult.devMode ? mailResult.verificationUrl : undefined,

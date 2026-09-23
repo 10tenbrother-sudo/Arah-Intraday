@@ -279,11 +279,11 @@ export const AutoTriggerNewsModal: React.FC<AutoTriggerNewsModalProps> = ({
             <div className="p-3 rounded-lg bg-[var(--bg-canvas)] border border-[var(--border-subtle)] space-y-1.5">
               <label className="text-[11px] font-semibold text-[var(--text-secondary)] flex items-center gap-1.5">
                 <Sliders className="w-3.5 h-3.5 text-[var(--warning)]" />
-                Filter Min. Dampak
+                Minimum impact filter
               </label>
               <div className="grid grid-cols-3 gap-1">
                 {[
-                  { label: 'SEMUA', val: 'ALL' as const },
+                  { label: 'ALL', val: 'ALL' as const },
                   { label: 'HIGH', val: 'HIGH' as const },
                   { label: 'CRITICAL', val: 'CRITICAL' as const },
                 ].map(item => (

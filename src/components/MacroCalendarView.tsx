@@ -69,7 +69,7 @@ export const MacroCalendarView: React.FC<MacroCalendarViewProps> = React.memo(({
 
   // Format live WIB clock for calendar header
   const currentWibTime = useMemo(() => {
-    return new Date(currentTimeMs).toLocaleTimeString('id-ID', {
+    return new Date(currentTimeMs).toLocaleTimeString('en-GB', {
       timeZone: 'Asia/Jakarta',
       hour12: false,
       hour: '2-digit',
@@ -79,7 +79,7 @@ export const MacroCalendarView: React.FC<MacroCalendarViewProps> = React.memo(({
   }, [currentTimeMs]);
 
   const currentWibDate = useMemo(() => {
-    return new Date(currentTimeMs).toLocaleDateString('id-ID', {
+    return new Date(currentTimeMs).toLocaleDateString('en-GB', {
       timeZone: 'Asia/Jakarta',
       weekday: 'long',
       day: 'numeric',
@@ -201,7 +201,7 @@ export const MacroCalendarView: React.FC<MacroCalendarViewProps> = React.memo(({
     if (events.length === 0) return null;
     const dates = events.map(e => new Date(e.last_updated || e.date_time_utc).getTime()).filter(d => !isNaN(d));
     if (dates.length === 0) return null;
-    return new Date(Math.max(...dates)).toLocaleTimeString('id-ID', {
+    return new Date(Math.max(...dates)).toLocaleTimeString('en-GB', {
       timeZone: 'Asia/Jakarta',
       hour12: false,
       hour: '2-digit',
@@ -239,16 +239,16 @@ export const MacroCalendarView: React.FC<MacroCalendarViewProps> = React.memo(({
         : selectedTimezone.split('/')[1] || selectedTimezone;
 
       // Indonesian localized day name and date
-      const dayName = d.toLocaleDateString(isWib ? 'id-ID' : 'en-US', {
+      const dayName = d.toLocaleDateString(isWib ? 'en-GB' : 'en-US', {
         weekday: 'short',
         timeZone: tzOption,
       });
-      const dateStr = d.toLocaleDateString(isWib ? 'id-ID' : 'en-US', {
+      const dateStr = d.toLocaleDateString(isWib ? 'en-GB' : 'en-US', {
         day: 'numeric',
         month: 'short',
         timeZone: tzOption,
       });
-      const timeStr = d.toLocaleTimeString('id-ID', {
+      const timeStr = d.toLocaleTimeString('en-GB', {
         hour: '2-digit',
         minute: '2-digit',
         hour12: false,
@@ -275,19 +275,19 @@ export const MacroCalendarView: React.FC<MacroCalendarViewProps> = React.memo(({
 
       if (min < 60) {
         return {
-          text: `dalam ${min}m ${sec % 60}s`,
+          text: `in ${min}m ${sec % 60}s`,
           isUrgent: min < 15,
           isNear: true,
         };
       } else if (hours < 24) {
         return {
-          text: `dalam ${hours}j ${min % 60}m`,
+          text: `in ${hours}h ${min % 60}m`,
           isUrgent: false,
           isNear: true,
         };
       } else {
         return {
-          text: `dalam ${days}h ${hours % 24}j`,
+          text: `in ${days}d ${hours % 24}h`,
           isUrgent: false,
           isNear: false,
         };

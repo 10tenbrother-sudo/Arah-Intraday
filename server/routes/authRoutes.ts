@@ -20,7 +20,7 @@ authRouter.post('/register', async (req, res) => {
   try {
     const { email, password, name } = req.body;
     if (!email || !password) {
-      res.status(400).json({ error: 'Alamat email dan kata sandi wajib diisi.' });
+      res.status(400).json({ error: 'Email address and password are required.' });
       return;
     }
 
@@ -63,7 +63,7 @@ authRouter.post('/login', (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
-      res.status(400).json({ error: 'Alamat email dan kata sandi wajib diisi.' });
+      res.status(400).json({ error: 'Email address and password are required.' });
       return;
     }
     const result = AuthService.login(email, password);
@@ -106,7 +106,7 @@ authRouter.post('/login', (req, res) => {
 
     const existingUser = cleanEmail ? db.getUserByEmail(cleanEmail) : null;
     res.status(401).json({
-      error: err.message || 'Otentikasi gagal. Silakan periksa kembali email dan kata sandi Anda.',
+      error: err.message || 'Authentication failed. Check your email and password.',
       code: err.code || (existingUser ? 'INVALID_PASSWORD' : 'USER_NOT_FOUND'),
       email: cleanEmail,
       userExists: Boolean(existingUser),
@@ -118,7 +118,7 @@ authRouter.post('/firebase-login', async (req, res) => {
   try {
     const { email, name, uid } = req.body;
     if (!email || !uid) {
-      res.status(400).json({ error: 'Alamat email dan UID Firebase wajib disertakan.' });
+      res.status(400).json({ error: 'Email address and Firebase UID are required.' });
       return;
     }
     const cleanEmail = email.toLowerCase().trim();
@@ -184,17 +184,17 @@ authRouter.get('/verify-email', (req, res) => {
 
   if (!token) {
     if (req.accepts('html')) {
-      res.status(400).send(renderVerificationResultHtml(false, 'Parameter token verifikasi tidak ditemukan.'));
+      res.status(400).send(renderVerificationResultHtml(false, 'No verification token parameter found.'));
       return;
     }
-    res.status(400).json({ error: 'Parameter token verifikasi wajib disertakan.' });
+    res.status(400).json({ error: 'A verification token parameter is required.' });
     return;
   }
 
   const result = AuthService.verifyEmail(token);
 
   if (!result.success || !result.user || !result.token) {
-    const errorMsg = result.error || 'Token verifikasi tidak valid atau telah kedaluwarsa.';
+    const errorMsg = result.error || 'That verification token is invalid or has expired.';
     if (req.accepts('html')) {
       res.status(400).send(renderVerificationResultHtml(false, errorMsg));
       return;
@@ -204,13 +204,13 @@ authRouter.get('/verify-email', (req, res) => {
   }
 
   if (req.accepts('html')) {
-    res.send(renderVerificationResultHtml(true, 'Alamat email Anda berhasil diverifikasi! Akun trading Anda kini telah aktif.', result.token, result.user));
+    res.send(renderVerificationResultHtml(true, 'Your email address is verified. Your trading account is now active.', result.token, result.user));
     return;
   }
 
   res.json({
     success: true,
-    message: 'Email berhasil diverifikasi. Akun Anda telah aktif.',
+    message: 'Email verified. Your account is now active.',
     token: result.token,
     user: {
       id: result.user.id,
@@ -229,19 +229,19 @@ authRouter.get('/verify-email', (req, res) => {
 authRouter.post('/verify-email', (req, res) => {
   const { token } = req.body;
   if (!token) {
-    res.status(400).json({ error: 'Token verifikasi wajib disertakan.' });
+    res.status(400).json({ error: 'A verification token is required.' });
     return;
   }
 
   const result = AuthService.verifyEmail(token);
   if (!result.success || !result.user || !result.token) {
-    res.status(400).json({ error: result.error || 'Token tidak valid atau telah kedaluwarsa.' });
+    res.status(400).json({ error: result.error || 'That token is invalid or has expired.' });
     return;
   }
 
   res.json({
     success: true,
-    message: 'Email berhasil diverifikasi. Akun Anda telah aktif.',
+    message: 'Email verified. Your account is now active.',
     token: result.token,
     user: {
       id: result.user.id,
@@ -266,7 +266,7 @@ authRouter.get('/check-status', (req, res) => {
 
   const user = db.getUserByEmail(email);
   if (!user) {
-    res.status(404).json({ error: 'Pengguna tidak ditemukan.' });
+    res.status(404).json({ error: 'User not found.' });
     return;
   }
 
@@ -297,19 +297,19 @@ authRouter.get('/check-status', (req, res) => {
 authRouter.post('/verify-code', (req, res) => {
   const { email, code } = req.body;
   if (!email || !code) {
-    res.status(400).json({ error: 'Alamat email dan 6-digit kode verifikasi wajib disertakan.' });
+    res.status(400).json({ error: 'Email address and the 6-digit verification code are required.' });
     return;
   }
 
   const result = AuthService.verifyCode(email, code);
   if (!result.success || !result.user || !result.token) {
-    res.status(400).json({ error: result.error || 'Kode verifikasi tidak sesuai atau telah kedaluwarsa.' });
+    res.status(400).json({ error: result.error || 'That verification code is incorrect or has expired.' });
     return;
   }
 
   res.json({
     success: true,
-    message: 'Email berhasil diverifikasi! Akun Anda telah aktif.',
+    message: 'Email verified. Your account is now active.',
     token: result.token,
     user: {
       id: result.user.id,
@@ -425,7 +425,7 @@ authRouter.post('/reset-password', (req, res) => {
       const result = AuthService.directPasswordReset(email, newPassword);
       res.json({
         success: true,
-        message: 'Kata sandi berhasil diperbarui. Anda telah otomatis masuk.',
+        message: 'Password updated. You have been signed in automatically.',
         user: result.user,
         token: result.token,
       });
@@ -433,7 +433,7 @@ authRouter.post('/reset-password', (req, res) => {
     }
 
     if (!token || !newPassword) {
-      res.status(400).json({ error: 'Token verifikasi dan kata sandi baru wajib disertakan.' });
+      res.status(400).json({ error: 'Verification token and new password are required.' });
       return;
     }
 
@@ -462,14 +462,14 @@ authRouter.post('/password-reset', (req, res) => {
       const result = AuthService.directPasswordReset(email, targetPassword);
       res.json({
         success: true,
-        message: 'Kata sandi berhasil diperbarui.',
+        message: 'Password updated.',
         user: result.user,
         token: result.token,
       });
       return;
     }
 
-    res.status(400).json({ error: 'Parameter tidak lengkap untuk pengaturan ulang kata sandi.' });
+    res.status(400).json({ error: 'Incomplete parameters for the password reset.' });
   } catch (err: any) {
     res.status(400).json({ error: err.message });
   }
@@ -500,16 +500,16 @@ authRouter.get('/magic-link', (req, res) => {
   const token = req.query.token as string | undefined;
   if (!token) {
     if (req.accepts('html')) {
-      res.status(400).send(renderVerificationResultHtml(false, 'Parameter token masuk tidak ditemukan.'));
+      res.status(400).send(renderVerificationResultHtml(false, 'No sign-in token parameter found.'));
       return;
     }
-    res.status(400).json({ error: 'Parameter token masuk wajib disertakan.' });
+    res.status(400).json({ error: 'A sign-in token parameter is required.' });
     return;
   }
 
   const result = AuthService.verifyMagicLink(token);
   if (!result.success || !result.user || !result.token) {
-    const errorMsg = result.error || 'Tautan masuk tidak valid atau telah kedaluwarsa.';
+    const errorMsg = result.error || 'That sign-in link is invalid or has expired.';
     if (req.accepts('html')) {
       res.status(400).send(renderVerificationResultHtml(false, errorMsg));
       return;
@@ -532,7 +532,7 @@ authRouter.get('/magic-link', (req, res) => {
 
   res.json({
     success: true,
-    message: 'Berhasil masuk melalui tautan instan.',
+    message: 'Signed in via instant link.',
     token: result.token,
     user: result.user,
   });
@@ -549,12 +549,12 @@ authRouter.post('/magic-link-verify', (req, res) => {
   }
   const result = AuthService.verifyMagicLink(token);
   if (!result.success || !result.user || !result.token) {
-    res.status(400).json({ error: result.error || 'Tautan masuk tidak valid atau telah kedaluwarsa.' });
+    res.status(400).json({ error: result.error || 'That sign-in link is invalid or has expired.' });
     return;
   }
   res.json({
     success: true,
-    message: 'Berhasil masuk.',
+    message: 'Signed in.',
     token: result.token,
     user: result.user,
   });
@@ -648,7 +648,7 @@ function renderVerificationResultHtml(success: boolean, message: string, token?:
 <html lang="id">
 <head>
   <meta charset="utf-8">
-  <title>${success ? 'Email Terverifikasi' : 'Verifikasi Gagal'} • ArahMarket</title>
+  <title>${success ? 'Email Terverifikasi' : 'Verification failed'} • ArahMarket</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
@@ -737,17 +737,17 @@ function renderVerificationResultHtml(success: boolean, message: string, token?:
 <body>
   <div class="card">
     <div class="icon">${success ? '✓' : '✕'}</div>
-    <h1>${success ? 'Akun Berhasil Diaktifkan!' : 'Verifikasi Gagal'}</h1>
+    <h1>${success ? 'Account activated!' : 'Verification failed'}</h1>
     ${userSafe && userSafe.email ? `<div class="account-badge">${userSafe.email}</div>` : ''}
     <p>${message}</p>
     
-    <a href="/" id="action-btn" class="btn">${success ? 'Buka Terminal Trading' : 'Kembali ke Beranda'}</a>
+    <a href="/" id="action-btn" class="btn">${success ? 'Open the trading terminal' : 'Back to home'}</a>
 
     ${
       success
         ? `
     <div class="hint-box">
-      <strong>Langkah Selanjutnya:</strong> Anda dapat langsung kembali ke tab <strong>ArahMarket</strong> di browser Anda. Layar terminal akan otomatis mengenali akun Anda yang telah aktif.
+      <strong>Next step:</strong> you can return to the <strong>ArahMarket</strong> tab in your browser. The terminal will automatically recognise your now-active account.
     </div>
     `
         : ''

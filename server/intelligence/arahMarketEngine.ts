@@ -56,20 +56,20 @@ export class ArahMarketEngine {
     const now = new Date();
     const utcHour = now.getUTCHours();
     let activeSession: TradingSessionName = 'LONDON';
-    let sessionStatusText = 'Sesi London Aktif (Likuiditas Valuta Eropa & Komoditas)';
+    let sessionStatusText = 'London session active (European FX and commodity liquidity)';
 
     if (utcHour >= 13 && utcHour < 16) {
       activeSession = 'OVERLAP';
-      sessionStatusText = 'London - New York Overlap (Puncak Likuiditas & Volatilitas Global)';
+      sessionStatusText = 'London - New York overlap (peak global liquidity and volatility)';
     } else if (utcHour >= 16 && utcHour < 21) {
       activeSession = 'NEW_YORK';
-      sessionStatusText = 'Sesi New York Aktif (Fokus Data AS, Wall Street & Obligasi)';
+      sessionStatusText = 'New York session active (US data, Wall Street and bonds)';
     } else if (utcHour >= 21 || utcHour < 0) {
       activeSession = 'SYDNEY';
-      sessionStatusText = 'Sesi Pasifik / Sydney (Likuiditas Awal Pasifik)';
+      sessionStatusText = 'Pacific / Sydney session (early Pacific liquidity)';
     } else if (utcHour >= 0 && utcHour < 8) {
       activeSession = 'TOKYO';
-      sessionStatusText = 'Sesi Asia / Tokyo Aktif (Fokus BoJ, Yen & Sentimen Regional)';
+      sessionStatusText = 'Asia / Tokyo session active (BoJ, yen and regional sentiment)';
     }
 
     // 2. Barometer Intermarket Kunci
@@ -112,8 +112,8 @@ export class ArahMarketEngine {
         targetPair: 'US500',
         interpretation:
           us10yMinusUs02y > 0
-            ? 'Kurva yield normal (disinflasi bertahap, sentimen pasar saham relatif stabil).'
-            : 'Kurva flat/inversi (tekanan pengetatan likuiditas The Fed jangka pendek masih aktif).',
+            ? 'Normal yield curve (gradual disinflation, equity sentiment relatively stable).'
+            : 'Flat/inverted curve (short-term Fed liquidity tightening pressure still active).',
       },
       {
         id: 'spread-us-de',
@@ -126,8 +126,8 @@ export class ArahMarketEngine {
         targetPair: 'EURUSD',
         interpretation:
           usDeSpread > 1.7
-            ? 'Spread melebar untuk keunggulan US Dollar (Gravitasi EUR/USD cenderung tertahan/tertekan).'
-            : 'Spread menyempit (membuka ruang penguatan bagi mata uang Euro).',
+            ? 'Spread widening in favour of the US dollar (EUR/USD gravity likely to stall or stay pressured).'
+            : 'Spread narrowing (opens room for euro strength).',
       },
       {
         id: 'spread-us-jp',
@@ -140,8 +140,8 @@ export class ArahMarketEngine {
         targetPair: 'USDJPY',
         interpretation:
           usJpSpread > 3.0
-            ? 'Selisih suku bunga AS-Jepang sangat lebar (Bahan bakar utama kenaikan USD/JPY / Carry Trade long USD).'
-            : 'Selisih bunga melandai (waspada pembalikan penguatan Yen / aksi unwinding).',
+            ? 'US-Japan rate differential is very wide (the main fuel for USD/JPY upside and long-USD carry trades).'
+            : 'Rate differential is flattening (watch for a yen reversal or carry unwinding).',
       },
       {
         id: 'spread-real-yield',
@@ -154,8 +154,8 @@ export class ArahMarketEngine {
         targetPair: 'XAUUSD',
         interpretation:
           realYield10y > 1.9
-            ? 'Real yield tinggi menaikkan opportunity cost emas (XAU/USD rentan menghadapi resistensi saat reli).'
-            : 'Real yield melandai di bawah 1.8% (Katalis positif bagi reli safe-haven Emas).',
+            ? 'High real yields raise the opportunity cost of gold (XAU/USD prone to resistance on rallies).'
+            : 'Real yields easing below 1.8% (a positive catalyst for safe-haven gold rallies).',
       },
     ];
 
@@ -183,34 +183,34 @@ export class ArahMarketEngine {
 
     if (us100Change > 0.08 && us30Change < -0.05) {
       marketRotationRegime = 'TECH_LEADERSHIP';
-      regimeDescription = 'Mega-cap teknologi & AI hyperscalers memimpin penguatan pasar saham. US100 mengungguli US30 (Dow Jones) seiring kestabilan yield diskonto obligasi.';
+      regimeDescription = 'Tech mega-caps and AI hyperscalers lead the equity advance. US100 outperforms US30 (Dow Jones) as discount yields stay stable.';
       preferredAsset = 'US100';
       playbookReason = 'Momentum beli terkonsentrasi di sektor semikonduktor & software; defensif industrials di US30 tertinggal.';
-      yieldConditionTrigger = 'US10Y stabil atau melandai di bawah 4.25% memvalidasi ekspansi rasio US100/US30.';
+      yieldConditionTrigger = 'US10Y stable or easing below 4.25% validates the expanding US100/US30 ratio.';
     } else if (us30Change > 0.08 && us100Change < -0.05) {
       marketRotationRegime = 'FLIGHT_TO_VALUE';
-      regimeDescription = 'Rotasi defensif ke saham siklikal dan perbankan (US30). Saham teknologi (US100) menghadapi tekanan valuasi akibat imbal hasil obligasi yang kaku.';
+      regimeDescription = 'Defensive rotation into cyclicals and banks (US30). Technology names (US100) face valuation pressure from sticky bond yields.';
       preferredAsset = 'US30';
-      playbookReason = 'Sektor finansial, energi, dan industri tradisional di Dow Jones 30 menarik aliran dana rotasi keluar dari saham bertumbuh.';
-      yieldConditionTrigger = 'Kenaikan yield US10Y di atas 4.30% menekan P/E multiple US100 dan menguntungkan value stocks US30.';
+      playbookReason = 'Financials, energy, and traditional industrials in the Dow Jones 30 draw rotation flows out of growth stocks.';
+      yieldConditionTrigger = 'A US10Y yield above 4.30% compresses the US100 P/E multiple and favours US30 value stocks.';
     } else if (us100Change > 0.1 && us30Change > 0.1) {
       marketRotationRegime = 'BROAD_RALLY';
-      regimeDescription = 'Reli pasar saham Wall Street menyeluruh didukung sentimen selera risiko tinggi (Risk-On) dan likuiditas global yang kondusif.';
+      regimeDescription = 'A broad Wall Street rally backed by risk-on sentiment and supportive global liquidity.';
       preferredAsset = us100Change >= us30Change ? 'US100' : 'US30';
-      playbookReason = 'Seluruh indeks Wall Street bergerak positif seirama dengan pelemahan Dolar AS.';
-      yieldConditionTrigger = 'DXY bergerak di bawah harga buka sesi mendukung akumulasi posisi Buy pada indeks ekuitas AS.';
+      playbookReason = 'All Wall Street indices trade higher in step with a softer US dollar.';
+      yieldConditionTrigger = 'DXY trading below the session open supports buying US equity indices.';
     } else if (us100Change < -0.15 && us30Change < -0.15) {
       marketRotationRegime = 'BROAD_SELLOFF';
-      regimeDescription = 'Aksi jual serentak pada indeks ekuitas AS di tengah keengganan risiko (Risk-Off) atau lonjakan volatilitas makro.';
+      regimeDescription = 'Simultaneous selling across US equity indices amid risk-off sentiment or a macro volatility spike.';
       preferredAsset = 'NEUTRAL';
-      playbookReason = 'Tekanan likuiditas membebani pasar saham; prioritaskan wait and see atau pantau batas support harian.';
-      yieldConditionTrigger = 'Penembusan resisten yield US10Y atau penguatan tajam DXY memicu aksi de-risking.';
+      playbookReason = 'Liquidity pressure weighs on equities; prefer waiting or watch the daily support boundary.';
+      yieldConditionTrigger = 'A break above US10Y resistance or a sharp DXY rally would trigger de-risking.';
     } else {
       marketRotationRegime = 'BALANCED_ROTATION';
-      regimeDescription = 'Indeks ekuitas AS bergerak stabil dan berkonsolidasi di sekitar harga pembukaan sesi. Belum terlihat rotasi sektoral ekstrem antara Growth dan Value.';
+      regimeDescription = 'US equity indices are stable, consolidating around the session open. No extreme sector rotation between growth and value yet.';
       preferredAsset = 'NEUTRAL';
-      playbookReason = 'Keseimbangan intraday antara sektor teknologi dan saham siklikal; tunggu dorongan katalis data AS sesi New York.';
-      yieldConditionTrigger = 'Pergerakan mendatar pada US10Y menjaga pergerakan indeks tetap dalam rentang konsolidasi.';
+      playbookReason = 'Intraday balance between technology and cyclicals; wait for a catalyst from US data in the New York session.';
+      yieldConditionTrigger = 'A flat US10Y keeps index moves within a consolidation range.';
     }
 
     const indexCorrelation: IndexCorrelationMetrics = {
@@ -234,32 +234,32 @@ export class ArahMarketEngine {
     let regimeBadgeColor = 'bg-cyan-950 text-cyan-300 border-cyan-800';
     let riskScore = 15;
     let summaryNarrative =
-      'Aliran modal intraday berputar seimbang antar kelas aset. Tidak ada dominasi kepanikan atau euforia berlebih menjelang rilis data utama sesi berikutnya.';
+      'Intraday capital flows rotate evenly across asset classes. No dominant panic or excess euphoria ahead of the next session\'s key data.';
 
     if (us10yChange > 0.4 && dxyChange > 0.2) {
       regimeTitle = 'HAWKISH YIELD PRESSURE';
       regimeBadgeColor = 'bg-amber-950 text-amber-300 border-amber-800';
       riskScore = -45;
       summaryNarrative =
-        'Kenaikan imbal hasil obligasi AS dan penguatan DXY di atas harga buka sesi mendominasi arah pasar. Pasangan valuta non-USD dan aset berimbal hasil rendah tertekan.';
+        'Rising US Treasury yields and a DXY above the session open dominate market direction. Non-USD pairs and low-yielding assets stay pressured.';
     } else if (sp500Change > 0.4 && dxyChange < -0.15) {
       regimeTitle = 'RISK-ON EXPANSION';
       regimeBadgeColor = 'bg-emerald-950 text-emerald-300 border-emerald-800';
       riskScore = +65;
       summaryNarrative =
-        'Sentimen selera risiko tinggi. Dolar melemah seiring masuknya modal global ke pasar saham dan mata uang komoditas (AUD, CAD, NZD).';
+        'High risk appetite. The dollar weakens as global capital flows into equities and commodity currencies (AUD, CAD, NZD).';
     } else if (sp500Change < -0.5 && goldChange > 0.3) {
       regimeTitle = 'GLOBAL FLIGHT TO SAFETY';
       regimeBadgeColor = 'bg-rose-950 text-rose-300 border-rose-800';
       riskScore = -75;
       summaryNarrative =
-        'Kekhawatiran geopolitik atau perlambatan makro memicu aksi jual saham dan perburuan aset safe-haven (Emas & Swiss Franc).';
+        'Geopolitical worries or a macro slowdown drive equity selling and a hunt for safe havens (gold and the Swiss franc).';
     } else if (dxyChange < -0.3 && us10yChange < -0.5) {
       regimeTitle = 'DOVISH LIQUIDITY EASING';
       regimeBadgeColor = 'bg-indigo-950 text-indigo-300 border-indigo-800';
       riskScore = +35;
       summaryNarrative =
-        'Pelemahan tajam imbal hasil obligasi AS dan Dolar membebaskan tekanan likuiditas global, memicu rebound pada Emas dan Valuta Mayor.';
+        'A sharp fall in US Treasury yields and the dollar releases global liquidity pressure, sparking a rebound in gold and the majors.';
     }
 
     // Ambil berita terbaru yang berdampak
@@ -273,21 +273,21 @@ export class ArahMarketEngine {
       anomalyAlerts.push({
         id: 'anomaly-gold-dxy',
         severity: 'WARNING',
-        title: 'Anomali XAU/USD: Emas Gagal Naik Saat Dolar Melemah',
+        title: 'XAU/USD anomaly: gold fails to rise as the dollar softens',
         description:
-          'DXY mengalami pelemahan intraday, namun XAU/USD tidak mampu memanfaatkan pelemahan ini dan justru terkonsolidasi/melemah. Mengindikasikan tekanan jual internal atau real yield yang masih kaku.',
+          'DXY softened intraday, yet XAU/USD could not capitalise and instead consolidated or fell. That signals internal selling pressure or still-sticky real yields.',
         affectedPairs: ['XAUUSD', 'EURUSD'],
-        actionAdvice: 'Waspadai aksi jebakan beli (bull trap) pada Emas. Jangan buru-buru Buy sebelum harga menembus resisten kunci sesi.',
+        actionAdvice: 'Watch for a bull trap in gold. Do not rush to buy before price clears the session\'s key resistance.',
       });
     } else if (dxyChange > 0.2 && goldChange > 0.3) {
       anomalyAlerts.push({
         id: 'anomaly-gold-safe-haven',
         severity: 'WARNING',
-        title: 'Divergensi Safe-Haven: Emas Reli Bersama Penguatan Dolar',
+        title: 'Safe-haven divergence: gold rallies alongside a firmer dollar',
         description:
-          'XAU/USD menguat bersamaan dengan naiknya Dolar AS. Ini adalah tanda khas lonjakan risiko geopolitik atau kepanikan likuiditas global di mana investor memborong instrumen pelindung nilai secara agresif.',
+          'XAU/USD strengthens together with the US dollar. That is the classic signature of a geopolitical risk spike or global liquidity panic, where investors aggressively buy protection.',
         affectedPairs: ['XAUUSD', 'US500'],
-        actionAdvice: 'Prioritaskan manajemen risiko; reli emas didorong ketakutan eksternal, bukan sekadar transmisi kurs.',
+        actionAdvice: 'Prioritise risk management; the gold rally is driven by external fear, not plain FX transmission.',
       });
     }
 
@@ -298,9 +298,9 @@ export class ArahMarketEngine {
         severity: 'WARNING',
         title: 'USD/JPY Overextended vs Spread (Zona Sensitif Intervensi)',
         description:
-          'Meskipun spread imbal hasil mendukung kenaikan, level harga saat ini berada di area intervensi verbal Kementerian Keuangan Jepang (MoF/BoJ).',
+          'Even though the yield spread supports upside, the current price sits in the area where Japan\'s Ministry of Finance (MoF/BoJ) has intervened verbally.',
         affectedPairs: ['USDJPY'],
-        actionAdvice: 'Batasi eksposur Buy panjang; siapkan stop loss ketat karena potensi ayunan intervensi sewaktu-waktu.',
+        actionAdvice: 'Limit long exposure; keep a tight stop loss given the risk of a sudden intervention swing.',
       });
     }
 
@@ -312,9 +312,9 @@ export class ArahMarketEngine {
         severity: 'WARNING',
         title: 'Divergensi Valuasi: Nasdaq Reli Melawan Lonjakan Yields',
         description:
-          'Indeks saham teknologi menguat signifikan padahal yield US10Y melonjak tinggi. Biasanya lonjakan yield memicu kompresi kelipatan P/E.',
+          'Technology indices are up sharply even as US10Y yields jump. A yield spike normally compresses P/E multiples.',
         affectedPairs: ['US100', 'US500'],
-        actionAdvice: 'Waspadai potensi pembalikan mendadak saat sesi Wall Street dibuka penuh (Cash Open).',
+        actionAdvice: 'Watch for a sudden reversal when the Wall Street cash session opens fully.',
       });
     }
 
@@ -325,9 +325,9 @@ export class ArahMarketEngine {
         severity: 'OPPORTUNITY',
         title: 'Konfirmasi Intermarket Selaras Normal',
         description:
-          'Hubungan transmisi antara Dolar, Yields Obligasi AS, Valuta Mayor, dan Indeks Ekuitas saat ini berjalan seirama tanpa anomali struktural.',
+          'The transmission between the dollar, US Treasury yields, the majors, and equity indices is currently in step, with no structural anomaly.',
         affectedPairs: ['EURUSD', 'USDJPY', 'XAUUSD', 'US100', 'US30'],
-        actionAdvice: 'Fokus pada strategi trend-following searah dengan pembukaan sesi saat ini.',
+        actionAdvice: 'Focus on trend-following in the direction of the current session open.',
       });
     }
 
@@ -417,16 +417,16 @@ export class ArahMarketEngine {
 
       // Hitung 3 Pilar per Pair
       let fundBias: 'BULLISH' | 'BEARISH' | 'NEUTRAL' = 'NEUTRAL';
-      let fundDriver = 'Data ekonomi AS memandu ekspektasi suku bunga The Fed';
+      let fundDriver = 'US economic data guides Fed rate expectations';
       let fundScore = 0;
 
       let interBias: 'BULLISH' | 'BEARISH' | 'NEUTRAL' = 'NEUTRAL';
-      let interSymptom = 'DXY bergerak moderat di sekitar harga buka sesi';
+      let interSymptom = 'DXY trades moderately around the session open';
       let interScore = 0;
 
       let paBias: 'BULLISH' | 'BEARISH' | 'NEUTRAL' = 'NEUTRAL';
       let paStructure: 'SESSION_BREAKOUT' | 'RETEST_SUPPORT' | 'RETEST_RESISTANCE' | 'CHOP_RANGE' = 'CHOP_RANGE';
-      let actionableZone = 'Amati batas support/resisten sesi';
+      let actionableZone = 'Watch the session support/resistance boundary';
       let paScore = 0;
 
       let recommendedAction: 'LOOK_FOR_BUY' | 'LOOK_FOR_SELL' | 'WAIT_ON_SUPPORT' | 'CAUTION_NO_TRADE' = 'WAIT_ON_SUPPORT';
@@ -434,7 +434,7 @@ export class ArahMarketEngine {
 
       if (tp.pair === 'XAUUSD') {
         fundBias = usdScore > 5.2 ? 'BEARISH' : usdScore < 4.8 ? 'BULLISH' : 'NEUTRAL';
-        fundDriver = 'Ekspektasi kebijakan suku bunga The Fed & premi lindung nilai geopolitik';
+        fundDriver = 'Fed policy rate expectations and geopolitical hedging premium';
         fundScore = fundBias === 'BULLISH' ? 45 : fundBias === 'BEARISH' ? -40 : 0;
 
         interBias = realYield10y > 1.9 ? 'BEARISH' : realYield10y < 1.8 ? 'BULLISH' : (dxyBiasVsOpen === 'BELOW_OPEN' ? 'BULLISH' : 'BEARISH');
@@ -443,18 +443,18 @@ export class ArahMarketEngine {
 
         paBias = chg > 0.2 ? 'BULLISH' : chg < -0.2 ? 'BEARISH' : 'NEUTRAL';
         paStructure = chg > 0.3 ? 'SESSION_BREAKOUT' : chg < -0.3 ? 'RETEST_SUPPORT' : 'CHOP_RANGE';
-        actionableZone = chg > 0 ? 'Pullback ke demand sesi terdekat' : 'Uji area support sesi bawah';
+        actionableZone = chg > 0 ? 'Pullback to the nearest session demand' : 'Test of the lower session support area';
         paScore = chg > 0.2 ? 35 : chg < -0.2 ? -35 : 0;
 
         if (fundBias === 'BULLISH' && interBias === 'BULLISH') {
           recommendedAction = 'LOOK_FOR_BUY';
-          invalidation = 'Jika DXY breakout kuat ke atas session high';
+          invalidation = 'If DXY breaks strongly above the session high';
         } else if (fundBias === 'BEARISH' && interBias === 'BEARISH') {
           recommendedAction = 'LOOK_FOR_SELL';
-          invalidation = 'Jika yield US10Y anjlok di bawah level support intraday';
+          invalidation = 'If US10Y yields drop below intraday support';
         } else {
           recommendedAction = 'WAIT_ON_SUPPORT';
-          invalidation = 'Menunggu konfirmasi breakout sesi';
+          invalidation = 'Awaiting session breakout confirmation';
         }
       } else if (tp.pair === 'EURUSD') {
         const eurScore = strengthMap.get('EUR')?.strength_score || 5.0;
@@ -463,20 +463,20 @@ export class ArahMarketEngine {
         fundScore = fundBias === 'BULLISH' ? 40 : fundBias === 'BEARISH' ? -45 : 0;
 
         interBias = dxyBiasVsOpen === 'ABOVE_OPEN' ? 'BEARISH' : 'BULLISH';
-        interSymptom = `Spread US-DE di ${usDeSpread}% ${usDeSpread > 1.7 ? 'mendukung keunggulan Dolar' : 'kondusif bagi Euro'}`;
+        interSymptom = `Spread US-DE di ${usDeSpread}% ${usDeSpread > 1.7 ? 'supports dollar dominance' : 'supportive for the euro'}`;
         interScore = interBias === 'BULLISH' ? 40 : -50;
 
         paBias = chg > 0.1 ? 'BULLISH' : chg < -0.1 ? 'BEARISH' : 'NEUTRAL';
         paStructure = chg < -0.2 ? 'SESSION_BREAKOUT' : chg > 0.2 ? 'SESSION_BREAKOUT' : 'CHOP_RANGE';
-        actionableZone = chg < 0 ? 'Sell on rally di resisten terdekat' : 'Buy on dip di support sesi';
+        actionableZone = chg < 0 ? 'Sell on rally di resisten terdekat' : 'Buy the dip at session support';
         paScore = chg > 0.1 ? 30 : chg < -0.1 ? -35 : 0;
 
         recommendedAction = interBias === 'BEARISH' ? 'LOOK_FOR_SELL' : 'LOOK_FOR_BUY';
-        invalidation = 'Breakout berlawanan pada DXY melintasi Session Open';
+        invalidation = 'Opposing DXY breakout through the session open';
       } else if (tp.pair === 'GBPUSD') {
         const gbpScore = strengthMap.get('GBP')?.strength_score || 5.0;
         fundBias = gbpScore > usdScore + 0.1 ? 'BULLISH' : gbpScore < usdScore - 0.1 ? 'BEARISH' : 'NEUTRAL';
-        fundDriver = 'Arah suku bunga Bank of England (BoE) vs Fed dan persistensi inflasi jasa UK';
+        fundDriver = 'Bank of England (BoE) versus Fed rate path and sticky UK services inflation';
         fundScore = fundBias === 'BULLISH' ? 40 : fundBias === 'BEARISH' ? -40 : 0;
 
         interBias = dxyBiasVsOpen === 'BELOW_OPEN' ? 'BULLISH' : 'BEARISH';
@@ -485,15 +485,15 @@ export class ArahMarketEngine {
 
         paBias = chg > 0.15 ? 'BULLISH' : chg < -0.15 ? 'BEARISH' : 'NEUTRAL';
         paStructure = chg > 0.25 ? 'SESSION_BREAKOUT' : chg < -0.25 ? 'RETEST_SUPPORT' : 'CHOP_RANGE';
-        actionableZone = chg > 0 ? 'Demand zone sesi London' : 'Supply zone batas atas sesi Asia-London';
+        actionableZone = chg > 0 ? 'London session demand zone' : 'Supply zone at the upper Asia-London session boundary';
         paScore = chg > 0.15 ? 30 : chg < -0.15 ? -30 : 0;
 
         recommendedAction = interBias === 'BULLISH' && paBias === 'BULLISH' ? 'LOOK_FOR_BUY' : interBias === 'BEARISH' && paBias === 'BEARISH' ? 'LOOK_FOR_SELL' : 'WAIT_ON_SUPPORT';
-        invalidation = 'Penolakan pada level pivot harian GBPUSD';
+        invalidation = 'Rejection at the GBPUSD daily pivot';
       } else if (tp.pair === 'USDJPY') {
         const jpyScore = strengthMap.get('JPY')?.strength_score || 5.0;
         fundBias = usdScore >= jpyScore ? 'BULLISH' : 'BEARISH';
-        fundDriver = 'Kesenjangan suku bunga ekstrim The Fed (~5%) vs suku bunga rendah Bank of Japan (~0.25%)';
+        fundDriver = 'Extreme rate gap between the Fed (~5%) and the Bank of Japan\'s low rate (~0.25%)';
         fundScore = fundBias === 'BULLISH' ? 55 : -40;
 
         // USDJPY berkorelasi POSITIF dengan DXY dan US-JP Yield Spread
@@ -503,42 +503,42 @@ export class ArahMarketEngine {
 
         paBias = chg > 0.1 ? 'BULLISH' : chg < -0.1 ? 'BEARISH' : 'NEUTRAL';
         paStructure = chg > 0.2 ? 'SESSION_BREAKOUT' : 'RETEST_RESISTANCE';
-        actionableZone = 'Pantau reaksi harga di dekat level psikologis angka bulat';
+        actionableZone = 'Watch the price reaction near the round-number psychological level';
         paScore = chg > 0 ? 35 : -30;
 
         recommendedAction = interBias === 'BULLISH' ? 'LOOK_FOR_BUY' : 'WAIT_ON_SUPPORT';
-        invalidation = 'Sinyal intervensi verbal pejabat MoF/BoJ atau pembalikan tajam DXY';
+        invalidation = 'Signals of verbal intervention by MoF/BoJ officials or a sharp DXY reversal';
       } else if (tp.pair === 'US100') {
         const isUp = chg > 0.1;
         const isDown = chg < -0.1;
         fundBias = us10yChange > 0.25 ? 'BEARISH' : us10yChange < -0.2 ? 'BULLISH' : (isUp ? 'BULLISH' : isDown ? 'BEARISH' : 'NEUTRAL');
-        fundDriver = 'Sensitivitas valuasi teknologi & AI terhadap yield diskonto US 10-Year Treasury';
+        fundDriver = 'Sensitivity of tech and AI valuations to the US 10-year Treasury discount yield';
         fundScore = fundBias === 'BULLISH' ? 45 : fundBias === 'BEARISH' ? -45 : 0;
 
         interBias = realYield10y > 1.95 ? 'BEARISH' : realYield10y < 1.85 ? 'BULLISH' : (dxyBiasVsOpen === 'BELOW_OPEN' ? 'BULLISH' : 'BEARISH');
-        interSymptom = `Real Yield 10Y di ${realYield10y}% ${realYield10y > 1.95 ? 'menekan P/E multiples teknologi' : 'kondusif untuk valuasi saham bertumbuh'}`;
+        interSymptom = `Real Yield 10Y di ${realYield10y}% ${realYield10y > 1.95 ? 'menekan P/E multiples teknologi' : 'supportive for growth-stock valuations'}`;
         interScore = interBias === 'BULLISH' ? 40 : -40;
 
         paBias = isUp ? 'BULLISH' : isDown ? 'BEARISH' : 'NEUTRAL';
         paStructure = chg > 0.3 ? 'SESSION_BREAKOUT' : chg < -0.3 ? 'RETEST_SUPPORT' : 'CHOP_RANGE';
-        actionableZone = isUp ? 'Area demand breakout pembukaan sesi New York' : 'Support kunci intraday Nasdaq';
+        actionableZone = isUp ? 'Breakout demand area at the New York session open' : 'Support kunci intraday Nasdaq';
         paScore = isUp ? 35 : isDown ? -35 : 0;
 
         if (fundBias === 'BULLISH' && interBias === 'BULLISH') {
           recommendedAction = 'LOOK_FOR_BUY';
-          invalidation = 'Jika yield US10Y melonjak melampaui resisten sesi';
+          invalidation = 'If US10Y yields spike above session resistance';
         } else if (fundBias === 'BEARISH' && interBias === 'BEARISH') {
           recommendedAction = 'LOOK_FOR_SELL';
-          invalidation = 'Jika DXY anjlok di bawah session open';
+          invalidation = 'If DXY drops below the session open';
         } else {
           recommendedAction = 'WAIT_ON_SUPPORT';
-          invalidation = 'Tunggu rilis data makro / pembukaan sesi Wall Street';
+          invalidation = 'Wait for the macro data release or the Wall Street session open';
         }
       } else if (tp.pair === 'US30') {
         const isUp = chg > 0.1;
         const isDown = chg < -0.1;
         fundBias = us10yMinusUs02y > 0 ? 'BULLISH' : 'NEUTRAL';
-        fundDriver = 'Kesehatan aktivitas industri, laba perbankan & saham siklikal Dow 30';
+        fundDriver = 'Industrial activity health, bank earnings, and Dow 30 cyclicals';
         fundScore = isUp ? 40 : isDown ? -40 : 15;
 
         interBias = us10yMinusUs02y > 0 ? 'BULLISH' : 'BEARISH';
@@ -547,16 +547,16 @@ export class ArahMarketEngine {
 
         paBias = isUp ? 'BULLISH' : isDown ? 'BEARISH' : 'NEUTRAL';
         paStructure = chg > 0.2 ? 'SESSION_BREAKOUT' : chg < -0.2 ? 'RETEST_SUPPORT' : 'CHOP_RANGE';
-        actionableZone = 'Area angka bulat psikologis Dow 30 & batas sesi London-NY';
+        actionableZone = 'Dow 30 round-number psychological area and the London-NY session boundary';
         paScore = isUp ? 30 : isDown ? -30 : 0;
 
         recommendedAction = isUp && interBias === 'BULLISH' ? 'LOOK_FOR_BUY' : isDown && interBias === 'BEARISH' ? 'LOOK_FOR_SELL' : 'WAIT_ON_SUPPORT';
-        invalidation = 'Penolakan keras (rejection) pada level support/resisten harian';
+        invalidation = 'Firm rejection at the daily support/resistance level';
       } else if (tp.pair === 'US500') {
         const isUp = chg > 0.1;
         const isDown = chg < -0.1;
         fundBias = us10yChange > 0.35 ? 'BEARISH' : (isUp ? 'BULLISH' : isDown ? 'BEARISH' : 'NEUTRAL');
-        fundDriver = 'Barometer agregat laba 500 korporasi AS dan ekspektasi likuiditas moneter makro';
+        fundDriver = 'Aggregate earnings barometer of 500 US companies and macro monetary liquidity expectations';
         fundScore = isUp ? 40 : isDown ? -40 : 0;
 
         interBias = dxyBiasVsOpen === 'BELOW_OPEN' && us10yChange <= 0.2 ? 'BULLISH' : (dxyBiasVsOpen === 'ABOVE_OPEN' && us10yChange > 0.2 ? 'BEARISH' : 'NEUTRAL');
@@ -569,11 +569,11 @@ export class ArahMarketEngine {
         paScore = isUp ? 30 : isDown ? -30 : 0;
 
         recommendedAction = isUp && interBias === 'BULLISH' ? 'LOOK_FOR_BUY' : isDown && interBias === 'BEARISH' ? 'LOOK_FOR_SELL' : 'WAIT_ON_SUPPORT';
-        invalidation = 'Pembalikan tajam menembus support sesi harian';
+        invalidation = 'Sharp reversal breaking through daily session support';
       } else if (tp.pair === 'AUDUSD') {
         const audScore = strengthMap.get('AUD')?.strength_score || 5.0;
         fundBias = audScore > usdScore + 0.1 ? 'BULLISH' : audScore < usdScore - 0.1 ? 'BEARISH' : 'NEUTRAL';
-        fundDriver = 'Divergensi suku bunga RBA vs Fed dan proyeksi permintaan komoditas ekspor Australia';
+        fundDriver = 'RBA versus Fed rate divergence and Australia\'s export commodity demand outlook';
         fundScore = fundBias === 'BULLISH' ? 40 : fundBias === 'BEARISH' ? -40 : 0;
 
         // AUDUSD berbanding terbalik dengan DXY dan searah dengan sentimen komoditas/risk-on
@@ -583,16 +583,16 @@ export class ArahMarketEngine {
 
         paBias = chg > 0.15 ? 'BULLISH' : chg < -0.15 ? 'BEARISH' : 'NEUTRAL';
         paStructure = chg > 0.2 ? 'SESSION_BREAKOUT' : chg < -0.2 ? 'RETEST_SUPPORT' : 'CHOP_RANGE';
-        actionableZone = 'Batas atas/bawah range sesi Asia-Pasifik';
+        actionableZone = 'Upper/lower boundary of the Asia-Pacific session range';
         paScore = chg > 0.15 ? 30 : chg < -0.15 ? -30 : 0;
 
         recommendedAction = interBias === 'BULLISH' && paBias === 'BULLISH' ? 'LOOK_FOR_BUY' : interBias === 'BEARISH' && paBias === 'BEARISH' ? 'LOOK_FOR_SELL' : 'WAIT_ON_SUPPORT';
-        invalidation = 'Breakout palsu pada level pembukaan sesi London';
+        invalidation = 'False breakout at the London session open level';
       } else if (tp.pair === 'USDCAD') {
         // PERHATIAN: USD adalah Base Currency, CAD adalah Quote Currency!
         const cadScore = strengthMap.get('CAD')?.strength_score || 5.0;
         fundBias = usdScore > cadScore + 0.1 ? 'BULLISH' : usdScore < cadScore - 0.1 ? 'BEARISH' : 'NEUTRAL';
-        fundDriver = 'Divergensi suku bunga Bank of Canada (BoC) vs The Fed dan transmisi sektor energi Kanada';
+        fundDriver = 'Bank of Canada (BoC) versus Fed rate divergence and Canada\'s energy sector transmission';
         fundScore = fundBias === 'BULLISH' ? 40 : fundBias === 'BEARISH' ? -40 : 0;
 
         // USDCAD berkorelasi SEARAH/POSITIF dengan DXY! (Dolar naik -> USDCAD naik)
@@ -602,16 +602,16 @@ export class ArahMarketEngine {
 
         paBias = chg > 0.1 ? 'BULLISH' : chg < -0.1 ? 'BEARISH' : 'NEUTRAL';
         paStructure = chg > 0.2 ? 'SESSION_BREAKOUT' : chg < -0.2 ? 'RETEST_SUPPORT' : 'CHOP_RANGE';
-        actionableZone = 'Zona reaksi rilis data makro bersama AS-Kanada (sesi New York)';
+        actionableZone = 'Reaction zone around joint US-Canada macro releases (New York session)';
         paScore = chg > 0.1 ? 30 : chg < -0.1 ? -30 : 0;
 
         recommendedAction = interBias === 'BULLISH' && paBias === 'BULLISH' ? 'LOOK_FOR_BUY' : interBias === 'BEARISH' && paBias === 'BEARISH' ? 'LOOK_FOR_SELL' : 'WAIT_ON_SUPPORT';
-        invalidation = 'Lonjakan tajam harga minyak mentah yang menguatkan Dolar Kanada secara tiba-tiba';
+        invalidation = 'A sharp crude oil spike that suddenly strengthens the Canadian dollar';
       } else if (tp.pair === 'BTC') {
         const isUp = chg > 0.5;
         const isDown = chg < -0.5;
         fundBias = isUp ? 'BULLISH' : isDown ? 'BEARISH' : 'NEUTRAL';
-        fundDriver = 'Likuiditas moneter global (M2), arus modal spot ETF institusional & selera risiko kripto';
+        fundDriver = 'Global monetary liquidity (M2), institutional spot ETF flows, and crypto risk appetite';
         fundScore = isUp ? 45 : isDown ? -45 : 0;
 
         // BTC berkorelasi TERBALIK dengan DXY & Real Yields, searah dengan saham teknologi US100
@@ -621,22 +621,22 @@ export class ArahMarketEngine {
 
         paBias = isUp ? 'BULLISH' : isDown ? 'BEARISH' : 'NEUTRAL';
         paStructure = chg > 1.0 ? 'SESSION_BREAKOUT' : chg < -1.0 ? 'RETEST_SUPPORT' : 'CHOP_RANGE';
-        actionableZone = 'Level psikologis angka bulat ribuan Dolar & likuiditas leverage derivatif';
+        actionableZone = 'Round-number psychological levels in thousands of dollars and derivatives leverage liquidity';
         paScore = isUp ? 35 : isDown ? -35 : 0;
 
         recommendedAction = interBias === 'BULLISH' && paBias === 'BULLISH' ? 'LOOK_FOR_BUY' : interBias === 'BEARISH' && paBias === 'BEARISH' ? 'LOOK_FOR_SELL' : 'WAIT_ON_SUPPORT';
-        invalidation = 'Penembusan level support likuiditas harian Bitcoin';
+        invalidation = 'Break of Bitcoin\'s daily liquidity support level';
       } else {
         // Fallback generik
         const isUp = chg > 0.1;
         const isDown = chg < -0.1;
 
         fundBias = isUp ? 'BULLISH' : isDown ? 'BEARISH' : 'NEUTRAL';
-        fundDriver = 'Sentimen likuiditas global dan sentimen selera risiko harian';
+        fundDriver = 'Global liquidity sentiment and the daily risk appetite';
         fundScore = isUp ? 30 : isDown ? -30 : 0;
 
         interBias = dxyBiasVsOpen === 'BELOW_OPEN' ? 'BULLISH' : 'BEARISH';
-        interSymptom = `DXY berada ${dxyBiasVsOpen === 'ABOVE_OPEN' ? 'di atas' : 'di bawah'} harga buka sesi`;
+        interSymptom = `DXY berada ${dxyBiasVsOpen === 'ABOVE_OPEN' ? 'above' : 'below'} harga buka sesi`;
         interScore = interBias === 'BULLISH' ? 25 : -25;
 
         paBias = isUp ? 'BULLISH' : isDown ? 'BEARISH' : 'NEUTRAL';
@@ -645,7 +645,7 @@ export class ArahMarketEngine {
         paScore = isUp ? 25 : isDown ? -25 : 0;
 
         recommendedAction = isUp && interBias === 'BULLISH' ? 'LOOK_FOR_BUY' : isDown && interBias === 'BEARISH' ? 'LOOK_FOR_SELL' : 'WAIT_ON_SUPPORT';
-        invalidation = 'Pembalikan arah harga menembus level pembukaan sesi';
+        invalidation = 'Price reversal through the session open level';
       }
 
       // Hitung Confluence Status & Conviction Score
@@ -723,7 +723,7 @@ export class ArahMarketEngine {
         intradayPlan: {
           recommendedAction,
           invalidationTrigger: invalidation,
-          warningNote: csWarning || (confluenceStatus === 'CAUTION_TRAP' ? 'Waspadai jebakan likuiditas; pergerakan harga tidak didukung pilar makro/intermarket.' : undefined),
+          warningNote: csWarning || (confluenceStatus === 'CAUTION_TRAP' ? 'Watch for a liquidity trap; the price move is not backed by macro or intermarket pillars.' : undefined),
         },
         tvSymbol: tp.tv,
       };
