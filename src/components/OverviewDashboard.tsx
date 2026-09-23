@@ -624,7 +624,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
                 </h3>
               </div>
               <button
-                onClick={() => onNavigateTab('today_catalysts')}
+                onClick={() => onNavigateTab('macro')}
                 className="text-[10px] font-mono text-[var(--accent)] hover:underline flex items-center gap-0.5 cursor-pointer"
               >
                 <span>Detail</span>

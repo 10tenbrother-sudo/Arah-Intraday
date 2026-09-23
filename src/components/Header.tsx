@@ -103,10 +103,6 @@ export const Header: React.FC<HeaderProps> = React.memo(({
         return 'OVERVIEW DASHBOARD';
       case 'arah_market':
         return 'MARKET BIAS DOSSIER';
-      case 'intraday_map':
-        return 'INTRADAY MARKET MAP';
-      case 'today_catalysts':
-        return "TODAY'S CATALYSTS";
       case 'intermarket':
         return 'INTERMARKET FLOWS';
       case 'markets':
