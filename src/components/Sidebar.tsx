@@ -183,18 +183,16 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
         >
           <div className="flex items-center gap-2.5 overflow-hidden">
             <div className="w-6 h-6 rounded flex items-center justify-center font-mono font-bold text-xs bg-[var(--accent)] text-white shrink-0 shadow-xs">
-              IM
+              AM
             </div>
             {(!isCollapsed || isOpen) && (
               <div className="truncate">
                 <div className="font-mono font-bold text-xs tracking-wider text-[var(--text-primary)] flex items-center gap-1.5">
-                  <span>INTRADAY</span>
-                  <span className="text-[9px] px-1 py-0 rounded font-mono font-semibold bg-[var(--bg-section-alt)] text-[var(--text-secondary)] border border-[var(--border-subtle)]">
-                    PRO
-                  </span>
+                  <span>ARAH</span>
+                  <span>MARKET</span>
                 </div>
                 <div className="text-[9px] font-mono text-[var(--text-muted)] tracking-wider">
-                  MARKET INTELLIGENCE
+                  MACRO &amp; FX INTELLIGENCE
                 </div>
               </div>
             )}
