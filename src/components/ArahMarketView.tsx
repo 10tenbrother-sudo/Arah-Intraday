@@ -14,6 +14,7 @@ import {
   Flame,
   Activity,
 } from 'lucide-react';
+import { NavTabId } from './Sidebar';
 import { getCurrencyFlagUrl } from '../lib/assets';
 import { EmptyState } from './shared/EmptyState';
 import { LoadingState } from './shared/LoadingState';
@@ -24,6 +25,7 @@ interface ArahMarketViewProps {
   onRefresh: () => Promise<void>;
   isRefreshing: boolean;
   onOpenChart: (symbol: string) => void;
+  onNavigateTab?: (tab: NavTabId) => void;
 }
 
 export const ArahMarketView: React.FC<ArahMarketViewProps> = React.memo(({
@@ -32,6 +34,7 @@ export const ArahMarketView: React.FC<ArahMarketViewProps> = React.memo(({
   onRefresh,
   isRefreshing,
   onOpenChart,
+  onNavigateTab,
 }) => {
   const [selectedPairFilter, setSelectedPairFilter] = useState<'ALL' | 'HIGH_CONVICTION' | 'MODERATE' | 'CAUTION'>('ALL');
 
@@ -222,41 +225,42 @@ export const ArahMarketView: React.FC<ArahMarketViewProps> = React.memo(({
           </span>
         </div>
 
-        {/* 4 Intermarket Spread Gauges (3 columns) */}
-        <div className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
-          {intermarketSpreads.map(spread => (
-            <div
-              key={spread.id}
-              className="rounded-lg p-3.5 flex flex-col justify-between gap-2"
-              style={{ backgroundColor: 'var(--bg-section-alt)' }}
-            >
-              <div>
-                <div className="flex items-center justify-between text-[10px] font-mono text-[var(--text-muted)] mb-1">
-                  <span className="font-semibold uppercase tracking-wider">{spread.formulaLabel}</span>
-                  <span className="px-1 py-0 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] font-bold text-[var(--text-primary)]">
-                    {spread.targetPair}
-                  </span>
+        {/* Intermarket channels, condensed. The Intermarket Flows page carries the
+            full transmission detail, so this stays a one-line pulse per channel. */}
+        <div className="lg:col-span-3 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[13px] font-semibold text-[var(--text-primary)]">Intermarket pulse</span>
+            {onNavigateTab && (
+              <button
+                onClick={() => onNavigateTab('intermarket')}
+                className="text-[11px] font-medium text-[var(--accent)] hover:underline cursor-pointer"
+              >
+                Full transmission
+              </button>
+            )}
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+            {intermarketSpreads.map(spread => (
+              <div key={spread.id} className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="text-[11px] text-[var(--text-primary)] font-medium truncate" title={spread.name}>
+                    {spread.name}
+                  </div>
+                  <div className="text-[10px] text-[var(--text-muted)] truncate">{spread.targetPair}</div>
                 </div>
-                <div className="text-xs font-bold text-[var(--text-primary)] truncate font-mono" title={spread.name}>
-                  {spread.name}
-                </div>
-                <div className="flex items-baseline gap-2 mt-1 tabular-nums">
-                  <span className="text-lg font-mono font-bold text-[var(--text-primary)]">
+                <div className="text-right shrink-0 tabular-nums">
+                  <div className="text-[13px] font-semibold text-[var(--text-primary)]">
                     {spread.currentValue > 0 ? `+${spread.currentValue}` : spread.currentValue}{spread.unit}
-                  </span>
-                  <span className={`text-[10px] font-mono font-semibold ${
+                  </div>
+                  <div className={`text-[10px] font-medium ${
                     spread.changeSessionBps >= 0 ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'
                   }`}>
-                    {spread.changeSessionBps >= 0 ? `+${spread.changeSessionBps}` : spread.changeSessionBps} bps
-                  </span>
+                    {spread.changeSessionBps >= 0 ? '+' : ''}{spread.changeSessionBps} bps
+                  </div>
                 </div>
               </div>
-
-              <div className="pt-2 border-t text-[10px] text-[var(--text-secondary)] leading-snug font-sans" style={{ borderColor: 'var(--border-hairline)' }}>
-                {spread.interpretation}
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
 

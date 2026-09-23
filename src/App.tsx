@@ -573,6 +573,7 @@ export default function App() {
               onRefresh={refreshArahMarket}
               isRefreshing={isRefreshingArah}
               onOpenChart={handleOpenChart}
+              onNavigateTab={handleTabChange}
             />
           )}
 
