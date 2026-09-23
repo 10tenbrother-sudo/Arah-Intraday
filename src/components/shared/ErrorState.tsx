@@ -11,7 +11,7 @@ interface ErrorStateProps {
 }
 
 export function ErrorState({
-  title = 'Gagal Memuat Data',
+  title = 'Failed to load data',
   message,
   onRetry,
   className,

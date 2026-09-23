@@ -104,7 +104,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
       bc = new BroadcastChannel('arah_market_auth');
       bc.onmessage = (event) => {
         if (event.data?.type === 'EMAIL_VERIFIED' && event.data?.token && event.data?.user) {
-          setTokenVerifySuccess('Email berhasil diverifikasi! Membuka terminal trading...');
+          setTokenVerifySuccess('Email verified. Opening the trading terminal...');
           setAuthToken(event.data.token);
           setStoredUser(event.data.user);
           setTimeout(() => {
@@ -122,7 +122,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
           api.getMe()
             .then(meRes => {
               if (isMounted && meRes?.user) {
-                setTokenVerifySuccess('Email berhasil diverifikasi! Membuka terminal...');
+                setTokenVerifySuccess('Email verified. Opening the terminal...');
                 setAuthToken(storedToken);
                 setStoredUser(meRes.user);
                 setTimeout(() => onSuccess(meRes.user, storedToken), 600);
@@ -183,7 +183,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
         setTokenVerifyError(null);
         api.verifyEmail(token)
           .then((res) => {
-            setTokenVerifySuccess('Verifikasi email berhasil! Membuka terminal trading...');
+            setTokenVerifySuccess('Email verified. Opening the trading terminal...');
             setAuthToken(res.token);
             setStoredUser(res.user);
             setTimeout(() => {
@@ -225,7 +225,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
         setResetUrl(res.resetUrl);
       }
     } catch (err: any) {
-      setError(err.message || 'Gagal meminta reset kata sandi.');
+      setError(err.message || 'Could not request a password reset.');
     } finally {
       setLoading(false);
     }
@@ -235,11 +235,11 @@ export const AuthPage: React.FC<AuthPageProps> = ({
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPassword || newPassword.length < 6) {
-      setError('Kata sandi baru minimal harus 6 karakter.');
+      setError('The new password must be at least 6 characters.');
       return;
     }
     if (newPassword !== confirmPassword) {
-      setError('Konfirmasi kata sandi tidak cocok.');
+      setError('Password confirmation does not match.');
       return;
     }
 
@@ -253,7 +253,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
         newPassword,
       });
 
-      setSuccessMessage('Kata sandi berhasil diperbarui! Mengalihkan ke terminal...');
+      setSuccessMessage('Password updated. Redirecting to the terminal...');
       setAuthToken(res.token);
       setStoredUser(res.user);
       addRegisteredAccount({
@@ -265,7 +265,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
         onSuccess(res.user, res.token);
       }, 900);
     } catch (err: any) {
-      setError(err.message || 'Gagal mereset kata sandi.');
+      setError(err.message || 'Could not reset the password.');
     } finally {
       setLoading(false);
     }
@@ -281,7 +281,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const fbUser = result.user;
-      if (!fbUser.email) throw new Error('Akun Google tidak memiliki alamat email publik.');
+      if (!fbUser.email) throw new Error('The Google account has no public email address.');
 
       // 1. Authenticate with backend API
       const apiRes = await api.firebaseLogin({
@@ -339,7 +339,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
         });
 
         if (res.token && res.user) {
-          setSuccessMessage(`Selamat datang, ${res.user.name || name}! Akun Anda telah aktif dan tersimpan permanen.`);
+          setSuccessMessage(`Welcome, ${res.user.name || name}! Your account is active.`);
           setAuthToken(res.token);
           setStoredUser(res.user);
           addRegisteredAccount({
@@ -386,7 +386,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
   const handleResendVerification = async (targetEmail?: string) => {
     const emailToUse = targetEmail || registeredEmail || email;
     if (!emailToUse.trim()) {
-      setError('Silakan masukkan alamat email terlebih dahulu.');
+      setError('Enter your email address first.');
       return;
     }
 
@@ -396,7 +396,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
       const res = await api.resendVerification(emailToUse.trim());
       setResendStatus(res.message || 'A new verification link has been sent to your email.');
     } catch (err: any) {
-      setError(err.message || 'Gagal mengirim ulang email verifikasi.');
+      setError(err.message || 'Could not resend the verification email.');
     } finally {
       setResendLoading(false);
     }
@@ -420,7 +420,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     setError(null);
     try {
       const res = await api.verifyCode(targetEmail.trim(), cleanCode);
-      setTokenVerifySuccess('Email berhasil diverifikasi! Membuka terminal trading...');
+      setTokenVerifySuccess('Email verified. Opening the trading terminal...');
       setAuthToken(res.token);
       setStoredUser(res.user);
       addRegisteredAccount({
@@ -486,9 +486,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({
               <div className="w-12 h-12 rounded-md bg-[var(--accent-subtle)]/80 border border-[var(--accent)]/80 flex items-center justify-center mx-auto text-[var(--accent)] shadow-inner">
                 <RefreshCw className="w-6 h-6 animate-spin" />
               </div>
-              <h2 className="text-lg font-bold text-[var(--text-primary)]">Memvalidasi Tautan Akses...</h2>
+              <h2 className="text-lg font-bold text-[var(--text-primary)]">Validating access link...</h2>
               <p className="text-xs text-[var(--text-secondary)] font-sans">
-                Mohon tunggu sejenak, sistem sedang mengonfirmasi token otentikasi akun Anda.
+                Please wait while the system confirms your account authentication token.
               </p>
             </div>
           )}
@@ -520,7 +520,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
             <div className="p-4 rounded-md bg-[var(--bearish-bg)]/60 border border-[var(--bearish-border)]/80 text-[var(--bearish)] text-xs space-y-3 font-sans">
               <div className="flex items-center gap-2 font-semibold text-[var(--bearish)]">
                 <AlertCircle className="w-4 h-4 text-[var(--bearish)] shrink-0" />
-                <span>Validasi Tautan Gagal</span>
+                <span>Link validation failed</span>
               </div>
               <p>{tokenVerifyError}</p>
               <button
@@ -531,7 +531,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                 }}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-primary)] text-[11px] font-mono font-medium transition cursor-pointer"
               >
-                <span>Buka Formulir Masuk</span>
+                <span>Open sign-in form</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -551,7 +551,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   Aktivasi Email Anda
                 </h1>
                 <p className="text-xs text-[var(--text-secondary)] font-sans leading-relaxed">
-                  Tautan dan kode verifikasi telah dikirimkan ke:
+                  A verification link and code were sent to:
                 </p>
                 <div className="inline-block px-3 py-1.5 rounded-md bg-[var(--bg-canvas)] border border-[var(--accent)] text-[var(--accent)] font-mono text-xs font-semibold">
                   {registeredEmail}
@@ -563,7 +563,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-mono font-bold text-[var(--accent)] uppercase tracking-wider flex items-center gap-1.5">
                     <KeyRound className="w-3.5 h-3.5 text-[var(--accent)]" />
-                    Aktivasi dengan 6-Digit Kode Email
+                    Activate with a 6-digit email code
                   </span>
                   <span className="text-[10px] font-mono text-[var(--accent)]/80 bg-[var(--accent-subtle)] px-2 py-0.5 rounded border border-[var(--accent)]">
                     Bebas Hambatan
@@ -571,7 +571,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                 </div>
 
                 <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed font-sans">
-                  Ketik 6 angka kode aktivasi yang dikirim ke email Anda di bawah ini (solusi tercepat jika tautan email terhalang izin browser):
+                  Enter the 6-digit activation code sent to your email below (the fastest route when your browser blocks the link):
                 </p>
 
                 <div className="flex gap-2">
@@ -580,7 +580,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                     inputMode="numeric"
                     autoComplete="one-time-code"
                     maxLength={6}
-                    placeholder="Contoh: 849201"
+                    placeholder="e.g. 849201"
                     value={otpCode}
                     onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                     className="flex-1 px-3 py-2.5 bg-[var(--bg-canvas)] border border-[var(--border-strong)] focus:border-[var(--accent)] rounded-md text-center font-mono text-base tracking-[0.25em] font-bold text-[var(--accent)] outline-none placeholder:text-[var(--text-muted)] placeholder:tracking-normal placeholder:font-sans placeholder:text-xs transition"
@@ -610,7 +610,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   className="w-full py-2.5 rounded-md bg-[var(--bg-section-alt)] hover:bg-[var(--bg-section-alt)] border border-[var(--border-strong)] text-[var(--text-primary)] font-mono text-xs font-semibold transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${resendLoading ? 'animate-spin' : ''}`} />
-                  <span>{resendLoading ? 'Mengirim Ulang...' : 'Resend verification email'}</span>
+                  <span>{resendLoading ? 'Resending...' : 'Resend verification email'}</span>
                 </button>
 
                 <button
@@ -633,10 +633,10 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   <KeyRound className="w-5 h-5" />
                 </div>
                 <h1 className="text-xl font-bold font-mono tracking-tight text-[var(--text-primary)]">
-                  Lupa Kata Sandi
+                  Forgot password
                 </h1>
                 <p className="text-xs text-[var(--text-secondary)] font-sans leading-relaxed">
-                  Masukkan email akun Anda. Kami akan mengirimkan tautan untuk membuat kata sandi baru.
+                  Enter your account email. We will send a link to create a new password.
                 </p>
               </div>
 
@@ -654,10 +654,10 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                 <div className="p-3.5 rounded-md bg-[var(--accent-subtle)]/60 border border-[var(--accent)]/80 text-[var(--text-primary)] text-xs space-y-2">
                   <div className="font-mono text-[11px] font-bold text-[var(--accent)] flex items-center gap-1.5">
                     <KeyRound className="w-3.5 h-3.5 text-[var(--warning)]" />
-                    <span>Tautan Reset Instan Siap Digunakan</span>
+                    <span>Instant reset link ready</span>
                   </div>
                   <p className="text-[11px] text-[var(--text-secondary)]">
-                    Klik tombol di bawah untuk langsung membuka formulir pembuatan kata sandi baru:
+                    Use the button below to open the new-password form directly:
                   </p>
                   <button
                     type="button"
@@ -670,7 +670,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                     }}
                     className="w-full py-2 px-3 rounded-md bg-[var(--accent)] hover:opacity-90 text-white font-bold font-mono text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
                   >
-                    <span>Buka Formulir Buat Password Baru</span>
+                    <span>Open the new-password form</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -701,10 +701,10 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   className="w-full mt-2"
                 >
                   {loading ? (
-                    <span>Mengirim permintaan...</span>
+                    <span>Sending request...</span>
                   ) : (
                     <>
-                      <span>Kirim Tautan Atur Ulang Kata Sandi</span>
+                      <span>Send password reset link</span>
                       <Send className="w-3.5 h-3.5" />
                     </>
                   )}
@@ -730,10 +730,10 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   <Lock className="w-5 h-5" />
                 </div>
                 <h1 className="text-xl font-bold font-mono tracking-tight text-[var(--text-primary)]">
-                  Buat Kata Sandi Baru
+                  Create new password
                 </h1>
                 <p className="text-xs text-[var(--text-secondary)] font-sans leading-relaxed">
-                  Masukkan kata sandi baru untuk akun Anda (minimal 6 karakter).
+                  Enter a new password for your account (at least 6 characters).
                 </p>
               </div>
 
@@ -768,7 +768,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 
                 <div className="space-y-1.5">
                   <label className="block text-[var(--text-secondary)] text-[11px] font-semibold">
-                    Kata Sandi Baru
+                    New password
                   </label>
                   <div className="relative">
                     <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] z-10" />
@@ -786,7 +786,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 
                 <div className="space-y-1.5">
                   <label className="block text-[var(--text-secondary)] text-[11px] font-semibold">
-                    Ulangi Kata Sandi Baru
+                    Repeat new password
                   </label>
                   <div className="relative">
                     <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] z-10" />
@@ -809,10 +809,10 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   className="w-full mt-2"
                 >
                   {loading ? (
-                    <span>Memperbarui kata sandi...</span>
+                    <span>Updating password...</span>
                   ) : (
                     <>
-                      <span>Simpan Kata Sandi & Masuk</span>
+                      <span>Save password & sign in</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </>
                   )}
@@ -825,7 +825,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   onClick={() => onNavigate('/login')}
                   className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] font-mono text-xs cursor-pointer"
                 >
-                  Batal dan kembali ke halaman masuk
+                  Cancel and return to sign in
                 </button>
               </div>
             </div>
@@ -838,7 +838,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   <Lock className="w-5 h-5" />
                 </div>
                 <h1 className="text-xl font-bold font-mono tracking-tight text-[var(--text-primary)]">
-                  {isRegister ? 'Daftar Akun Trader' : 'Otentikasi Terminal'}
+                  {isRegister ? 'Create a trader account' : 'Terminal authentication'}
                 </h1>
                 <p className="text-xs text-[var(--text-secondary)] font-sans leading-relaxed">
                   {isRegister
@@ -886,7 +886,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   {/* Resolution Paths for Invalid Password */}
                   {errorCode === 'INVALID_PASSWORD' && (
                     <div className="pt-2 border-t border-[var(--bearish-border)]/60 space-y-2">
-                      <p className="text-[11px] text-[var(--bearish)]/90 font-mono">Lupa atau ingin mengganti kata sandi?</p>
+                      <p className="text-[11px] text-[var(--bearish)]/90 font-mono">Forgot or want to change your password?</p>
                       <div>
                         <button
                           type="button"
@@ -897,7 +897,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                           className="w-full py-2 px-3 rounded-md bg-[var(--bg-section-alt)] hover:bg-[var(--bg-section-alt)] text-[var(--accent)] border border-[var(--border-strong)] font-mono text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
                         >
                           <KeyRound className="w-3.5 h-3.5 text-[var(--warning)]" />
-                          <span>Atur Ulang Kata Sandi (Reset Password)</span>
+                          <span>Reset password</span>
                         </button>
                       </div>
                     </div>
@@ -908,7 +908,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                     <div className="pt-2 border-t border-[var(--bearish-border)]/60 space-y-2.5">
                       <div className="space-y-1.5">
                         <label className="text-[10px] font-mono font-bold text-[var(--accent)] uppercase tracking-wider block">
-                          Masukkan 6-Digit Kode dari Email:
+                          Enter the 6-digit code from your email:
                         </label>
                         <div className="flex gap-2">
                           <input
@@ -941,7 +941,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                           }}
                           className="text-[11px] text-[var(--accent)] hover:underline font-mono"
                         >
-                          Buka Layar Aktivasi Penuh →
+                          Open the full activation screen →
                         </button>
 
                         <button
@@ -952,7 +952,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                           id="unverified-resend-btn"
                         >
                           <Send className="w-3 h-3" />
-                          <span>{resendLoading ? 'Mengirim...' : 'Resend email'}</span>
+                          <span>{resendLoading ? 'Sending...' : 'Resend email'}</span>
                         </button>
                       </div>
                     </div>
@@ -1015,7 +1015,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                 <div className="relative flex items-center justify-center my-2">
                   <div className="border-t border-[var(--border-subtle)] w-full" />
                   <span className="px-3 text-[10px] uppercase font-mono tracking-widest text-[var(--text-muted)] shrink-0" style={{ background: 'var(--bg-surface)' }}>
-                    atau lanjutkan dengan email
+                    or continue with email
                   </span>
                   <div className="border-t border-[var(--border-subtle)] w-full" />
                 </div>
@@ -1064,7 +1064,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
                       <label className="block text-[var(--text-secondary)] text-[11px] font-semibold">
-                        Kata Sandi
+                        Password
                       </label>
                       {!isRegister && (
                         <button
@@ -1072,7 +1072,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                           onClick={() => onNavigate(`/forgot-password?email=${encodeURIComponent(email.trim())}`)}
                           className="text-[11px] text-[var(--accent)] hover:underline font-mono cursor-pointer"
                         >
-                          Lupa kata sandi?
+                          Forgot password?
                         </button>
                       )}
                     </div>

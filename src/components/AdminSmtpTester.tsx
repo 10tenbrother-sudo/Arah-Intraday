@@ -88,7 +88,7 @@ export const AdminSmtpTester: React.FC<AdminSmtpTesterProps> = ({
         connected: false,
         testEmailSent: false,
         message: err.message || 'Could not reach the server for the SMTP test.',
-        details: 'Pastikan server backend aktif dan token sesi admin valid.',
+        details: 'Make sure the backend server is running and the admin session token is valid.',
         config: config || {
           configured: false,
           host: 'unknown',
@@ -133,7 +133,7 @@ export const AdminSmtpTester: React.FC<AdminSmtpTesterProps> = ({
               )}
             </div>
             <p className="text-xs text-[var(--text-secondary)] mt-0.5 font-sans">
-              Uji coba koneksi langsung ke mail server (Gmail/Brevo/SendGrid) untuk memvalidasi kredensial{' '}
+              Test a direct connection to the mail server (Gmail/Brevo/SendGrid) to validate the credentials{' '}
               <code className="text-[var(--accent)] font-mono">SMTP_USER</code> dan{' '}
               <code className="text-[var(--accent)] font-mono">SMTP_PASS</code>.
             </p>
@@ -146,7 +146,7 @@ export const AdminSmtpTester: React.FC<AdminSmtpTesterProps> = ({
             onClick={fetchStatus}
             disabled={loading}
             className="px-3 py-1.5 rounded-lg bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-secondary)] text-xs font-mono flex items-center gap-1.5 border border-[var(--border-strong)] transition cursor-pointer disabled:opacity-50"
-            title="Muat ulang status konfigurasi dari server"
+            title="Reload the configuration status from the server"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-[var(--accent)]' : ''}`} />
             <span>Segarkan Status</span>
@@ -157,7 +157,7 @@ export const AdminSmtpTester: React.FC<AdminSmtpTesterProps> = ({
             className="px-3 py-1.5 rounded-lg bg-[var(--accent-subtle)] hover:bg-[var(--accent-subtle)] text-[var(--accent)] text-xs font-mono flex items-center gap-1.5 border border-[var(--accent)] transition cursor-pointer"
           >
             <HelpCircle className="w-3.5 h-3.5" />
-            <span>{showGuide ? 'Close guide' : 'Panduan Kredensial'}</span>
+            <span>{showGuide ? 'Close guide' : 'Credentials guide'}</span>
           </button>
         </div>
       </div>
@@ -171,10 +171,10 @@ export const AdminSmtpTester: React.FC<AdminSmtpTesterProps> = ({
           </div>
           <ol className="list-decimal list-inside space-y-1.5 text-[var(--text-secondary)] leading-relaxed">
             <li>
-              Buka akun Google pengirim, pastikan <strong>Verifikasi 2 Langkah (2-Step Verification)</strong> telah aktif.
+              Open the sending Google account and make sure <strong>2-Step Verification</strong> is enabled.
             </li>
             <li>
-              Kunjungi halaman resmi kata sandi aplikasi Google:{' '}
+              Visit the official Google app passwords page:{' '}
               <a
                 href="https://myaccount.google.com/apppasswords"
                 target="_blank"
@@ -188,13 +188,13 @@ export const AdminSmtpTester: React.FC<AdminSmtpTesterProps> = ({
               Buat nama aplikasi baru (misal: <em>ArahMarket Terminal</em>), lalu klik <strong>Generate</strong>.
             </li>
             <li>
-              Salin kode 16-karakter yang muncul (misal: <code className="bg-[var(--bg-canvas)] px-1.5 py-0.5 rounded text-[var(--accent)] font-mono">abcd efgh ijkl mnop</code>).
+              Copy the 16-character code shown (e.g. <code className="bg-[var(--bg-canvas)] px-1.5 py-0.5 rounded text-[var(--accent)] font-mono">abcd efgh ijkl mnop</code>).
             </li>
             <li>
-              Simpan pada Environment Variables:
+              Set in environment variables:
               <div className="mt-1 p-2 rounded bg-[var(--bg-canvas)] border border-[var(--border-subtle)] font-mono text-[11px] text-[var(--text-secondary)] space-y-0.5">
                 <div>SMTP_USER=emailanda@gmail.com</div>
-                <div>SMTP_PASS=abcdefghijklmnop <span className="text-[var(--text-muted)]">(spasi akan otomatis dihapus oleh sistem)</span></div>
+                <div>SMTP_PASS=abcdefghijklmnop <span className="text-[var(--text-muted)]">(spaces are stripped automatically)</span></div>
                 <div>SMTP_HOST=smtp.gmail.com</div>
                 <div>SMTP_PORT=587</div>
               </div>
@@ -218,7 +218,7 @@ export const AdminSmtpTester: React.FC<AdminSmtpTesterProps> = ({
             {config?.host || 'smtp.gmail.com'}:{config?.port || 587}
           </div>
           <div className="text-[10px] text-[var(--text-secondary)]">
-            {config?.secure ? 'Koneksi TLS Langsung (Port 465)' : 'Koneksi STARTTLS (Port 587)'}
+            {config?.secure ? 'Direct TLS connection (port 465)' : 'STARTTLS connection (port 587)'}
           </div>
         </div>
 
@@ -231,7 +231,7 @@ export const AdminSmtpTester: React.FC<AdminSmtpTesterProps> = ({
             </span>
             {config?.hasUser && (
               <span className={`text-[10px] ${config.isEmailValid ? 'text-[var(--bullish)]' : 'text-[var(--warning)]'}`}>
-                {config.isEmailValid ? 'Format Valid' : 'Format Invalid'}
+                {config.isEmailValid ? 'Valid format' : 'Invalid format'}
               </span>
             )}
           </div>
@@ -239,7 +239,7 @@ export const AdminSmtpTester: React.FC<AdminSmtpTesterProps> = ({
             {config?.userMasked || <span className="text-[var(--text-muted)] font-normal">Belum ditentukan</span>}
           </div>
           <div className="text-[10px] text-[var(--text-secondary)] truncate">
-            {config?.hasUser ? 'Email account credentials configured' : 'Variabel SMTP_USER kosong'}
+            {config?.hasUser ? 'Email account credentials configured' : 'SMTP_USER variable is empty'}
           </div>
         </div>
 
@@ -265,8 +265,8 @@ export const AdminSmtpTester: React.FC<AdminSmtpTesterProps> = ({
           </div>
           <div className="text-[10px] text-[var(--text-secondary)]">
             {config?.hasPass
-              ? 'Google App Password terlindungi'
-              : 'Memerlukan kata sandi aplikasi 16-karakter'}
+              ? 'Google App Password protected'
+              : 'Requires a 16-character app password'}
           </div>
         </div>
 
@@ -293,8 +293,8 @@ export const AdminSmtpTester: React.FC<AdminSmtpTesterProps> = ({
           </div>
           <div className="text-[10px] text-[var(--text-secondary)]">
             {config?.configured
-              ? 'Email aktivasi terkirim langsung'
-              : 'Verifikasi instan via Admin Panel'}
+              ? 'Activation email sent directly'
+              : 'Instant verification via admin panel'}
           </div>
         </div>
       </div>
@@ -318,7 +318,7 @@ export const AdminSmtpTester: React.FC<AdminSmtpTesterProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
             <div className="md:col-span-7 space-y-1.5 font-mono text-xs">
               <label className="block text-[var(--text-secondary)] font-semibold text-[11px]">
-                Kirim Email Uji Coba Ke (Inbox Penerima)
+                Send test email to (recipient inbox)
               </label>
               <div className="relative">
                 <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
@@ -326,7 +326,7 @@ export const AdminSmtpTester: React.FC<AdminSmtpTesterProps> = ({
                   type="email"
                   value={recipientEmail}
                   onChange={e => setRecipientEmail(e.target.value)}
-                  placeholder="Masukkan alamat email penerima (contoh: emailanda@gmail.com)..."
+                  placeholder="Enter the recipient email address (e.g. you@example.com)..."
                   className="w-full pl-9 pr-3 py-2 rounded-lg bg-[var(--bg-canvas)] border border-[var(--border-subtle)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-hidden focus:border-[var(--accent)] transition text-xs font-sans"
                   id="smtp-test-recipient-input"
                 />
@@ -341,7 +341,7 @@ export const AdminSmtpTester: React.FC<AdminSmtpTesterProps> = ({
                   onChange={e => setSendRealEmail(e.target.checked)}
                   className="rounded border-[var(--border-strong)] bg-[var(--bg-canvas)] text-[var(--accent)] focus:ring-[var(--accent)] h-4 w-4"
                 />
-                <span>Kirim email uji coba nyata</span>
+                <span>Send a real test email</span>
               </label>
 
               <button
@@ -385,7 +385,7 @@ export const AdminSmtpTester: React.FC<AdminSmtpTesterProps> = ({
                 )}
                 <div className="space-y-1">
                   <div className="font-bold text-sm">
-                    {testResult.success ? 'KONEKSI SMTP TERVERIFIKASI SUKSES' : 'PENGUJIAN KONEKSI SMTP GAGAL'}
+                    {testResult.success ? 'SMTP CONNECTION VERIFIED' : 'SMTP CONNECTION TEST FAILED'}
                   </div>
                   <div className="text-xs opacity-90 font-sans leading-relaxed">
                     {testResult.message}
@@ -422,7 +422,7 @@ export const AdminSmtpTester: React.FC<AdminSmtpTesterProps> = ({
                 Pengirim: {testResult.config.userMasked || 'None'}
               </span>
               <span className="bg-[var(--bg-surface)] px-2 py-0.5 rounded border border-[var(--border-subtle)]">
-                Email Terkirim: {testResult.testEmailSent ? 'Ya (Sukses)' : 'No'}
+                Email Terkirim: {testResult.testEmailSent ? 'Yes (success)' : 'No'}
               </span>
             </div>
           </div>
