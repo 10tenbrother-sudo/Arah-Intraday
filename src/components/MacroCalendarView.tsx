@@ -32,9 +32,9 @@ interface MacroCalendarViewProps {
 }
 
 const TIMEZONES = [
-  { value: 'Asia/Jakarta', label: 'WIB (Jakarta UTC+7) [Waktu Default]' },
+  { value: 'Asia/Jakarta', label: 'WIB (Jakarta UTC+7) [Default]' },
   { value: 'UTC', label: 'UTC (Universal Coordinated Time)' },
-  { value: 'LOCAL', label: 'Local (Waktu Perangkat Anda)' },
+  { value: 'LOCAL', label: 'Local (your device time)' },
   { value: 'America/New_York', label: 'New York (EDT/EST)' },
   { value: 'Europe/London', label: 'London (BST/GMT)' },
   { value: 'Asia/Tokyo', label: 'Tokyo (JST)' },
@@ -546,7 +546,7 @@ export const MacroCalendarView: React.FC<MacroCalendarViewProps> = React.memo(({
               <th className="text-center">
                 <Tooltip
                   title="Macro & Fundamental Intel"
-                  content="Buka drawer detail untuk melihat skenario pasar, implikasi suku bunga, dan korelasi antar-aset."
+                  content="Open the detail drawer for market scenarios, rate implications, and cross-asset correlation."
                   position="top"
                 >
                   <span className="cursor-help">INTEL</span>

@@ -137,7 +137,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
         });
       }
     } catch (err: any) {
-      showToast(err.message || 'Gagal memuat daftar pengguna.', 'error');
+      showToast(err.message || 'Could not load the user list.', 'error');
     } finally {
       setLoading(false);
     }
@@ -185,7 +185,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
         onUserModified?.();
       }
     } catch (err: any) {
-      showToast(err.message || 'Gagal memperbarui data user.', 'error');
+      showToast(err.message || 'Could not update the user record.', 'error');
     } finally {
       setLoading(false);
     }
@@ -217,7 +217,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
         onUserModified?.();
       }
     } catch (err: any) {
-      showToast(err.message || 'Gagal membuat pengguna baru.', 'error');
+      showToast(err.message || 'Could not create the new user.', 'error');
     } finally {
       setLoading(false);
     }
@@ -236,7 +236,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
         onUserModified?.();
       }
     } catch (err: any) {
-      showToast(err.message || 'Gagal menghapus user.', 'error');
+      showToast(err.message || 'Could not delete the user.', 'error');
     } finally {
       setLoading(false);
     }
@@ -251,7 +251,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
         loadUsers();
       }
     } catch (err: any) {
-      showToast(err.message || 'Gagal mengubah status verifikasi.', 'error');
+      showToast(err.message || 'Could not change the verification status.', 'error');
     }
   };
 
@@ -268,7 +268,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
         loadUsers();
       }
     } catch (err: any) {
-      showToast(err.message || 'Gagal mereset password.', 'error');
+      showToast(err.message || 'Could not reset the password.', 'error');
     } finally {
       setLoading(false);
     }
@@ -387,7 +387,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
           <Search className="w-4 h-4 text-[var(--text-secondary)] absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Cari user berdasarkan nama, email, atau ID..."
+            placeholder="Search users by name, email, or ID..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             className="w-full bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-lg pl-9 pr-8 py-1.5 text-xs font-mono text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition"
@@ -452,7 +452,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
           <button
             onClick={() => setShowSmtpModal(true)}
             className="px-2.5 py-1.5 bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--accent)] border border-[var(--accent)] rounded-lg font-semibold flex items-center gap-1.5 shadow-sm transition cursor-pointer"
-            title="Uji coba koneksi SMTP server email"
+            title="Test the email SMTP server connection"
             id="admin-test-smtp-button"
           >
             <Mail className="w-3.5 h-3.5 text-[var(--accent)]" />
@@ -494,7 +494,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
                         <span>Memuat data pengguna...</span>
                       </div>
                     ) : (
-                      'Tidak ada akun pengguna yang sesuai dengan filter.'
+                      'No user accounts match the current filter.'
                     )}
                   </td>
                 </tr>
@@ -585,7 +585,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
                           ) : (
                             <button
                               onClick={() => handleToggleVerification(u)}
-                              title="Klik untuk verifikasi instan akun ini"
+                              title="Click to instantly verify this account"
                               className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[var(--warning-bg)] text-[var(--warning)] border border-[var(--warning-border)] text-[10px] hover:bg-[var(--warning-bg)] transition cursor-pointer"
                             >
                               <AlertTriangle className="w-3 h-3 text-[var(--warning)]" />
@@ -614,7 +614,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
                           {/* Edit Details */}
                           <button
                             onClick={() => handleOpenEdit(u)}
-                            title="Ubah Role & Paket Langganan"
+                            title="Change role & subscription plan"
                             className="p-1.5 bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-primary)] rounded border border-[var(--border-strong)] transition cursor-pointer"
                           >
                             <Edit2 className="w-3.5 h-3.5" />
@@ -624,7 +624,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
                           <button
                             onClick={() => setDeletingUser(u)}
                             disabled={isCurrentAccount}
-                            title={isCurrentAccount ? 'Tidak dapat menghapus akun admin Anda sendiri' : 'Hapus akun user ini'}
+                            title={isCurrentAccount ? 'You cannot delete your own admin account' : 'Delete this user account'}
                             className={`p-1.5 rounded border transition ${
                               isCurrentAccount
                                 ? 'bg-[var(--bg-surface)] text-[var(--text-muted)] border-[var(--border-subtle)] cursor-not-allowed opacity-40'

@@ -119,7 +119,7 @@ export const BreakingNewsAlertPopup: React.FC<BreakingNewsAlertPopupProps> = ({
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-[var(--text-secondary)] hover:text-[var(--accent)] transition p-0.5"
-                title="Buka sumber asli"
+                title="Open original source"
               >
                 <ExternalLink className="w-3 h-3" />
               </a>
@@ -127,7 +127,7 @@ export const BreakingNewsAlertPopup: React.FC<BreakingNewsAlertPopupProps> = ({
             <button
               onClick={() => onDismiss(activeAlert.id)}
               className="p-0.5 rounded text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-section-alt)] transition cursor-pointer"
-              title="Tutup Alert"
+              title="Close alert"
               id="close-alert-toast-btn"
             >
               <X className="w-3 h-3" />

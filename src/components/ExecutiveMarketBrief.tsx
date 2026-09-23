@@ -118,7 +118,7 @@ export const ExecutiveMarketBrief: React.FC<ExecutiveMarketBriefProps> = ({
       regimeBadgeClass = 'badge-bearish';
     }
 
-    const summaryText = `Pasar berada dalam rezim ${regimeTitle}. Indeks Wall Street dipimpin oleh reli US100 didukung kinerja emiten teknologi dan imbal hasil obligasi AS US10Y yang stabil di kisaran ${us10yPrice.toFixed(3)}%. Di pasar mata uang, ${strongest.currency} memimpin disparitas tertinggi (+${strongest.strength_score.toFixed(1)}pt), sementara ${weakest.currency} terlemah (${weakest.strength_score.toFixed(1)}pt). Emas (XAU/USD) tetap diburu sebagai lindung nilai makro di atas $${Math.round(goldPrice)}.`;
+    const summaryText = `Markets are trading in a ${regimeTitle} regime. Wall Street is led by the US100 on technology earnings momentum, with the US 10Y yield steady near ${us10yPrice.toFixed(3)}%. In FX, ${strongest.currency} carries the widest dispersion (+${strongest.strength_score.toFixed(1)}pt) while ${weakest.currency} is the weakest leg (${weakest.strength_score.toFixed(1)}pt). Gold (XAU/USD) remains bid as a macro hedge above $${Math.round(goldPrice)}.`;
 
     return {
       strongest,
@@ -148,10 +148,10 @@ export const ExecutiveMarketBrief: React.FC<ExecutiveMarketBriefProps> = ({
         quote: 'JPY',
         category: 'FX_MAJOR' as const,
         name: 'US Dollar / Japanese Yen',
-        catalyst: 'Perbedaan yield US-Japan & divergensi suku bunga Fed-BoJ',
-        entryLogic: 'Pullback ke EMA21 M15 atau support H1',
-        invalidation: 'Break di bawah support pivot',
-        target: 'Resistensi swing high intraday',
+        catalyst: 'US-Japan yield spread and Fed-BoJ policy divergence',
+        entryLogic: 'Pullback to M15 EMA21 or H1 support',
+        invalidation: 'Break below pivot support',
+        target: 'Intraday swing-high resistance',
       },
       {
         symbol: 'EURUSD',
@@ -159,10 +159,10 @@ export const ExecutiveMarketBrief: React.FC<ExecutiveMarketBriefProps> = ({
         quote: 'USD',
         category: 'FX_MAJOR' as const,
         name: 'Euro / US Dollar',
-        catalyst: 'Ekspektasi pelonggaran ECB vs ketahanan ekonomi AS',
-        entryLogic: 'Sell rally di area suplai H1',
-        invalidation: 'Penutupan H1 di atas resistance suplai',
-        target: 'Target likuiditas swing low sebelumnya',
+        catalyst: 'ECB easing expectations against US growth resilience',
+        entryLogic: 'Sell the rally into H1 supply',
+        invalidation: 'H1 close above supply resistance',
+        target: 'Prior swing-low liquidity',
       },
       {
         symbol: 'GBPUSD',
@@ -170,10 +170,10 @@ export const ExecutiveMarketBrief: React.FC<ExecutiveMarketBriefProps> = ({
         quote: 'USD',
         category: 'FX_MAJOR' as const,
         name: 'British Pound / US Dollar',
-        catalyst: 'Data inflasi BoE & selisih suku bunga Bank of England',
-        entryLogic: 'Konfirmasi rejection pada zona orderblock H1',
-        invalidation: 'Break struktur swing H1',
-        target: 'Target zona demand discount H4',
+        catalyst: 'BoE inflation data and Bank of England rate differential',
+        entryLogic: 'Rejection confirmation at H1 order block',
+        invalidation: 'Break of H1 swing structure',
+        target: 'H4 discount demand zone',
       },
       {
         symbol: 'AUDJPY',
@@ -181,10 +181,10 @@ export const ExecutiveMarketBrief: React.FC<ExecutiveMarketBriefProps> = ({
         quote: 'JPY',
         category: 'FX_CROSS' as const,
         name: 'Australian Dollar / Japanese Yen',
-        catalyst: 'Risk sentiment barometer & carry trade appetite',
-        entryLogic: 'Long pada retest pivot intraday',
-        invalidation: 'Break struktur support M30',
-        target: 'Resistensi R1 / R2 harian',
+        catalyst: 'Risk sentiment barometer and carry-trade appetite',
+        entryLogic: 'Long on intraday pivot retest',
+        invalidation: 'Break of M30 support structure',
+        target: 'Daily R1 / R2 resistance',
       },
       {
         symbol: 'EURJPY',
@@ -192,10 +192,10 @@ export const ExecutiveMarketBrief: React.FC<ExecutiveMarketBriefProps> = ({
         quote: 'JPY',
         category: 'FX_CROSS' as const,
         name: 'Euro / Japanese Yen',
-        catalyst: 'Divergensi imbal hasil Eropa vs Jepang',
-        entryLogic: 'Breakout konfirmasi volume pada sesi London',
+        catalyst: 'European versus Japanese yield divergence',
+        entryLogic: 'Volume-confirmed breakout in the London session',
         invalidation: 'False breakout reversal',
-        target: 'High sesi sebelumnya',
+        target: 'Prior session high',
       },
       {
         symbol: 'GBPJPY',
@@ -203,10 +203,10 @@ export const ExecutiveMarketBrief: React.FC<ExecutiveMarketBriefProps> = ({
         quote: 'JPY',
         category: 'FX_CROSS' as const,
         name: 'British Pound / Japanese Yen',
-        catalyst: 'Momentum volatilitas sesi London & carry flow',
-        entryLogic: 'Dip buying pada EMA50 H1',
-        invalidation: 'Break swing low 40 pips',
-        target: 'High tahunan / weekly high',
+        catalyst: 'London-session volatility momentum and carry flow',
+        entryLogic: 'Dip buying at H1 EMA50',
+        invalidation: 'Break of 40-pip swing low',
+        target: 'Yearly / weekly high',
       },
       {
         symbol: 'USDCHF',
@@ -214,10 +214,10 @@ export const ExecutiveMarketBrief: React.FC<ExecutiveMarketBriefProps> = ({
         quote: 'CHF',
         category: 'FX_MAJOR' as const,
         name: 'US Dollar / Swiss Franc',
-        catalyst: 'Pelonggaran suku bunga SNB vs yield AS',
-        entryLogic: 'Buy limit pada zona discount H1',
-        invalidation: 'Breakout support SNB',
-        target: 'Zona suplai 0.9000+',
+        catalyst: 'SNB easing against US yields',
+        entryLogic: 'Buy limit in H1 discount zone',
+        invalidation: 'Break of SNB support',
+        target: '0.9000+ supply zone',
       },
     ];
 
@@ -228,7 +228,7 @@ export const ExecutiveMarketBrief: React.FC<ExecutiveMarketBriefProps> = ({
       const absDelta = Math.abs(delta);
 
       let action: TradeSuggestion['action'] = 'AVOID_CHOP';
-      let actionLabel = 'HINDARI (FLAT BASKET)';
+      let actionLabel = 'AVOID (FLAT BASKET)';
       let tier: TradeSuggestion['tier'] = 'AVOID';
       let tradeStyle = 'Sideways';
 

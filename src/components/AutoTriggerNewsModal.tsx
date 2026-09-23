@@ -318,14 +318,14 @@ export const AutoTriggerNewsModal: React.FC<AutoTriggerNewsModalProps> = ({
                   type="button"
                   onClick={handleTestSound}
                   className="text-[10px] text-[var(--accent)] hover:underline cursor-pointer flex items-center gap-1"
-                  title="Uji suara Web Audio chime"
+                  title="Test the Web Audio chime"
                 >
-                  {soundTestSuccess ? '✓ Terdengar' : 'Uji Chime'}
+                  {soundTestSuccess ? '✓ Terdengar' : 'Test chime'}
                 </button>
               </label>
               <div className="flex items-center justify-between pt-1">
                 <span className="text-[11px] font-mono text-[var(--text-secondary)]">
-                  {config.soundEnabled ? '🔔 Audio Aktif' : '🔕 Mute / Hening'}
+                  {config.soundEnabled ? '🔔 Audio on' : '🔕 Mute / Hening'}
                 </span>
                 <Switch
                   checked={config.soundEnabled}

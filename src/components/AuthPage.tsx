@@ -141,7 +141,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
         const status = await api.checkVerificationStatus(activeTargetEmail);
         if (status.is_verified && status.token && status.user) {
           clearInterval(pollInterval);
-          setTokenVerifySuccess('Email Anda telah aktif! Membuka terminal...');
+          setTokenVerifySuccess('Your email is verified. Opening the terminal...');
           setAuthToken(status.token);
           setStoredUser(status.user);
           setTimeout(() => {
@@ -171,7 +171,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     }
 
     if (verifiedParam === 'true' || verifiedParam === '1') {
-      setTokenVerifySuccess('Email Anda telah terverifikasi. Silakan masuk dengan akun Anda.');
+      setTokenVerifySuccess('Your email has been verified. Please sign in with your account.');
     }
 
     if (token) {
@@ -191,7 +191,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
             }, 1000);
           })
           .catch((err: any) => {
-            setTokenVerifyError(err.message || 'Token verifikasi tidak valid atau telah kedaluwarsa.');
+            setTokenVerifyError(err.message || 'That verification token is invalid or has expired.');
           })
           .finally(() => {
             setTokenVerifying(false);
@@ -212,7 +212,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) {
-      setError('Silakan masukkan alamat email Anda.');
+      setError('Enter your email address.');
       return;
     }
     setLoading(true);
@@ -220,7 +220,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     setSuccessMessage(null);
     try {
       const res = await api.forgotPassword(email.trim());
-      setSuccessMessage(res.message || 'Tautan reset password telah dikirim ke email Anda.');
+      setSuccessMessage(res.message || 'A password reset link has been sent to your email.');
       if (res.resetUrl) {
         setResetUrl(res.resetUrl);
       }
@@ -312,7 +312,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
       onSuccess(apiRes.user, apiRes.token);
     } catch (err: any) {
       console.error('Google sign in error:', err);
-      setError(err.message || 'Gagal masuk dengan Google');
+      setError(err.message || 'Google sign-in failed');
     } finally {
       setGoogleLoading(false);
     }
@@ -330,7 +330,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     try {
       if (isRegister) {
         if (!name.trim()) {
-          throw new Error('Silakan isi nama lengkap atau trading handle Anda.');
+          throw new Error('Enter your full name or trading handle.');
         }
         const res = await api.register({
           email: email.trim(),
@@ -370,7 +370,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
         onSuccess(res.user, res.token);
       }
     } catch (err: any) {
-      setError(err.message || 'Otentikasi gagal. Silakan periksa kembali email dan kata sandi Anda.');
+      setError(err.message || 'Authentication failed. Check your email and password.');
       if (err.code) {
         setErrorCode(err.code);
       }
@@ -394,7 +394,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     setResendStatus(null);
     try {
       const res = await api.resendVerification(emailToUse.trim());
-      setResendStatus(res.message || 'Tautan verifikasi baru berhasil dikirim ke email Anda.');
+      setResendStatus(res.message || 'A new verification link has been sent to your email.');
     } catch (err: any) {
       setError(err.message || 'Gagal mengirim ulang email verifikasi.');
     } finally {
@@ -407,12 +407,12 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     if (e) e.preventDefault();
     const cleanCode = otpCode.trim();
     if (!cleanCode) {
-      setError('Silakan masukkan 6 angka kode verifikasi dari email Anda.');
+      setError('Enter the 6-digit verification code from your email.');
       return;
     }
     const targetEmail = registeredEmail || email;
     if (!targetEmail.trim()) {
-      setError('Alamat email belum ditentukan. Silakan masukkan email Anda.');
+      setError('No email address set. Enter your email first.');
       return;
     }
 
@@ -432,7 +432,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
         onSuccess(res.user, res.token);
       }, 700);
     } catch (err: any) {
-      setError(err.message || 'Kode verifikasi tidak sesuai atau telah kedaluwarsa.');
+      setError(err.message || 'That verification code is incorrect or has expired.');
     } finally {
       setOtpVerifying(false);
     }
@@ -610,7 +610,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   className="w-full py-2.5 rounded-md bg-[var(--bg-section-alt)] hover:bg-[var(--bg-section-alt)] border border-[var(--border-strong)] text-[var(--text-primary)] font-mono text-xs font-semibold transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${resendLoading ? 'animate-spin' : ''}`} />
-                  <span>{resendLoading ? 'Mengirim Ulang...' : 'Kirim Ulang Email Verifikasi'}</span>
+                  <span>{resendLoading ? 'Mengirim Ulang...' : 'Resend verification email'}</span>
                 </button>
 
                 <button
@@ -842,8 +842,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                 </h1>
                 <p className="text-xs text-[var(--text-secondary)] font-sans leading-relaxed">
                   {isRegister
-                    ? 'Daftarkan akun Anda untuk mengakses intelijen pasar. Tautan verifikasi akan dikirimkan ke email Anda.'
-                    : 'Masuk untuk mengakses ruang kerja intelijen makro dan telemetri pasar.'}
+                    ? 'Create an account to access market intelligence. A verification link will be sent to your email.'
+                    : 'Sign in to access the macro intelligence workspace and market telemetry.'}
                 </p>
               </div>
 
@@ -952,7 +952,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                           id="unverified-resend-btn"
                         >
                           <Send className="w-3 h-3" />
-                          <span>{resendLoading ? 'Mengirim...' : 'Kirim Ulang Email'}</span>
+                          <span>{resendLoading ? 'Mengirim...' : 'Resend email'}</span>
                         </button>
                       </div>
                     </div>
@@ -1009,7 +1009,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                       d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
                     />
                   </svg>
-                  <span>{googleLoading ? 'Menghubungkan Google...' : 'Masuk dengan Google (Firebase Auth)'}</span>
+                  <span>{googleLoading ? 'Connecting to Google...' : 'Sign in with Google (Firebase Auth)'}</span>
                 </button>
 
                 <div className="relative flex items-center justify-center my-2">
@@ -1102,7 +1102,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                       <span>Memproses otentikasi...</span>
                     ) : (
                       <>
-                        <span>{isRegister ? 'Daftar Akun' : 'Masuk ke Terminal'}</span>
+                        <span>{isRegister ? 'Create account' : 'Sign in to terminal'}</span>
                         <ArrowRight className="w-3.5 h-3.5" />
                       </>
                     )}

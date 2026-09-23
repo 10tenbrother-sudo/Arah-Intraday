@@ -85,28 +85,38 @@ export class CurrencyStrengthService {
       const series = await this.getChartFeed('1d');
       if (Array.isArray(series) && series.length >= 6) {
         const results: CurrencyStrength[] = [];
+        const pending: { currency: MajorCurrency; rawDelta: number }[] = [];
 
         for (const item of series) {
           const cur = item.key.toUpperCase() as MajorCurrency;
           if (!MAJOR_CURRENCIES.includes(cur)) continue;
 
           const lastPoint = item.values[item.values.length - 1];
-          const rawDelta = lastPoint ? Number(lastPoint[1]) : 0;
+          pending.push({ currency: cur, rawDelta: lastPoint ? Number(lastPoint[1]) : 0 });
+        }
 
-          // Normalized score (0.0 to 10.0) where 0 delta (open parity) = 5.0
-          // Deltas typically range from -12 to +12
-          const normalized = Math.min(9.9, Math.max(0.5, 5.0 + (rawDelta / 20) * 4.5));
+        // The provider rescales its delta periodically (observed both ±12 and ±100
+        // intraday). Normalise against the batch's own peak so the full 0.5-9.9 band
+        // is used and no currency saturates, whatever scale the feed is on.
+        const peak = Math.max(...pending.map(p => Math.abs(p.rawDelta)), 1);
+
+        for (const { currency: cur, rawDelta } of pending) {
+          const normalized = Math.min(9.9, Math.max(0.5, 5.0 + (rawDelta / peak) * 4.5));
           const score = Number(normalized.toFixed(1));
+
+          // Direction thresholds track the same peak-relative scale
+          const strongBand = peak * 0.25;
+          const softBand = peak * 0.08;
 
           results.push({
             currency: cur,
             strength_score: score,
             raw_delta: rawDelta,
             change_direction:
-              rawDelta >= 3.0 ? 'STRONG_BUY' :
-              rawDelta >= 1.0 ? 'BUY' :
-              rawDelta <= -3.0 ? 'STRONG_SELL' :
-              rawDelta <= -1.0 ? 'SELL' : 'NEUTRAL',
+              rawDelta >= strongBand ? 'STRONG_BUY' :
+              rawDelta >= softBand ? 'BUY' :
+              rawDelta <= -strongBand ? 'STRONG_SELL' :
+              rawDelta <= -softBand ? 'SELL' : 'NEUTRAL',
             rank: 0,
             source: 'https://currency-strength.com/en/',
             timestamp: now,
