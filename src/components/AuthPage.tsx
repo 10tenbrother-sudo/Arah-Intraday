@@ -1014,7 +1014,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 
                 <div className="relative flex items-center justify-center my-2">
                   <div className="border-t border-[var(--border-subtle)] w-full" />
-                  <span className="bg-[#0b0e14] px-3 text-[10px] uppercase font-mono tracking-widest text-[var(--text-muted)] shrink-0">
+                  <span className="px-3 text-[10px] uppercase font-mono tracking-widest text-[var(--text-muted)] shrink-0" style={{ background: 'var(--bg-surface)' }}>
                     atau lanjutkan dengan email
                   </span>
                   <div className="border-t border-[var(--border-subtle)] w-full" />
