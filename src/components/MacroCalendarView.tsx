@@ -557,25 +557,25 @@ export const MacroCalendarView: React.FC<MacroCalendarViewProps> = React.memo(({
           <tbody className="divide-y" style={{ borderColor: 'var(--border-hairline)' }}>
             {filteredEvents.length === 0 ? (
               <tr>
-                <td colSpan={13} className="py-12 text-center text-slate-400 font-mono text-xs">
+                <td colSpan={13} className="py-12 text-center text-[var(--text-secondary)] font-mono text-xs">
                   {timingFilter === 'TODAY' ? (
                     <div className="space-y-3 py-4 max-w-md mx-auto">
-                      <div className="p-2.5 rounded-lg bg-amber-950/40 border border-amber-800/60 text-amber-300 font-medium">
+                      <div className="p-2.5 rounded-md bg-[var(--warning-bg)] border border-[var(--warning-border)] text-[var(--warning)] font-medium">
                         Tidak ada rilis makro berdampak signifikan pada sesi hari ini (Pasar tutup / Akhir Pekan).
                       </div>
-                      <p className="text-slate-400 text-[11px]">
+                      <p className="text-[var(--text-secondary)] text-[11px]">
                         Rilis terjadwal berikutnya dimulai pada sesi kerja aktif berikutnya (Waktu Indonesia Barat).
                       </p>
                       <div className="flex items-center justify-center gap-2 pt-1">
                         <button
                           onClick={() => setTimingFilter('UPCOMING')}
-                          className="px-3 py-1.5 rounded-lg bg-cyan-950 text-cyan-300 border border-cyan-800/80 font-bold hover:bg-cyan-900 transition cursor-pointer"
+                          className="px-3 py-1.5 rounded-md bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent)] font-bold hover:opacity-90 transition cursor-pointer"
                         >
                           Lihat Rilis Akan Datang ({upcomingCount})
                         </button>
                         <button
                           onClick={() => setTimingFilter('ALL')}
-                          className="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-200 border border-slate-700 hover:bg-slate-700 transition cursor-pointer"
+                          className="px-3 py-1.5 rounded-md bg-[var(--bg-section-alt)] text-[var(--text-primary)] border border-[var(--border-strong)] hover:bg-[var(--border-subtle)] transition cursor-pointer"
                         >
                           Semua Jadwal ({events.length})
                         </button>

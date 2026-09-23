@@ -3,19 +3,19 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../../lib/utils';
 
 const alertVariants = cva(
-  'relative w-full rounded-lg border p-3.5 text-xs [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-3.5 [&>svg]:top-3.5 [&>svg]:text-neutral-100 [&>svg~*]:pl-7 font-sans',
+  'relative w-full rounded-lg border p-3.5 text-xs [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-3.5 [&>svg]:top-3.5 [&>svg]:text-[var(--text-primary)] [&>svg~*]:pl-7 font-sans',
   {
     variants: {
       variant: {
-        default: 'bg-neutral-900/90 text-neutral-200 border-neutral-800',
+        default: 'bg-[var(--bg-surface)] text-[var(--text-primary)] border-[var(--border-subtle)]',
         destructive:
-          'border-rose-900/50 bg-rose-950/40 text-rose-300 [&>svg]:text-rose-400',
+          'border-[var(--bearish-border)] bg-[var(--bearish-bg)] text-[var(--bearish)] [&>svg]:text-[var(--bearish)]',
         warning:
-          'border-amber-900/50 bg-amber-950/40 text-amber-300 [&>svg]:text-amber-400',
+          'border-[var(--warning-border)] bg-[var(--warning-bg)] text-[var(--warning)] [&>svg]:text-[var(--warning)]',
         success:
-          'border-emerald-900/50 bg-emerald-950/40 text-emerald-300 [&>svg]:text-emerald-400',
+          'border-[var(--bullish-border)] bg-[var(--bullish-bg)] text-[var(--bullish)] [&>svg]:text-[var(--bullish)]',
         info:
-          'border-cyan-900/50 bg-cyan-950/40 text-cyan-300 [&>svg]:text-cyan-400',
+          'border-[var(--accent)] bg-[var(--accent-subtle)] text-[var(--accent)] [&>svg]:text-[var(--accent)]',
       },
     },
     defaultVariants: {
@@ -55,7 +55,7 @@ const AlertDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn('text-xs [&_p]:leading-relaxed text-neutral-400', className)}
+    className={cn('text-xs [&_p]:leading-relaxed text-[var(--text-secondary)]', className)}
     {...props}
   />
 ));
