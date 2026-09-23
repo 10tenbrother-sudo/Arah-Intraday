@@ -1,0 +1,6 @@
+{
+  "name": "Arah Market — Macro & FX Intelligence Terminal",
+  "description": "Institutional-grade macroeconomic surveillance, currency strength dispersion, and cross-asset intelligence terminal.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
