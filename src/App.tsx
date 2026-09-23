@@ -468,7 +468,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#07090e] text-slate-100 flex font-sans selection:bg-cyan-500/30 selection:text-cyan-200">
+    <div className="min-h-screen bg-[var(--bg-canvas)] text-[var(--text-primary)] flex font-sans selection:bg-[var(--accent)] selection:text-white">
       {/* 1. Global Responsive Sidebar Navigation */}
       <Sidebar
         activeTab={activeTab}
@@ -513,15 +513,15 @@ export default function App() {
 
         {/* Active Instrument Filter Strip */}
         {selectedSymbol && (
-          <div className="bg-cyan-950/70 border-b border-cyan-800/60 px-4 py-1.5 flex items-center justify-between text-xs font-mono text-cyan-300">
+          <div className="px-4 py-1.5 flex items-center justify-between text-xs font-mono border-b" style={{ background: 'var(--accent-subtle)', borderColor: 'var(--border-subtle)', color: 'var(--accent)' }}>
             <div className="flex items-center gap-2">
               <span>FILTERED BY INSTRUMENT:</span>
-              <strong className="text-white font-bold bg-cyan-900 px-2 py-0.5 rounded">{selectedSymbol}</strong>
-              <span className="text-slate-400 hidden sm:inline">Highlighting events and macro correlations</span>
+              <strong className="font-bold px-2 py-0.5 rounded text-white" style={{ background: 'var(--accent)' }}>{selectedSymbol}</strong>
+              <span className="hidden sm:inline" style={{ color: 'var(--text-muted)' }}>Highlighting events and macro correlations</span>
             </div>
             <button
               onClick={() => setSelectedSymbol(null)}
-              className="text-cyan-400 hover:text-white underline cursor-pointer"
+              className="underline cursor-pointer hover:opacity-80" style={{ color: 'var(--accent)' }}
             >
               Clear Filter ×
             </button>
@@ -879,7 +879,7 @@ export default function App() {
               <AdminPanel currentUser={user} />
             ) : (
               <div className="max-w-md mx-auto my-12 p-6 rounded border text-center font-mono bg-[var(--bg-surface)] border-[var(--border-subtle)]">
-                <div className="w-12 h-12 mx-auto rounded-full bg-red-950/80 border border-red-500/40 flex items-center justify-center text-red-400 mb-4">
+                <div className="w-12 h-12 mx-auto rounded-full flex items-center justify-center mb-4" style={{ background: 'var(--bearish-bg)', border: '1px solid var(--bearish-border)', color: 'var(--bearish)' }}>
                   <ShieldAlert className="w-6 h-6" />
                 </div>
                 <h2 className="text-base font-bold text-[var(--text-primary)] uppercase tracking-wider">Access Restricted</h2>
