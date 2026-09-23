@@ -24,9 +24,9 @@
     --border-strong: #A1A1AA;
     --border-hairline: #F4F4F5;
 
-    --active-bg: #09090B;
-    --active-text: #FFFFFF;
-    --active-border: #09090B;
+    --active-bg: #FBEEE8;
+    --active-text: #09090B;
+    --active-border: #F0D9CC;
 
     --bullish: #15803D;
     --bullish-bg: #DCFCE7;
@@ -64,9 +64,9 @@
     --border-strong: #3A3A40;
     --border-hairline: #1A1A1E;
 
-    --active-bg: #FFFFFF;
-    --active-text: #000000;
-    --active-border: #FFFFFF;
+    --active-bg: #1F1F24;
+    --active-text: #FAFAFA;
+    --active-border: #3A3A40;
 
     --bullish: #22C55E;
     --bullish-bg: rgba(34, 197, 94, 0.15);
