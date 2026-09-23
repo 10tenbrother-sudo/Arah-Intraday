@@ -558,7 +558,7 @@ export interface CurrencyStrengthConfluenceItem {
   netDifferential: number; // baseScore - quoteScore e.g. +1.8
   bias: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
   alignment: 'CONFIRMED' | 'DIVERGENCE' | 'NEUTRAL';
-  advantageLabel: string; // e.g. 'USD (#5, 4.3) Unggul +3.8 atas JPY (#8, 0.5)'
+  advantageLabel: string; // e.g. 'USD (#5, 4.3) leads JPY (#8, 0.5) by +3.8'
   summary: string;
 }
 

@@ -332,7 +332,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
           </div>
           <div className="text-[11px] text-[var(--text-muted)]">
             {kpiStats.upcomingHigh ? (
-              `${new Date(kpiStats.upcomingHigh.date_time_utc).toLocaleTimeString('id-ID', {
+              `${new Date(kpiStats.upcomingHigh.date_time_utc).toLocaleTimeString('en-GB', {
                 timeZone: 'Asia/Jakarta',
                 hour12: false,
                 hour: '2-digit',
@@ -486,7 +486,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
                     const eventDate = new Date(event.last_updated_at || event.first_detected_at);
                     const eventTime = isNaN(eventDate.getTime())
                       ? 'LIVE'
-                      : eventDate.toLocaleTimeString('id-ID', {
+                      : eventDate.toLocaleTimeString('en-GB', {
                           timeZone: 'Asia/Jakarta',
                           hour12: false,
                           hour: '2-digit',
@@ -567,7 +567,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
 
                     <div className="flex items-center gap-3 shrink-0 text-[10px] tabular-nums">
                       <span className="font-bold text-[var(--text-primary)]">
-                        {new Date(item.date_time_utc).toLocaleTimeString('id-ID', {
+                        {new Date(item.date_time_utc).toLocaleTimeString('en-GB', {
                           timeZone: 'Asia/Jakarta',
                           hour12: false,
                           hour: '2-digit',

@@ -249,14 +249,14 @@ export const CurrencyStrengthChart: React.FC<CurrencyStrengthChartProps> = React
     for (let i = 0; i < count; i += step) {
       const t = ts[i];
       const d = new Date(t);
-      const timeStr = d.toLocaleTimeString('id-ID', {
+      const timeStr = d.toLocaleTimeString('en-GB', {
         timeZone: 'Asia/Jakarta',
         hour: '2-digit',
         minute: '2-digit',
         hour12: false,
       });
 
-      const dayStr = d.toLocaleDateString('id-ID', {
+      const dayStr = d.toLocaleDateString('en-GB', {
         timeZone: 'Asia/Jakarta',
         day: 'numeric',
         month: 'short',
@@ -277,8 +277,8 @@ export const CurrencyStrengthChart: React.FC<CurrencyStrengthChartProps> = React
         idx: count - 1,
         timestamp: lastT,
         label: range === '2d'
-          ? `${lastD.toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta', day: 'numeric', month: 'short' })} ${lastD.toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit', hour12: false })}`
-          : `${lastD.toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit', hour12: false })}`,
+          ? `${lastD.toLocaleDateString('en-GB', { timeZone: 'Asia/Jakarta', day: 'numeric', month: 'short' })} ${lastD.toLocaleTimeString('en-GB', { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit', hour12: false })}`
+          : `${lastD.toLocaleTimeString('en-GB', { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit', hour12: false })}`,
       });
     }
 
@@ -623,12 +623,12 @@ export const CurrencyStrengthChart: React.FC<CurrencyStrengthChartProps> = React
               <Calendar className="w-3 h-3 text-[var(--warning)]" />
               <span>TIME:</span>
               <span className="text-[var(--warning)] font-bold">
-                {new Date(activeTimestamp).toLocaleDateString('id-ID', {
+                {new Date(activeTimestamp).toLocaleDateString('en-GB', {
                   timeZone: 'Asia/Jakarta',
                   day: 'numeric',
                   month: 'short',
                 })}{' '}
-                {new Date(activeTimestamp).toLocaleTimeString('id-ID', {
+                {new Date(activeTimestamp).toLocaleTimeString('en-GB', {
                   timeZone: 'Asia/Jakarta',
                   hour: '2-digit',
                   minute: '2-digit',

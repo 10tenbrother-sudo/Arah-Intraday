@@ -171,8 +171,8 @@ class MailService {
         success: false,
         connected: false,
         testEmailSent: false,
-        message: 'Kredensial SMTP belum lengkap. Variabel SMTP_USER dan/atau SMTP_PASS belum diatur di environment.',
-        details: 'Pastikan SMTP_USER (email pengirim) dan SMTP_PASS (Google App Password 16-karakter) telah diatur di konfigurasi.',
+        message: 'SMTP credentials are incomplete. The SMTP_USER and/or SMTP_PASS variables are not set in the environment.',
+        details: 'Make sure SMTP_USER (sender email) and SMTP_PASS (16-character Google App Password) are set in the configuration.',
         config,
       };
     }
@@ -183,7 +183,7 @@ class MailService {
         connected: false,
         testEmailSent: false,
         message: `Format SMTP_USER ("${config.userMasked}") bukan alamat email yang valid.`,
-        details: 'Gunakan alamat email lengkap, contoh: trader@gmail.com',
+        details: 'Use a full email address, e.g. trader@example.com',
         config,
       };
     }
@@ -193,8 +193,8 @@ class MailService {
         success: false,
         connected: false,
         testEmailSent: false,
-        message: 'Gagal menginisialisasi transporter SMTP.',
-        details: 'Periksa pengaturan host dan port SMTP.',
+        message: 'Could not initialise the SMTP transporter.',
+        details: 'Check the SMTP host and port settings.',
         config,
       };
     }
@@ -216,18 +216,18 @@ class MailService {
         await this.transporter.sendMail({
           from: fromAddress,
           to: cleanRecipient,
-          subject: '✅ Tes Koneksi SMTP Berhasil • ArahMarket Terminal',
-          text: `Halo Admin,\n\nIni adalah email uji coba (test mail) dari ArahMarket Terminal.\nKoneksi SMTP ke ${config.host}:${config.port} berhasil terverifikasi pada ${new Date().toLocaleString('id-ID')}.\nLatensi handshake: ${latencyMs} ms.\n\nSalam,\nArahMarket System Engine`,
+          subject: '✅ SMTP connection test succeeded • ArahMarket Terminal',
+          text: `Hello Admin,\n\nThis is a test email from the ArahMarket Terminal.\nThe SMTP connection to ${config.host}:${config.port} was verified on ${new Date().toLocaleString('en-GB')}.\nHandshake latency: ${latencyMs} ms.\n\nRegards,\nArahMarket System Engine`,
           html: `
             <div style="font-family:ui-sans-serif,system-ui,sans-serif;max-width:520px;margin:0 auto;padding:24px;border:1px solid #1e293b;border-radius:12px;background:#020617;color:#f8fafc;">
               <div style="display:inline-block;padding:4px 10px;background:#0891b2;color:#020617;font-weight:800;font-size:11px;border-radius:6px;font-family:monospace;">ARAHMARKET SMTP VERIFIER</div>
-              <h2 style="color:#38bdf8;margin:16px 0 8px;font-size:20px;">Koneksi SMTP Berhasil Diverifikasi!</h2>
-              <p style="color:#94a3b8;font-size:13px;line-height:1.5;">Kredensial SMTP Anda valid dan server email siap mengirimkan tautan verifikasi email akun baru serta email pemulihan kata sandi pengguna.</p>
+              <h2 style="color:#38bdf8;margin:16px 0 8px;font-size:20px;">SMTP connection verified!</h2>
+              <p style="color:#94a3b8;font-size:13px;line-height:1.5;">Your SMTP credentials are valid and the mail server is ready to send new-account verification links and password recovery emails.</p>
               <div style="background:#0f172a;border:1px solid #334155;border-radius:8px;padding:12px 16px;margin:16px 0;font-family:monospace;font-size:12px;color:#38bdf8;line-height:1.7;">
                 <div>• Host: <strong>${config.host}:${config.port}</strong></div>
-                <div>• Pengirim: <strong>${config.userMasked}</strong></div>
-                <div>• Latensi Handshake: <strong>${latencyMs} ms</strong></div>
-                <div>• Waktu Uji: <strong>${new Date().toLocaleString('id-ID')}</strong></div>
+                <div>• Sender: <strong>${config.userMasked}</strong></div>
+                <div>• Handshake latency: <strong>${latencyMs} ms</strong></div>
+                <div>• Test time: <strong>${new Date().toLocaleString('en-GB')}</strong></div>
               </div>
               <p style="color:#64748b;font-size:11px;margin:0;">ArahMarket Institutional Intelligence Platform</p>
             </div>
@@ -256,11 +256,11 @@ class MailService {
         errMsg.includes('Username and Password not accepted')
       ) {
         hint =
-          'Kata sandi atau pengguna ditolak (Error 535). Jika menggunakan Gmail, pastikan Anda menggunakan Google App Password 16 karakter (bukan kata sandi login biasa akun Google) dan pastikan Verifikasi 2 Langkah (2FA) telah aktif di akun Google.';
+          'Username or password rejected (Error 535). With Gmail, use a 16-character Google App Password (not the normal Google account password) and make sure 2-Step Verification is enabled on the Google account.';
       } else if (errMsg.includes('ETIMEDOUT') || errMsg.includes('ECONNREFUSED')) {
-        hint = `Gagal terhubung ke host ${config.host}:${config.port}. Periksa apakah port diblokir oleh firewall atau alamat host salah.`;
+        hint = `Could not connect to host ${config.host}:${config.port}. Check whether the port is blocked by a firewall or the host address is wrong.`;
       } else if (errMsg.includes('ENOTFOUND')) {
-        hint = `Alamat host ${config.host} tidak ditemukan (DNS lookup failed).`;
+        hint = `Host address ${config.host} was not found (DNS lookup failed).`;
       }
 
       return {
@@ -299,7 +299,7 @@ class MailService {
     this.lastSentEmail = {
       to: toEmail,
       name,
-      subject: 'Aktivasi Akun ArahMarket • Verifikasi Email Anda',
+      subject: 'ArahMarket account activation • Verify your email',
       verificationUrl,
       token,
       sentAt: new Date().toISOString(),
@@ -309,11 +309,11 @@ class MailService {
 
     const htmlContent = `
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Verifikasi Email ArahMarket</title>
+  <title>ArahMarket Email Verification</title>
   <style>
     body { margin: 0; padding: 0; background-color: #020617; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #f8fafc; }
     .wrapper { max-width: 560px; margin: 40px auto; background-color: #0f172a; border: 1px solid #1e293b; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
@@ -338,31 +338,31 @@ class MailService {
   <div class="wrapper">
     <div class="header">
       <div class="logo-badge">ARAH MARKET</div>
-      <h1 class="title">Verifikasi Akun Trading Anda</h1>
-      <p class="subtitle">Satu langkah lagi untuk membuka akses Institutional Macro Surveillance</p>
+      <h1 class="title">Verify your trading account</h1>
+      <p class="subtitle">One step away from Institutional Macro Surveillance access</p>
     </div>
     <div class="content">
-      <div class="user-greeting">Halo ${name || 'Trader'},</div>
-      <p>Terima kasih telah mendaftar di <strong>ArahMarket Terminal</strong>. Untuk mengaktifkan akun Anda, Anda dapat menggunakan salah satu dari 2 cara mudah di bawah ini:</p>
+      <div class="user-greeting">Hello ${name || 'Trader'},</div>
+      <p>Thanks for signing up to <strong>ArahMarket Terminal</strong>. Activate your account using either of the two options below:</p>
       
       <!-- Option 1: 6-Digit Numeric Code -->
       <div class="code-box">
-        <div class="code-label">KODE AKTIVASI AKUN (6 DIGIT)</div>
+        <div class="code-label">ACCOUNT ACTIVATION CODE (6 DIGITS)</div>
         <div class="code-number">${displayCode}</div>
-        <div class="code-desc">Ketikkan 6 angka di atas langsung pada layar aplikasi ArahMarket untuk aktivasi instan.</div>
+        <div class="code-desc">Enter those 6 digits on the ArahMarket app screen for instant activation.</div>
       </div>
 
       <!-- Option 2: Direct Activation Button -->
       <div class="btn-container">
-        <a href="${verificationUrl}" target="_blank" class="btn">AKTIFKAN AKUN SAYA</a>
+        <a href="${verificationUrl}" target="_blank" class="btn">ACTIVATE MY ACCOUNT</a>
       </div>
 
-      <p style="font-size: 12px; color: #94a3b8; text-align: center;">Atau salin dan buka tautan berikut langsung di peramban Anda:</p>
+      <p style="font-size: 12px; color: #94a3b8; text-align: center;">Or copy and open this link directly in your browser:</p>
       <div class="link-box">${verificationUrl}</div>
 
       <div class="notice">
-        <p style="margin: 0 0 6px;">⏱ <strong>Masa Berlaku:</strong> Kode dan tautan ini berlaku selama <strong>24 jam</strong>.</p>
-        <p style="margin: 0;">🛡 <em>Jika Anda tidak pernah mendaftar di ArahMarket, silakan abaikan email ini.</em></p>
+        <p style="margin: 0 0 6px;">⏱ <strong>Validity:</strong> This code and link are valid for <strong>24 hours</strong>.</p>
+        <p style="margin: 0;">🛡 <em>If you never signed up to ArahMarket, please ignore this email.</em></p>
       </div>
     </div>
     <div class="footer">
@@ -374,19 +374,19 @@ class MailService {
     `;
 
     const textContent = `
-Halo ${name || 'Trader'},
+Hello ${name || 'Trader'},
 
-Terima kasih telah mendaftar di ArahMarket Terminal.
-Kode aktivasi akun Anda: ${displayCode}
+Thanks for signing up to ArahMarket Terminal.
+Your account activation code: ${displayCode}
 
-Masukkan 6 angka tersebut pada layar aplikasi ArahMarket, atau buka tautan verifikasi berikut:
+Enter those 6 digits on the ArahMarket app screen, or open this verification link:
 ${verificationUrl}
 
-Kode dan tautan ini berlaku selama 24 jam.
-Jika Anda tidak merasa mendaftar di ArahMarket, abaikan email ini.
+This code and link are valid for 24 hours.
+If you did not sign up to ArahMarket, ignore this email.
 
-Salam,
-Tim ArahMarket
+Regards,
+The ArahMarket team
     `.trim();
 
     // If live SMTP is ready, send real email
@@ -395,7 +395,7 @@ Tim ArahMarket
         const info = await this.transporter.sendMail({
           from: fromAddress,
           to: toEmail,
-          subject: 'Aktivasi Akun ArahMarket • Verifikasi Email Anda',
+          subject: 'ArahMarket account activation • Verify your email',
           text: textContent,
           html: htmlContent,
         });
@@ -456,7 +456,7 @@ Tim ArahMarket
     this.lastSentEmail = {
       to: toEmail,
       name,
-      subject: 'Atur Ulang Kata Sandi • ArahMarket Terminal',
+      subject: 'Reset your password • ArahMarket Terminal',
       verificationUrl: resetUrl,
       token,
       sentAt: new Date().toISOString(),
@@ -466,10 +466,10 @@ Tim ArahMarket
 
     const htmlContent = `
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Reset Kata Sandi ArahMarket</title>
+  <title>ArahMarket Password Reset</title>
   <style>
     body { margin: 0; padding: 0; background-color: #020617; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #f8fafc; }
     .wrapper { max-width: 560px; margin: 40px auto; background-color: #0f172a; border: 1px solid #1e293b; border-radius: 16px; overflow: hidden; }
@@ -487,19 +487,19 @@ Tim ArahMarket
   <div class="wrapper">
     <div class="header">
       <div style="display:inline-block;background:#0891b2;color:#020617;font-weight:800;font-size:11px;padding:4px 10px;border-radius:6px;font-family:monospace;">ARAH MARKET</div>
-      <h1 class="title">Permintaan Reset Kata Sandi</h1>
+      <h1 class="title">Password reset request</h1>
     </div>
     <div class="content">
-      <p>Halo <strong>${name || 'Trader'}</strong>,</p>
-      <p>Kami menerima permintaan untuk mengatur ulang kata sandi akun ArahMarket Anda (<code>${toEmail}</code>). Klik tombol di bawah ini untuk membuat kata sandi baru:</p>
+      <p>Hello <strong>${name || 'Trader'}</strong>,</p>
+      <p>We received a request to reset the password for your ArahMarket account (<code>${toEmail}</code>). Use the button below to create a new password:</p>
       <div class="btn-container">
-        <a href="${resetUrl}" target="_blank" class="btn">RESET KATA SANDI SAYA</a>
+        <a href="${resetUrl}" target="_blank" class="btn">RESET MY PASSWORD</a>
       </div>
-      <p style="font-size: 12px; color: #94a3b8;">Atau buka tautan ini secara manual di peramban Anda:</p>
+      <p style="font-size: 12px; color: #94a3b8;">Or open this link manually in your browser:</p>
       <div class="link-box">${resetUrl}</div>
       <div class="notice">
-        <p style="margin:0 0 6px;">⏱ <strong>Masa Berlaku:</strong> Tautan ini hanya berlaku selama <strong>2 jam</strong>.</p>
-        <p style="margin:0;">🛡 Jika Anda tidak meminta reset kata sandi, amankan akun Anda atau abaikan pesan ini.</p>
+        <p style="margin:0 0 6px;">⏱ <strong>Validity:</strong> This link is valid for <strong>2 hours</strong>.</p>
+        <p style="margin:0;">🛡 If you did not request a password reset, secure your account or ignore this message.</p>
       </div>
     </div>
     <div class="footer">ARAHMARKET INTELLIGENCE TERMINAL • SECURITY GATEWAY</div>
@@ -513,8 +513,8 @@ Tim ArahMarket
         const info = await this.transporter.sendMail({
           from: fromAddress,
           to: toEmail,
-          subject: 'Atur Ulang Kata Sandi • ArahMarket Terminal',
-          text: `Halo ${name || 'Trader'},\n\nKlik tautan ini untuk mereset kata sandi Anda:\n${resetUrl}\n\nTautan berlaku 2 jam.`,
+          subject: 'Reset your password • ArahMarket Terminal',
+          text: `Hello ${name || 'Trader'},\n\nClick this link to reset your password:\n${resetUrl}\n\nThe link is valid for 2 hours.`,
           html: htmlContent,
         });
         return { success: true, messageId: info.messageId, resetUrl, devMode: false };
@@ -547,7 +547,7 @@ Tim ArahMarket
     this.lastSentEmail = {
       to: toEmail,
       name,
-      subject: 'Tautan Masuk Langsung (Magic Link) • ArahMarket Terminal',
+      subject: 'Instant sign-in link • ArahMarket Terminal',
       verificationUrl: magicUrl,
       token,
       sentAt: new Date().toISOString(),
@@ -557,7 +557,7 @@ Tim ArahMarket
 
     const htmlContent = `
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <title>Tautan Masuk ArahMarket</title>
@@ -578,18 +578,18 @@ Tim ArahMarket
   <div class="wrapper">
     <div class="header">
       <div style="display:inline-block;background:#0891b2;color:#020617;font-weight:800;font-size:11px;padding:4px 10px;border-radius:6px;font-family:monospace;">ARAH MARKET</div>
-      <h1 class="title">Masuk Cepat Tanpa Kata Sandi</h1>
+      <h1 class="title">Passwordless sign-in</h1>
     </div>
     <div class="content">
-      <p>Halo <strong>${name || 'Trader'}</strong>,</p>
-      <p>Gunakan tautan aman sekali pakai di bawah ini untuk langsung masuk ke ArahMarket Terminal tanpa mengetikkan kata sandi:</p>
+      <p>Hello <strong>${name || 'Trader'}</strong>,</p>
+      <p>Use this secure one-time link to sign in to the ArahMarket Terminal without typing a password:</p>
       <div class="btn-container">
-        <a href="${magicUrl}" target="_blank" class="btn">MASUK KE TERMINAL SEKARANG</a>
+        <a href="${magicUrl}" target="_blank" class="btn">SIGN IN TO THE TERMINAL NOW</a>
       </div>
-      <p style="font-size: 12px; color: #94a3b8;">Atau buka tautan ini di peramban Anda:</p>
+      <p style="font-size: 12px; color: #94a3b8;">Or open this link in your browser:</p>
       <div class="link-box">${magicUrl}</div>
       <div class="notice">
-        <p style="margin:0 0 6px;">⏱ <strong>Masa Berlaku:</strong> Tautan ini hanya berlaku selama <strong>1 jam</strong> untuk 1 kali penggunaan.</p>
+        <p style="margin:0 0 6px;">⏱ <strong>Validity:</strong> This link is valid for <strong>1 hour</strong> and a single use.</p>
       </div>
     </div>
     <div class="footer">ARAHMARKET INTELLIGENCE TERMINAL • SECURE ONE-CLICK ACCESS</div>
@@ -603,8 +603,8 @@ Tim ArahMarket
         const info = await this.transporter.sendMail({
           from: fromAddress,
           to: toEmail,
-          subject: 'Tautan Masuk Langsung (Magic Link) • ArahMarket Terminal',
-          text: `Halo ${name || 'Trader'},\n\nKlik tautan ini untuk langsung masuk ke ArahMarket Terminal:\n${magicUrl}\n\nTautan berlaku 1 jam.`,
+          subject: 'Instant sign-in link • ArahMarket Terminal',
+          text: `Hello ${name || 'Trader'},\n\nClick this link to sign in to the ArahMarket Terminal:\n${magicUrl}\n\nThe link is valid for 1 hour.`,
           html: htmlContent,
         });
         return { success: true, messageId: info.messageId, magicUrl, devMode: false };
