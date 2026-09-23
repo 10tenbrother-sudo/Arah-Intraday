@@ -13,7 +13,7 @@ function SkeletonBlock({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        'animate-pulse rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)]',
+        'animate-pulse rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-surface)]',
         className
       )}
     />

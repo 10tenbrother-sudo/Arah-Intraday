@@ -19,11 +19,11 @@ export function ErrorState({
   return (
     <div
       className={cn(
-        'flex flex-col items-center justify-center p-6 text-center rounded-xl border border-[var(--bearish-border)] bg-[var(--bearish-bg)] my-3',
+        'flex flex-col items-center justify-center p-6 text-center rounded-[var(--radius-md)] border border-[var(--bearish-border)] bg-[var(--bearish-bg)] my-3',
         className
       )}
     >
-      <div className="h-10 w-10 rounded-lg bg-[var(--bearish-bg)] border border-[var(--bearish-border)] flex items-center justify-center text-[var(--bearish)] mb-3 shadow-inner">
+      <div className="h-10 w-10 rounded-[var(--radius-sm)] bg-[var(--bearish-bg)] border border-[var(--bearish-border)] flex items-center justify-center text-[var(--bearish)] mb-3 shadow-inner">
         <AlertTriangle className="w-5 h-5 text-[var(--bearish)]" />
       </div>
       <h3 className="text-sm font-semibold text-[var(--bearish)] font-mono tracking-tight">

@@ -40,11 +40,11 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        'flex flex-col items-center justify-center p-8 text-center rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] my-3',
+        'flex flex-col items-center justify-center p-8 text-center rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] my-3',
         className
       )}
     >
-      <div className="h-10 w-10 rounded-lg bg-[var(--bg-section-alt)] border border-[var(--border-strong)] flex items-center justify-center text-[var(--text-secondary)] mb-3 shadow-inner">
+      <div className="h-10 w-10 rounded-[var(--radius-sm)] bg-[var(--bg-section-alt)] border border-[var(--border-strong)] flex items-center justify-center text-[var(--text-secondary)] mb-3 shadow-inner">
         {renderIcon()}
       </div>
       <h3 className="text-sm font-semibold text-[var(--text-primary)] font-mono tracking-tight">

@@ -46,23 +46,23 @@
   }
 
   html.dark {
-    /* Dark Theme (Clean Solid Pure Black) */
-    --bg-canvas: #000000;
-    --bg-section-alt: #0C0C0D;
-    --bg-surface: #0E0E10;
-    --bg-surface-elevated: #151518;
-    --bg-sidebar-base: #000000;
-    --bg-sidebar: #000000;
-    --bg-header-base: #000000;
-    --bg-header: #000000;
-    --bg-dark-primary: #000000;
-    --bg-dark-secondary: #0E0E10;
+    /* Dark Theme (calm surfaces, not pure black) */
+    --bg-canvas: #0A0A0B;
+    --bg-section-alt: #101013;
+    --bg-surface: #101013;
+    --bg-surface-elevated: #17171B;
+    --bg-sidebar-base: #0A0A0B;
+    --bg-sidebar: #0A0A0B;
+    --bg-header-base: #0A0A0B;
+    --bg-header: #0A0A0B;
+    --bg-dark-primary: #0A0A0B;
+    --bg-dark-secondary: #101013;
     --text-primary: #FFFFFF;
     --text-secondary: #A1A1AA;
-    --text-muted: #71717A;
-    --border-subtle: #27272A;
-    --border-strong: #3F3F46;
-    --border-hairline: #18181B;
+    --text-muted: #82828C;
+    --border-subtle: #222226;
+    --border-strong: #3A3A40;
+    --border-hairline: #1A1A1E;
 
     --active-bg: #FFFFFF;
     --active-text: #000000;
@@ -240,7 +240,7 @@
 }
 
 .terminal-table td {
-  padding: 0.625rem 0.75rem;
+  padding: 0.5rem 0.75rem;
   border-bottom: 1px solid var(--border-hairline);
   font-size: 0.8125rem;
   color: var(--text-primary);
