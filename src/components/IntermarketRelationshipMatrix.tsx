@@ -375,7 +375,7 @@ export const IntermarketRelationshipMatrix: React.FC<IntermarketRelationshipMatr
               <button
                 onClick={onRefresh}
                 disabled={isRefreshing}
-                className="px-2.5 py-1.5 rounded border border-[var(--border-subtle)] text-xs font-mono font-medium text-[var(--text-primary)] bg-[var(--bg-section-alt)] hover:border-[var(--text-primary)] transition cursor-pointer flex items-center gap-1.5"
+                className="px-2.5 py-1.5 rounded border border-[var(--border-subtle)] text-xs font-mono font-medium text-[var(--text-primary)] bg-[var(--bg-section-alt)] hover:border-[var(--border-strong)] transition cursor-pointer flex items-center gap-1.5"
                 title="Refresh Intermarket Live Feeds"
               >
                 <RefreshCw className={`w-3 h-3 ${isRefreshing ? 'animate-spin text-[var(--accent)]' : ''}`} />

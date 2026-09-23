@@ -322,7 +322,7 @@ export const ArahMarketView: React.FC<ArahMarketViewProps> = React.memo(({
               return (
                 <div
                   key={p.pair}
-                  className="terminal-panel p-3.5 flex flex-col justify-between space-y-3 hover:border-[var(--text-primary)] transition"
+                  className="terminal-panel p-3.5 flex flex-col justify-between space-y-3 hover:border-[var(--border-strong)] transition"
                 >
                   <div>
                     {/* Top Row: Symbol, Price, & 24h Change */}
