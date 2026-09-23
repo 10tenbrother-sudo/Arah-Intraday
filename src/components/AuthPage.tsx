@@ -439,17 +439,17 @@ export const AuthPage: React.FC<AuthPageProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-cyan-500 selection:text-slate-950 relative">
+    <div className="min-h-screen bg-[var(--bg-canvas)] text-[var(--text-primary)] flex flex-col font-sans selection:bg-[var(--accent)] selection:text-white relative">
       {/* Ambient background glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-80 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-80 bg-[var(--accent-subtle)] rounded-full blur-3xl pointer-events-none" />
 
       {/* Top Header */}
-      <header className="px-4 sm:px-8 py-4 flex items-center justify-between border-b border-slate-900 bg-slate-950/80 backdrop-blur-sm z-10">
+      <header className="px-4 sm:px-8 py-4 flex items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-header)] backdrop-blur-sm z-10">
         <Button
           variant="ghost"
           size="sm"
           onClick={() => onNavigate('/')}
-          className="text-slate-400 hover:text-slate-100 font-mono"
+          className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] font-mono"
           id="back-home-btn"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
@@ -460,17 +460,17 @@ export const AuthPage: React.FC<AuthPageProps> = ({
           onClick={() => onNavigate('/')}
           className="flex items-center gap-2 cursor-pointer"
         >
-          <div className="w-6 h-6 rounded bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-slate-950 font-bold text-xs">
+          <div className="w-6 h-6 rounded bg-[var(--accent)] flex items-center justify-center text-white font-bold text-xs">
             <Layers className="w-3.5 h-3.5 stroke-[2.5]" />
           </div>
-          <span className="font-mono text-xs font-bold tracking-wider text-slate-200">
-            ARAHMARKET <span className="text-cyan-400">TERMINAL</span>
+          <span className="font-mono text-xs font-bold tracking-wider text-[var(--text-primary)]">
+            ARAHMARKET <span className="text-[var(--accent)]">TERMINAL</span>
           </span>
         </div>
 
         <div className="hidden sm:flex items-center">
           <Badge variant="cyan" className="gap-1.5 py-1">
-            <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
+            <ShieldCheck className="w-3.5 h-3.5 text-[var(--accent)]" />
             <span>INSTITUTIONAL GATEWAY</span>
           </Badge>
         </div>
@@ -478,16 +478,16 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 
       {/* Main Authentication Container */}
       <main className="flex-1 flex items-center justify-center p-4 sm:p-8 z-10">
-        <Card className="w-full max-w-md bg-slate-900/90 border-slate-800 shadow-2xl p-6 sm:p-8 space-y-6">
+        <Card className="w-full max-w-md bg-[var(--bg-surface)] border-[var(--border-subtle)] shadow-2xl p-6 sm:p-8 space-y-6">
 
           {/* STATE 1: Token Verifying in Progress */}
           {tokenVerifying && (
             <div className="text-center py-8 space-y-4 font-mono">
-              <div className="w-12 h-12 rounded-2xl bg-cyan-950/80 border border-cyan-700/80 flex items-center justify-center mx-auto text-cyan-400 shadow-inner">
+              <div className="w-12 h-12 rounded-md bg-[var(--accent-subtle)]/80 border border-[var(--accent)]/80 flex items-center justify-center mx-auto text-[var(--accent)] shadow-inner">
                 <RefreshCw className="w-6 h-6 animate-spin" />
               </div>
-              <h2 className="text-lg font-bold text-slate-100">Memvalidasi Tautan Akses...</h2>
-              <p className="text-xs text-slate-400 font-sans">
+              <h2 className="text-lg font-bold text-[var(--text-primary)]">Memvalidasi Tautan Akses...</h2>
+              <p className="text-xs text-[var(--text-secondary)] font-sans">
                 Mohon tunggu sejenak, sistem sedang mengonfirmasi token otentikasi akun Anda.
               </p>
             </div>
@@ -495,9 +495,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 
           {/* STATE 2: Token Verification Success Banner */}
           {tokenVerifySuccess && !tokenVerifying && (
-            <div className="p-4 rounded-xl bg-emerald-950/60 border border-emerald-600/80 text-emerald-300 text-xs space-y-2 font-sans">
-              <div className="flex items-center gap-2 font-semibold text-emerald-200">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <div className="p-4 rounded-md bg-[var(--bullish-bg)]/60 border border-[var(--bullish-border)]/80 text-[var(--bullish)] text-xs space-y-2 font-sans">
+              <div className="flex items-center gap-2 font-semibold text-[var(--bullish)]">
+                <CheckCircle2 className="w-4 h-4 text-[var(--bullish)] shrink-0" />
                 <span>Otentikasi Berhasil</span>
               </div>
               <p>{tokenVerifySuccess}</p>
@@ -506,9 +506,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 
           {/* STATE 3: Success Message Banner */}
           {successMessage && !tokenVerifySuccess && (
-            <div className="p-4 rounded-xl bg-emerald-950/60 border border-emerald-600/80 text-emerald-300 text-xs space-y-2 font-sans">
-              <div className="flex items-center gap-2 font-semibold text-emerald-200">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <div className="p-4 rounded-md bg-[var(--bullish-bg)]/60 border border-[var(--bullish-border)]/80 text-[var(--bullish)] text-xs space-y-2 font-sans">
+              <div className="flex items-center gap-2 font-semibold text-[var(--bullish)]">
+                <CheckCircle2 className="w-4 h-4 text-[var(--bullish)] shrink-0" />
                 <span>Berhasil</span>
               </div>
               <p>{successMessage}</p>
@@ -517,9 +517,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 
           {/* STATE 4: Token Verification Error Banner */}
           {tokenVerifyError && (
-            <div className="p-4 rounded-xl bg-rose-950/60 border border-rose-700/80 text-rose-300 text-xs space-y-3 font-sans">
-              <div className="flex items-center gap-2 font-semibold text-rose-200">
-                <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+            <div className="p-4 rounded-md bg-[var(--bearish-bg)]/60 border border-[var(--bearish-border)]/80 text-[var(--bearish)] text-xs space-y-3 font-sans">
+              <div className="flex items-center gap-2 font-semibold text-[var(--bearish)]">
+                <AlertCircle className="w-4 h-4 text-[var(--bearish)] shrink-0" />
                 <span>Validasi Tautan Gagal</span>
               </div>
               <p>{tokenVerifyError}</p>
@@ -529,7 +529,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   setTokenVerifyError(null);
                   onNavigate('/login');
                 }}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-mono font-medium transition cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-primary)] text-[11px] font-mono font-medium transition cursor-pointer"
               >
                 <span>Buka Formulir Masuk</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -541,36 +541,36 @@ export const AuthPage: React.FC<AuthPageProps> = ({
           {verificationPending ? (
             <div className="space-y-6">
               <div className="text-center space-y-2">
-                <div className="w-14 h-14 rounded-2xl bg-cyan-950/90 border border-cyan-600/60 flex items-center justify-center mx-auto text-cyan-400 mb-3 shadow-lg shadow-cyan-950/60 relative">
+                <div className="w-14 h-14 rounded-md bg-[var(--accent-subtle)]/90 border border-[var(--accent)]/60 flex items-center justify-center mx-auto text-[var(--accent)] mb-3 shadow-lg  relative">
                   <Mail className="w-7 h-7" />
-                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-cyan-400 rounded-full border-2 border-slate-900 flex items-center justify-center">
-                    <Clock className="w-2.5 h-2.5 text-slate-950 stroke-[3]" />
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-[var(--accent)] rounded-full border-2 border-[var(--border-subtle)] flex items-center justify-center">
+                    <Clock className="w-2.5 h-2.5 text-white stroke-[3]" />
                   </span>
                 </div>
-                <h1 className="text-xl font-bold font-mono tracking-tight text-slate-100">
+                <h1 className="text-xl font-bold font-mono tracking-tight text-[var(--text-primary)]">
                   Aktivasi Email Anda
                 </h1>
-                <p className="text-xs text-slate-300 font-sans leading-relaxed">
+                <p className="text-xs text-[var(--text-secondary)] font-sans leading-relaxed">
                   Tautan dan kode verifikasi telah dikirimkan ke:
                 </p>
-                <div className="inline-block px-3 py-1.5 rounded-lg bg-slate-950 border border-cyan-500/40 text-cyan-300 font-mono text-xs font-semibold">
+                <div className="inline-block px-3 py-1.5 rounded-md bg-[var(--bg-canvas)] border border-[var(--accent)] text-[var(--accent)] font-mono text-xs font-semibold">
                   {registeredEmail}
                 </div>
               </div>
 
               {/* Form Input 6-Digit OTP Code */}
-              <form onSubmit={handleVerifyOtp} className="p-4 rounded-xl bg-slate-900/90 border border-cyan-500/40 space-y-3.5 shadow-xl">
+              <form onSubmit={handleVerifyOtp} className="p-4 rounded-md bg-[var(--bg-surface)] border border-[var(--accent)] space-y-3.5 shadow-xl">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-mono font-bold text-cyan-300 uppercase tracking-wider flex items-center gap-1.5">
-                    <KeyRound className="w-3.5 h-3.5 text-cyan-400" />
+                  <span className="text-[11px] font-mono font-bold text-[var(--accent)] uppercase tracking-wider flex items-center gap-1.5">
+                    <KeyRound className="w-3.5 h-3.5 text-[var(--accent)]" />
                     Aktivasi dengan 6-Digit Kode Email
                   </span>
-                  <span className="text-[10px] font-mono text-cyan-400/80 bg-cyan-950 px-2 py-0.5 rounded border border-cyan-800">
+                  <span className="text-[10px] font-mono text-[var(--accent)]/80 bg-[var(--accent-subtle)] px-2 py-0.5 rounded border border-[var(--accent)]">
                     Bebas Hambatan
                   </span>
                 </div>
 
-                <p className="text-[11px] text-slate-300 leading-relaxed font-sans">
+                <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed font-sans">
                   Ketik 6 angka kode aktivasi yang dikirim ke email Anda di bawah ini (solusi tercepat jika tautan email terhalang izin browser):
                 </p>
 
@@ -583,20 +583,20 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                     placeholder="Contoh: 849201"
                     value={otpCode}
                     onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    className="flex-1 px-3 py-2.5 bg-slate-950 border border-slate-700 focus:border-cyan-400 rounded-lg text-center font-mono text-base tracking-[0.25em] font-bold text-cyan-300 outline-none placeholder:text-slate-600 placeholder:tracking-normal placeholder:font-sans placeholder:text-xs transition"
+                    className="flex-1 px-3 py-2.5 bg-[var(--bg-canvas)] border border-[var(--border-strong)] focus:border-[var(--accent)] rounded-md text-center font-mono text-base tracking-[0.25em] font-bold text-[var(--accent)] outline-none placeholder:text-[var(--text-muted)] placeholder:tracking-normal placeholder:font-sans placeholder:text-xs transition"
                   />
                   <button
                     type="submit"
                     disabled={otpVerifying || otpCode.trim().length < 4}
-                    className="px-4 py-2.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold font-mono text-xs flex items-center justify-center gap-1.5 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+                    className="px-4 py-2.5 rounded-md bg-[var(--accent)] hover:opacity-90 text-white font-bold font-mono text-xs flex items-center justify-center gap-1.5 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
                   >
                     {otpVerifying ? <RefreshCw className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
                     <span>Verifikasi</span>
                   </button>
                 </div>
 
-                <div className="flex items-center gap-2 text-[10px] text-slate-400 font-mono pt-1">
-                  <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse inline-block shrink-0" />
+                <div className="flex items-center gap-2 text-[10px] text-[var(--text-secondary)] font-mono pt-1">
+                  <span className="w-2 h-2 rounded-full bg-[var(--accent)] animate-pulse inline-block shrink-0" />
                   <span>Sistem otomatis mendeteksi ketika Anda mengklik tautan di email.</span>
                 </div>
               </form>
@@ -607,7 +607,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   type="button"
                   disabled={resendLoading}
                   onClick={() => handleResendVerification()}
-                  className="w-full py-2.5 rounded-lg bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-200 font-mono text-xs font-semibold transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                  className="w-full py-2.5 rounded-md bg-[var(--bg-section-alt)] hover:bg-[var(--bg-section-alt)] border border-[var(--border-strong)] text-[var(--text-primary)] font-mono text-xs font-semibold transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${resendLoading ? 'animate-spin' : ''}`} />
                   <span>{resendLoading ? 'Mengirim Ulang...' : 'Kirim Ulang Email Verifikasi'}</span>
@@ -619,7 +619,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                     setVerificationPending(false);
                     onNavigate('/login');
                   }}
-                  className="w-full py-2 rounded-lg text-slate-400 hover:text-slate-200 font-mono text-xs transition cursor-pointer text-center"
+                  className="w-full py-2 rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] font-mono text-xs transition cursor-pointer text-center"
                 >
                   Sudah terverifikasi? Masuk ke Akun
                 </button>
@@ -629,21 +629,21 @@ export const AuthPage: React.FC<AuthPageProps> = ({
             /* VIEW: Forgot Password */
             <div className="space-y-5">
               <div className="text-center space-y-1.5">
-                <div className="w-11 h-11 rounded-xl bg-cyan-950 border border-cyan-800/80 flex items-center justify-center mx-auto text-cyan-400 mb-3 shadow-inner">
+                <div className="w-11 h-11 rounded-md bg-[var(--accent-subtle)] border border-[var(--accent)]/80 flex items-center justify-center mx-auto text-[var(--accent)] mb-3 shadow-inner">
                   <KeyRound className="w-5 h-5" />
                 </div>
-                <h1 className="text-xl font-bold font-mono tracking-tight text-slate-100">
+                <h1 className="text-xl font-bold font-mono tracking-tight text-[var(--text-primary)]">
                   Lupa Kata Sandi
                 </h1>
-                <p className="text-xs text-slate-400 font-sans leading-relaxed">
+                <p className="text-xs text-[var(--text-secondary)] font-sans leading-relaxed">
                   Masukkan email akun Anda. Kami akan mengirimkan tautan untuk membuat kata sandi baru.
                 </p>
               </div>
 
               {error && (
-                <div className="p-3.5 rounded-xl bg-rose-950/60 border border-rose-800/80 text-rose-300 text-xs space-y-2 font-sans">
+                <div className="p-3.5 rounded-md bg-[var(--bearish-bg)]/60 border border-[var(--bearish-border)]/80 text-[var(--bearish)] text-xs space-y-2 font-sans">
                   <div className="flex items-start gap-2">
-                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-[var(--bearish)]" />
                     <span>{error}</span>
                   </div>
                 </div>
@@ -651,12 +651,12 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 
               {/* Instant Reset URL fallback */}
               {resetUrl && (
-                <div className="p-3.5 rounded-xl bg-cyan-950/60 border border-cyan-700/80 text-cyan-200 text-xs space-y-2">
-                  <div className="font-mono text-[11px] font-bold text-cyan-400 flex items-center gap-1.5">
-                    <KeyRound className="w-3.5 h-3.5 text-amber-400" />
+                <div className="p-3.5 rounded-md bg-[var(--accent-subtle)]/60 border border-[var(--accent)]/80 text-[var(--text-primary)] text-xs space-y-2">
+                  <div className="font-mono text-[11px] font-bold text-[var(--accent)] flex items-center gap-1.5">
+                    <KeyRound className="w-3.5 h-3.5 text-[var(--warning)]" />
                     <span>Tautan Reset Instan Siap Digunakan</span>
                   </div>
-                  <p className="text-[11px] text-slate-300">
+                  <p className="text-[11px] text-[var(--text-secondary)]">
                     Klik tombol di bawah untuk langsung membuka formulir pembuatan kata sandi baru:
                   </p>
                   <button
@@ -668,7 +668,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                       }
                       onNavigate(`/reset-password?token=${encodeURIComponent(resetToken || '')}`);
                     }}
-                    className="w-full py-2 px-3 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold font-mono text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
+                    className="w-full py-2 px-3 rounded-md bg-[var(--accent)] hover:opacity-90 text-white font-bold font-mono text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
                   >
                     <span>Buka Formulir Buat Password Baru</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -678,11 +678,11 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 
               <form onSubmit={handleForgotPassword} className="space-y-4 font-mono text-xs">
                 <div className="space-y-1.5">
-                  <label className="block text-slate-300 text-[11px] font-semibold">
+                  <label className="block text-[var(--text-secondary)] text-[11px] font-semibold">
                     Alamat Email Terdaftar
                   </label>
                   <div className="relative">
-                    <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 z-10" />
+                    <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] z-10" />
                     <Input
                       type="email"
                       required
@@ -715,7 +715,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                 <button
                   type="button"
                   onClick={() => onNavigate('/login')}
-                  className="text-cyan-400 hover:underline font-mono text-xs cursor-pointer inline-flex items-center gap-1"
+                  className="text-[var(--accent)] hover:underline font-mono text-xs cursor-pointer inline-flex items-center gap-1"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
                   <span>Kembali ke Halaman Masuk</span>
@@ -726,21 +726,21 @@ export const AuthPage: React.FC<AuthPageProps> = ({
             /* VIEW: Reset Password (Set New Password) */
             <div className="space-y-5">
               <div className="text-center space-y-1.5">
-                <div className="w-11 h-11 rounded-xl bg-cyan-950 border border-cyan-800/80 flex items-center justify-center mx-auto text-cyan-400 mb-3 shadow-inner">
+                <div className="w-11 h-11 rounded-md bg-[var(--accent-subtle)] border border-[var(--accent)]/80 flex items-center justify-center mx-auto text-[var(--accent)] mb-3 shadow-inner">
                   <Lock className="w-5 h-5" />
                 </div>
-                <h1 className="text-xl font-bold font-mono tracking-tight text-slate-100">
+                <h1 className="text-xl font-bold font-mono tracking-tight text-[var(--text-primary)]">
                   Buat Kata Sandi Baru
                 </h1>
-                <p className="text-xs text-slate-400 font-sans leading-relaxed">
+                <p className="text-xs text-[var(--text-secondary)] font-sans leading-relaxed">
                   Masukkan kata sandi baru untuk akun Anda (minimal 6 karakter).
                 </p>
               </div>
 
               {error && (
-                <div className="p-3.5 rounded-xl bg-rose-950/60 border border-rose-800/80 text-rose-300 text-xs space-y-2 font-sans">
+                <div className="p-3.5 rounded-md bg-[var(--bearish-bg)]/60 border border-[var(--bearish-border)]/80 text-[var(--bearish)] text-xs space-y-2 font-sans">
                   <div className="flex items-start gap-2">
-                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-[var(--bearish)]" />
                     <span>{error}</span>
                   </div>
                 </div>
@@ -749,11 +749,11 @@ export const AuthPage: React.FC<AuthPageProps> = ({
               <form onSubmit={handleResetPassword} className="space-y-4 font-mono text-xs">
                 {!resetToken && (
                   <div className="space-y-1.5">
-                    <label className="block text-slate-300 text-[11px] font-semibold">
+                    <label className="block text-[var(--text-secondary)] text-[11px] font-semibold">
                       Alamat Email Akun
                     </label>
                     <div className="relative">
-                      <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 z-10" />
+                      <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] z-10" />
                       <Input
                         type="email"
                         required
@@ -767,11 +767,11 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                 )}
 
                 <div className="space-y-1.5">
-                  <label className="block text-slate-300 text-[11px] font-semibold">
+                  <label className="block text-[var(--text-secondary)] text-[11px] font-semibold">
                     Kata Sandi Baru
                   </label>
                   <div className="relative">
-                    <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 z-10" />
+                    <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] z-10" />
                     <Input
                       type="password"
                       required
@@ -785,11 +785,11 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="block text-slate-300 text-[11px] font-semibold">
+                  <label className="block text-[var(--text-secondary)] text-[11px] font-semibold">
                     Ulangi Kata Sandi Baru
                   </label>
                   <div className="relative">
-                    <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 z-10" />
+                    <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] z-10" />
                     <Input
                       type="password"
                       required
@@ -823,7 +823,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                 <button
                   type="button"
                   onClick={() => onNavigate('/login')}
-                  className="text-slate-400 hover:text-slate-200 font-mono text-xs cursor-pointer"
+                  className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] font-mono text-xs cursor-pointer"
                 >
                   Batal dan kembali ke halaman masuk
                 </button>
@@ -834,13 +834,13 @@ export const AuthPage: React.FC<AuthPageProps> = ({
             <>
               {/* Header */}
               <div className="text-center space-y-1.5">
-                <div className="w-11 h-11 rounded-xl bg-cyan-950 border border-cyan-800/80 flex items-center justify-center mx-auto text-cyan-400 mb-3 shadow-inner">
+                <div className="w-11 h-11 rounded-md bg-[var(--accent-subtle)] border border-[var(--accent)]/80 flex items-center justify-center mx-auto text-[var(--accent)] mb-3 shadow-inner">
                   <Lock className="w-5 h-5" />
                 </div>
-                <h1 className="text-xl font-bold font-mono tracking-tight text-slate-100">
+                <h1 className="text-xl font-bold font-mono tracking-tight text-[var(--text-primary)]">
                   {isRegister ? 'Daftar Akun Trader' : 'Otentikasi Terminal'}
                 </h1>
-                <p className="text-xs text-slate-400 font-sans leading-relaxed">
+                <p className="text-xs text-[var(--text-secondary)] font-sans leading-relaxed">
                   {isRegister
                     ? 'Daftarkan akun Anda untuk mengakses intelijen pasar. Tautan verifikasi akan dikirimkan ke email Anda.'
                     : 'Masuk untuk mengakses ruang kerja intelijen makro dan telemetri pasar.'}
@@ -848,14 +848,14 @@ export const AuthPage: React.FC<AuthPageProps> = ({
               </div>
 
               {/* Mode Tabs (Sign In vs Register) */}
-              <div className="grid grid-cols-2 p-1 rounded-xl bg-slate-950 border border-slate-850 font-mono text-xs">
+              <div className="grid grid-cols-2 p-1 rounded-md bg-[var(--bg-canvas)] border border-[var(--border-subtle)] font-mono text-xs">
                 <button
                   type="button"
                   onClick={() => onNavigate('/login')}
-                  className={`py-2 rounded-lg font-semibold transition cursor-pointer ${
+                  className={`py-2 rounded-md font-semibold transition cursor-pointer ${
                     !isRegister
-                      ? 'bg-slate-900 text-cyan-300 shadow-xs border border-slate-800'
-                      : 'text-slate-400 hover:text-slate-200'
+                      ? 'bg-[var(--bg-surface)] text-[var(--accent)] shadow-xs border border-[var(--border-subtle)]'
+                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                   }`}
                   id="tab-login"
                 >
@@ -864,10 +864,10 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                 <button
                   type="button"
                   onClick={() => onNavigate('/register')}
-                  className={`py-2 rounded-lg font-semibold transition cursor-pointer ${
+                  className={`py-2 rounded-md font-semibold transition cursor-pointer ${
                     isRegister
-                      ? 'bg-slate-900 text-cyan-300 shadow-xs border border-slate-800'
-                      : 'text-slate-400 hover:text-slate-200'
+                      ? 'bg-[var(--bg-surface)] text-[var(--accent)] shadow-xs border border-[var(--border-subtle)]'
+                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                   }`}
                   id="tab-register"
                 >
@@ -877,16 +877,16 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 
               {/* Error Message Box with Intelligent Action Buttons */}
               {error && (
-                <div className="p-3.5 rounded-xl bg-rose-950/60 border border-rose-800/80 text-rose-300 text-xs space-y-3 font-sans">
+                <div className="p-3.5 rounded-md bg-[var(--bearish-bg)]/60 border border-[var(--bearish-border)]/80 text-[var(--bearish)] text-xs space-y-3 font-sans">
                   <div className="flex items-start gap-2.5">
-                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-[var(--bearish)]" />
                     <span className="leading-relaxed">{error}</span>
                   </div>
 
                   {/* Resolution Paths for Invalid Password */}
                   {errorCode === 'INVALID_PASSWORD' && (
-                    <div className="pt-2 border-t border-rose-900/60 space-y-2">
-                      <p className="text-[11px] text-rose-200/90 font-mono">Lupa atau ingin mengganti kata sandi?</p>
+                    <div className="pt-2 border-t border-[var(--bearish-border)]/60 space-y-2">
+                      <p className="text-[11px] text-[var(--bearish)]/90 font-mono">Lupa atau ingin mengganti kata sandi?</p>
                       <div>
                         <button
                           type="button"
@@ -894,9 +894,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                             setError(null);
                             onNavigate(`/forgot-password?email=${encodeURIComponent(email.trim())}`);
                           }}
-                          className="w-full py-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-750 text-cyan-300 border border-slate-700 font-mono text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
+                          className="w-full py-2 px-3 rounded-md bg-[var(--bg-section-alt)] hover:bg-[var(--bg-section-alt)] text-[var(--accent)] border border-[var(--border-strong)] font-mono text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
                         >
-                          <KeyRound className="w-3.5 h-3.5 text-amber-400" />
+                          <KeyRound className="w-3.5 h-3.5 text-[var(--warning)]" />
                           <span>Atur Ulang Kata Sandi (Reset Password)</span>
                         </button>
                       </div>
@@ -905,9 +905,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 
                   {/* Resolution Paths for Unverified Email */}
                   {(errorCode === 'EMAIL_NOT_VERIFIED' || errorCode === 'ALREADY_REGISTERED_UNVERIFIED') && (
-                    <div className="pt-2 border-t border-rose-900/60 space-y-2.5">
+                    <div className="pt-2 border-t border-[var(--bearish-border)]/60 space-y-2.5">
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-mono font-bold text-cyan-300 uppercase tracking-wider block">
+                        <label className="text-[10px] font-mono font-bold text-[var(--accent)] uppercase tracking-wider block">
                           Masukkan 6-Digit Kode dari Email:
                         </label>
                         <div className="flex gap-2">
@@ -918,13 +918,13 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                             placeholder="6-digit kode OTP"
                             value={otpCode}
                             onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                            className="flex-1 px-2.5 py-1.5 bg-slate-950 border border-slate-700 focus:border-cyan-400 rounded text-center font-mono text-sm tracking-widest font-bold text-cyan-300 outline-none placeholder:text-slate-600 placeholder:tracking-normal placeholder:font-sans placeholder:text-xs"
+                            className="flex-1 px-2.5 py-1.5 bg-[var(--bg-canvas)] border border-[var(--border-strong)] focus:border-[var(--accent)] rounded text-center font-mono text-sm tracking-widest font-bold text-[var(--accent)] outline-none placeholder:text-[var(--text-muted)] placeholder:tracking-normal placeholder:font-sans placeholder:text-xs"
                           />
                           <button
                             type="button"
                             onClick={() => handleVerifyOtp()}
                             disabled={otpVerifying || otpCode.trim().length < 4}
-                            className="px-3 py-1.5 rounded bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold font-mono text-xs flex items-center gap-1 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+                            className="px-3 py-1.5 rounded bg-[var(--accent)] hover:opacity-90 text-white font-bold font-mono text-xs flex items-center gap-1 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
                           >
                             {otpVerifying ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />}
                             <span>Aktifkan</span>
@@ -932,14 +932,14 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between gap-2 pt-1 border-t border-rose-900/40">
+                      <div className="flex items-center justify-between gap-2 pt-1 border-t border-[var(--bearish-border)]/40">
                         <button
                           type="button"
                           onClick={() => {
                             setRegisteredEmail(email.trim());
                             setVerificationPending(true);
                           }}
-                          className="text-[11px] text-cyan-400 hover:underline font-mono"
+                          className="text-[11px] text-[var(--accent)] hover:underline font-mono"
                         >
                           Buka Layar Aktivasi Penuh →
                         </button>
@@ -948,7 +948,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                           type="button"
                           onClick={() => handleResendVerification(email || registeredEmail)}
                           disabled={resendLoading}
-                          className="px-2.5 py-1 rounded bg-rose-900/50 hover:bg-rose-900/90 text-rose-200 text-[11px] font-mono font-medium transition cursor-pointer flex items-center gap-1 shrink-0"
+                          className="px-2.5 py-1 rounded bg-[var(--bearish-bg)]/50 hover:bg-[var(--bearish-bg)]/90 text-[var(--bearish)] text-[11px] font-mono font-medium transition cursor-pointer flex items-center gap-1 shrink-0"
                           id="unverified-resend-btn"
                         >
                           <Send className="w-3 h-3" />
@@ -960,11 +960,11 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 
                   {/* Resolution Path for User Not Found */}
                   {errorCode === 'USER_NOT_FOUND' && (
-                    <div className="pt-2 border-t border-rose-900/60">
+                    <div className="pt-2 border-t border-[var(--bearish-border)]/60">
                       <button
                         type="button"
                         onClick={() => onNavigate('/register')}
-                        className="w-full py-1.5 px-3 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold font-mono text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
+                        className="w-full py-1.5 px-3 rounded-md bg-[var(--accent)] hover:opacity-90 text-white font-bold font-mono text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
                       >
                         <UserIcon className="w-3.5 h-3.5" />
                         <span>Daftarkan Akun Ini Sekarang</span>
@@ -976,8 +976,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 
               {/* Resend Status Message */}
               {resendStatus && (
-                <div className="p-3 rounded-lg bg-emerald-950/60 border border-emerald-700/80 text-emerald-300 text-xs flex items-center gap-2 font-sans">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                <div className="p-3 rounded-md bg-[var(--bullish-bg)]/60 border border-[var(--bullish-border)]/80 text-[var(--bullish)] text-xs flex items-center gap-2 font-sans">
+                  <CheckCircle2 className="w-4 h-4 text-[var(--bullish)] shrink-0" />
                   <span>{resendStatus}</span>
                 </div>
               )}
@@ -988,7 +988,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   type="button"
                   onClick={handleGoogleSignIn}
                   disabled={loading || googleLoading}
-                  className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-xl bg-white hover:bg-slate-100 text-slate-900 text-xs font-semibold font-sans transition-all duration-150 shadow-md hover:shadow-lg disabled:opacity-50 cursor-pointer border border-slate-200"
+                  className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-md bg-white hover:bg-[#f4f4f6] text-[#18181b] text-xs font-semibold font-sans transition-all duration-150 shadow-md hover:shadow-lg disabled:opacity-50 cursor-pointer border border-[#e4e4e7]"
                   id="google-signin-btn"
                 >
                   <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -1013,11 +1013,11 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                 </button>
 
                 <div className="relative flex items-center justify-center my-2">
-                  <div className="border-t border-slate-800 w-full" />
-                  <span className="bg-[#0b0e14] px-3 text-[10px] uppercase font-mono tracking-widest text-slate-500 shrink-0">
+                  <div className="border-t border-[var(--border-subtle)] w-full" />
+                  <span className="bg-[#0b0e14] px-3 text-[10px] uppercase font-mono tracking-widest text-[var(--text-muted)] shrink-0">
                     atau lanjutkan dengan email
                   </span>
-                  <div className="border-t border-slate-800 w-full" />
+                  <div className="border-t border-[var(--border-subtle)] w-full" />
                 </div>
               </div>
 
@@ -1025,11 +1025,11 @@ export const AuthPage: React.FC<AuthPageProps> = ({
               <form onSubmit={handleSubmit} className="space-y-4 font-mono text-xs">
                   {isRegister && (
                     <div className="space-y-1.5">
-                      <label className="block text-slate-300 text-[11px] font-semibold">
+                      <label className="block text-[var(--text-secondary)] text-[11px] font-semibold">
                         Nama Lengkap / Trading Desk Handle
                       </label>
                       <div className="relative">
-                        <UserIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 z-10" />
+                        <UserIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] z-10" />
                         <Input
                           type="text"
                           required
@@ -1044,11 +1044,11 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   )}
 
                   <div className="space-y-1.5">
-                    <label className="block text-slate-300 text-[11px] font-semibold">
+                    <label className="block text-[var(--text-secondary)] text-[11px] font-semibold">
                       Alamat Email (Wajib Aktif)
                     </label>
                     <div className="relative">
-                      <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 z-10" />
+                      <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] z-10" />
                       <Input
                         type="email"
                         required
@@ -1063,21 +1063,21 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <label className="block text-slate-300 text-[11px] font-semibold">
+                      <label className="block text-[var(--text-secondary)] text-[11px] font-semibold">
                         Kata Sandi
                       </label>
                       {!isRegister && (
                         <button
                           type="button"
                           onClick={() => onNavigate(`/forgot-password?email=${encodeURIComponent(email.trim())}`)}
-                          className="text-[11px] text-cyan-400 hover:underline font-mono cursor-pointer"
+                          className="text-[11px] text-[var(--accent)] hover:underline font-mono cursor-pointer"
                         >
                           Lupa kata sandi?
                         </button>
                       )}
                     </div>
                     <div className="relative">
-                      <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 z-10" />
+                      <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] z-10" />
                       <Input
                         type="password"
                         required
@@ -1110,14 +1110,14 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                 </form>
 
               {/* Footer Links */}
-              <div className="text-center text-[11px] text-slate-400 font-sans pt-2 border-t border-slate-850">
+              <div className="text-center text-[11px] text-[var(--text-secondary)] font-sans pt-2 border-t border-[var(--border-subtle)]">
                 {isRegister ? (
                   <p>
                     Sudah memiliki akun?{' '}
                     <button
                       type="button"
                       onClick={() => onNavigate('/login')}
-                      className="text-cyan-400 hover:underline font-semibold cursor-pointer"
+                      className="text-[var(--accent)] hover:underline font-semibold cursor-pointer"
                     >
                       Masuk
                     </button>
@@ -1128,7 +1128,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                     <button
                       type="button"
                       onClick={() => onNavigate('/register')}
-                      className="text-cyan-400 hover:underline font-semibold cursor-pointer"
+                      className="text-[var(--accent)] hover:underline font-semibold cursor-pointer"
                     >
                       Daftar akun baru
                     </button>
@@ -1141,7 +1141,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
       </main>
 
       {/* Bottom Disclaimer */}
-      <footer className="py-4 text-center text-[10px] text-slate-600 font-mono border-t border-slate-900">
+      <footer className="py-4 text-center text-[10px] text-[var(--text-muted)] font-mono border-t border-[var(--border-subtle)]">
         ARAHMARKET INTELLIGENCE TERMINAL • SECURE ENCRYPTED VERIFICATION GATEWAY
       </footer>
     </div>
