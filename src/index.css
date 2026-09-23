@@ -31,15 +31,20 @@
     --active-text: #09090B;
     --active-border: #F0D9CC;
 
+    /* Semantic fills are the foreground hue at low alpha rather than an opaque
+       pastel. The hue - and so the meaning - is unchanged; only the intensity
+       drops, so a run of adjacent badges no longer reads as a solid block of
+       colour. Because the fill stays close to the white canvas, the text keeps
+       more contrast than the old pastels did. */
     --bullish: #15803D;
-    --bullish-bg: #DCFCE7;
-    --bullish-border: #86EFAC;
+    --bullish-bg: rgba(21, 128, 61, 0.08);
+    --bullish-border: rgba(21, 128, 61, 0.3);
     --bearish: #DC2626;
-    --bearish-bg: #FEE2E2;
-    --bearish-border: #FCA5A5;
+    --bearish-bg: rgba(220, 38, 38, 0.08);
+    --bearish-border: rgba(220, 38, 38, 0.3);
     --warning: #D97706;
-    --warning-bg: #FEF3C7;
-    --warning-border: #FCD34D;
+    --warning-bg: rgba(217, 119, 6, 0.1);
+    --warning-border: rgba(217, 119, 6, 0.32);
     --accent: #E25C26;
     --accent-subtle: rgba(226, 92, 38, 0.08);
     --accent-glow: 0 4px 14px -4px rgba(226, 92, 38, 0.4);
@@ -292,11 +297,18 @@
 
 .badge-warning {
   background-color: var(--warning-bg);
-  color: var(--warning);
+  /* Amber at 3.19:1 against a light fill is too low for a 9px label, so the
+     text is darkened to the 700 step. Applies to the badge only; the raw
+     --warning token also backs solid buttons that need a dark-on-light pair. */
+  color: #B45309;
   border: 1px solid var(--warning-border);
   font-family: var(--font-mono);
   font-weight: 600;
   border-radius: 2px;
+}
+
+html.dark .badge-warning {
+  color: var(--warning);
 }
 
 .badge-neutral {
@@ -308,14 +320,25 @@
   border-radius: 2px;
 }
 
+/* The accent chip carries the brand hue rather than a semantic one. It was a
+   solid fill, which made it the loudest element on a row of otherwise quiet
+   badges, so it now shares their low-alpha treatment. The accent text is
+   darkened so it holds its contrast against that near-white fill. */
 .badge-accent {
-  background-color: var(--accent);
-  color: #FFFFFF;
-  border: 1px solid transparent;
+  background-color: rgba(226, 92, 38, 0.1);
+  color: #B94B1F;
+  border: 1px solid rgba(226, 92, 38, 0.26);
   font-family: var(--font-mono);
   font-weight: 600;
   border-radius: 2px;
-  box-shadow: var(--accent-glow);
+}
+
+/* A near-white fill would be wrong here, so the dark theme tints toward the
+   surface instead and lets the accent itself carry the text. */
+html.dark .badge-accent {
+  background-color: rgba(249, 115, 22, 0.12);
+  color: var(--accent);
+  border: 1px solid rgba(249, 115, 22, 0.3);
 }
 
 /* ============================================================
