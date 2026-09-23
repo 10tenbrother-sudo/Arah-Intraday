@@ -180,7 +180,7 @@ export const CurrencyStrengthWidget: React.FC<CurrencyStrengthWidgetProps> = Rea
               <div
                 key={item.currency}
                 onClick={() => onSelectCurrency?.(item.currency)}
-                className="p-2 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] hover:border-[var(--text-primary)] transition cursor-pointer space-y-1.5"
+                className="p-2 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] hover:border-[var(--border-strong)] transition cursor-pointer space-y-1.5"
               >
                 <div className="flex items-center justify-between text-xs tabular-nums">
                   <div className="flex items-center gap-1.5">

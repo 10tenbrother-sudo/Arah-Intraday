@@ -40,7 +40,7 @@ export const EventCard: React.FC<EventCardProps> = React.memo(({ event, onClick,
       className={`terminal-panel p-3.5 transition cursor-pointer flex flex-col justify-between space-y-2.5 ${
         isSelected
           ? 'border-[var(--text-primary)] ring-1 ring-[var(--text-primary)]'
-          : 'hover:border-[var(--text-primary)]'
+          : 'hover:border-[var(--border-strong)]'
       }`}
     >
       <div>

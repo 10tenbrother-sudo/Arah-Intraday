@@ -420,7 +420,7 @@ export const ExecutiveMarketBrief: React.FC<ExecutiveMarketBriefProps> = ({
 
             <div
               onClick={() => onOpenChart('US100')}
-              className="p-1.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-surface)] hover:border-[var(--text-primary)] transition cursor-pointer"
+              className="p-1.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-surface)] hover:border-[var(--border-strong)] transition cursor-pointer"
             >
               <span className="text-[9.5px] text-[var(--text-muted)] block">NASDAQ (US100)</span>
               <span className={`font-bold mt-0.5 block ${marketSynthesis.us100Change >= 0 ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}`}>
@@ -430,7 +430,7 @@ export const ExecutiveMarketBrief: React.FC<ExecutiveMarketBriefProps> = ({
 
             <div
               onClick={() => onOpenChart('XAUUSD')}
-              className="p-1.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-surface)] hover:border-[var(--text-primary)] transition cursor-pointer"
+              className="p-1.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-surface)] hover:border-[var(--border-strong)] transition cursor-pointer"
             >
               <span className="text-[9.5px] text-[var(--text-muted)] block">GOLD (XAU)</span>
               <span className={`font-bold mt-0.5 block ${marketSynthesis.goldChange >= 0 ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}`}>
