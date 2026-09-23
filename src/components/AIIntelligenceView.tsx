@@ -426,9 +426,9 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
 
                   {/* 5-Step Causal Framework */}
                   <div className="space-y-2 pt-1 font-mono">
-                    <div className="metadata-label text-[10px] text-[var(--text-primary)] flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5 text-[13px] font-semibold text-[var(--text-primary)]">
                       <Activity className="w-3.5 h-3.5 text-[var(--accent)]" />
-                      <span>5-STEP CAUSAL PIPELINE</span>
+                      <span>Causal pipeline</span>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
@@ -674,10 +674,10 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
                 {/* AI Explanation Provenance Box */}
                 <div className="p-3 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-2 font-mono text-xs">
                   <div className="flex items-center justify-between text-[var(--text-secondary)] border-b pb-1.5" style={{ borderColor: 'var(--border-subtle)' }}>
-                    <span className="metadata-label text-[10px] text-[var(--text-primary)]">
-                      RIGOROUS CAUSAL EXPLANATION & DATA PROVENANCE
+                    <span className="text-[13px] font-semibold text-[var(--text-primary)]">
+                      Explanation and provenance
                     </span>
-                    <span className="text-[var(--bullish)] font-bold">CONFIDENCE: {unifiedContext.confidence}%</span>
+                    <span className="text-[var(--bullish)] font-semibold tabular-nums">{unifiedContext.confidence}% confidence</span>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">

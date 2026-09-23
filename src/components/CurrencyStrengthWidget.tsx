@@ -83,8 +83,8 @@ export const CurrencyStrengthWidget: React.FC<CurrencyStrengthWidgetProps> = Rea
         <div>
           <div className="flex items-center gap-1.5">
             <TrendingUp className="w-3.5 h-3.5 text-[var(--accent)]" />
-            <h2 className="metadata-label text-[10.5px] text-[var(--text-primary)]">
-              CURRENCY STRENGTH G8
+            <h2 className="text-[13px] font-semibold text-[var(--text-primary)]">
+              Currency strength · G8
             </h2>
             <MetricInfoIcon term="CURRENCY_STRENGTH" position="bottom" />
           </div>
