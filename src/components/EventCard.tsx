@@ -37,10 +37,10 @@ export const EventCard: React.FC<EventCardProps> = React.memo(({ event, onClick,
   return (
     <div
       onClick={onClick}
-      className={`terminal-panel p-3.5 transition cursor-pointer flex flex-col justify-between space-y-2.5 ${
+      className={`rounded-lg p-3.5 cursor-pointer flex flex-col justify-between gap-2.5 transition ${
         isSelected
-          ? 'border-[var(--text-primary)] ring-1 ring-[var(--text-primary)]'
-          : 'hover:border-[var(--border-strong)]'
+          ? 'bg-[var(--active-bg)] border border-[var(--active-border)]'
+          : 'bg-[var(--bg-surface)] border border-[var(--border-subtle)] hover:border-[var(--border-strong)] hover:shadow-[var(--shadow-raised)]'
       }`}
     >
       <div>
@@ -50,13 +50,13 @@ export const EventCard: React.FC<EventCardProps> = React.memo(({ event, onClick,
             <span className="metadata-label text-[10px] text-[var(--text-muted)]">
               {event.primary_category}
             </span>
-            <span className="text-[var(--border-subtle)]">·</span>
-            <span className={`text-[9px] px-1.5 py-0.5 rounded border font-bold uppercase tracking-wider ${getImpactBadgeClass(event.impact_level)}`}>
+            <span className="text-[var(--border-strong)]">·</span>
+            <span className={`text-[9px] px-2 py-0.5 rounded-full font-semibold ${getImpactBadgeClass(event.impact_level)}`}>
               {event.impact_level}
             </span>
             {event.source_count > 1 && (
-              <span className="text-[9.5px] px-1 py-0 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] text-[var(--text-secondary)] font-semibold">
-                {event.source_count} SOURCES
+              <span className="text-[9.5px] text-[var(--text-muted)]">
+                {event.source_count} sources
               </span>
             )}
           </div>
@@ -79,10 +79,10 @@ export const EventCard: React.FC<EventCardProps> = React.memo(({ event, onClick,
 
         {/* Correlated Pair Impacts & Directional Bias */}
         {(event.pair_impacts || []).length > 0 && (
-          <div className="mb-2 p-2 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)]">
-            <div className="flex items-center justify-between text-[9px] font-mono text-[var(--text-muted)] mb-1 uppercase tracking-wider">
-              <span>PAIR TRANSMISSION:</span>
-              <span className="text-[var(--accent)] font-semibold">DIRECT BIAS</span>
+          <div className="mb-2.5">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="metadata-label text-[9px] text-[var(--text-muted)]">Pair transmission</span>
+              <span className="metadata-label text-[9px] text-[var(--accent)]">Direct bias</span>
             </div>
             <div className="flex items-center gap-1.5 flex-wrap">
               {event.pair_impacts!.slice(0, 4).map((pi) => {
@@ -130,13 +130,13 @@ export const EventCard: React.FC<EventCardProps> = React.memo(({ event, onClick,
       </div>
 
       {/* Footer Details */}
-      <div className="pt-2 border-t font-mono text-[10px] flex items-center justify-between text-[var(--text-muted)]" style={{ borderColor: 'var(--border-hairline)' }}>
-        <span className="truncate max-w-[140px] uppercase">
-          {event.source_names?.[0] || 'Institutional Wire'}
+      <div className="pt-2 border-t text-[10px] flex items-center justify-between text-[var(--text-muted)]" style={{ borderColor: 'var(--border-hairline)' }}>
+        <span className="truncate max-w-[150px]">
+          {event.source_names?.[0] || 'Institutional wire'}
         </span>
-        <span className="text-[var(--accent)] font-semibold flex items-center gap-1">
-          <span>INTEL DOSSIER</span>
-          <ArrowRight className="w-2.5 h-2.5" />
+        <span className="text-[var(--accent)] font-semibold flex items-center gap-1 group-hover:gap-1.5 transition-all">
+          <span>Read dossier</span>
+          <ArrowRight className="w-3 h-3" />
         </span>
       </div>
     </div>

@@ -638,16 +638,18 @@ export default function App() {
 
           {/* VIEW 7: CANONICAL EVENT WIRE */}
           {activeTab === 'events' && (
-            <div className="space-y-4">
-              <div className="terminal-panel p-4 space-y-3.5 shadow-xs">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div>
-                    <h1 className="text-xs sm:text-sm font-mono font-bold text-[var(--text-primary)] uppercase tracking-wider flex items-center gap-2">
+            <div className="space-y-5">
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 pb-3 border-b" style={{ borderColor: 'var(--border-hairline)' }}>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2.5">
                       <Layers className="w-4 h-4 text-[var(--accent)]" />
-                      <span>DEDUPLICATED EVENT WIRE</span>
-                    </h1>
-                    <p className="text-xs text-[var(--text-secondary)] mt-0.5 font-mono">
-                      ONE EVENT → ONE CANONICAL ID → MULTIPLE SOURCES → DIRECT TRANSMISSION
+                      <h1 className="headline-h3 text-[var(--text-primary)]">
+                        Canonical news wire
+                      </h1>
+                    </div>
+                    <p className="text-xs text-[var(--text-muted)]">
+                      One event, one canonical id, every source that carried it.
                     </p>
                   </div>
 
@@ -655,7 +657,7 @@ export default function App() {
                     <button
                       onClick={refreshEvents}
                       disabled={isSyncing}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-primary)] border border-[var(--border-subtle)] text-xs font-mono font-medium transition cursor-pointer disabled:opacity-50"
+                      className="flex items-center gap-1.5 px-3 h-9 rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-section-alt)] text-xs font-medium transition cursor-pointer disabled:opacity-50"
                       title="Sync wire with latest source releases"
                     >
                       <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-[var(--accent)]' : ''}`} />
@@ -667,7 +669,7 @@ export default function App() {
                       placeholder="Search news, pairs, assets..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] px-3 py-1.5 rounded text-xs font-mono text-[var(--text-primary)] placeholder-[var(--text-muted)] outline-none w-48 sm:w-60 focus:border-[var(--text-primary)] transition"
+                      className="bg-[var(--bg-section-alt)] border border-transparent px-3 h-9 rounded-md text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] outline-none w-48 sm:w-60 focus:border-[var(--border-strong)] transition"
                     />
                   </div>
                 </div>
@@ -675,69 +677,70 @@ export default function App() {
                 {/* Filter Controls: Impact Level & Category */}
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2.5 pt-2 border-t" style={{ borderColor: 'var(--border-hairline)' }}>
                   {/* Impact Filter Buttons */}
-                  <div className="flex items-center gap-1.5 flex-wrap font-mono text-xs">
-                    <span className="metadata-label text-[10px] text-[var(--text-muted)] flex items-center gap-1 mr-1">
-                      <Filter className="w-3 h-3 text-[var(--accent)]" />
-                      <span>IMPACT:</span>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="metadata-label text-[9px] text-[var(--text-muted)] flex items-center gap-1">
+                      <Filter className="w-3 h-3" />
+                      <span>Impact</span>
                     </span>
 
                     <button
                       onClick={() => setImpactFilter('HIGH')}
-                      className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-mono font-bold border transition cursor-pointer ${
+                      className={`flex items-center gap-1.5 px-2.5 h-7 rounded text-[11px] font-medium transition cursor-pointer ${
                         impactFilter === 'HIGH'
-                          ? 'badge-warning border-[var(--warning)]'
-                          : 'bg-[var(--bg-section-alt)] text-[var(--text-secondary)] border-[var(--border-subtle)] hover:text-[var(--text-primary)]'
+                          ? 'bg-[var(--bg-surface)] text-[var(--warning)] shadow-sm'
+                          : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                       }`}
                       title="Show only High & Critical impact events for reliable pair correlations"
                     >
-                      <Flame className="w-3.5 h-3.5 text-[var(--warning)]" />
-                      <span>HIGH IMPACT</span>
-                      <span className="text-[9px] px-1 py-0 rounded bg-[var(--warning-border)] text-[var(--warning)]">
+                      <Flame className="w-3 h-3" />
+                      <span>High</span>
+                      <span className="tabular-nums opacity-70">
                         {events.filter(e => e.impact_level === 'CRITICAL' || e.impact_level === 'HIGH').length}
                       </span>
                     </button>
 
                     <button
                       onClick={() => setImpactFilter('CRITICAL')}
-                      className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-mono font-bold border transition cursor-pointer ${
+                      className={`flex items-center gap-1.5 px-2.5 h-7 rounded text-[11px] font-medium transition cursor-pointer ${
                         impactFilter === 'CRITICAL'
-                          ? 'badge-bearish border-[var(--bearish)]'
-                          : 'bg-[var(--bg-section-alt)] text-[var(--text-secondary)] border-[var(--border-subtle)] hover:text-[var(--text-primary)]'
+                          ? 'bg-[var(--bg-surface)] text-[var(--bearish)] shadow-sm'
+                          : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                       }`}
                       title="Show only critical macro events (Rates, geopolitical disruptions, liquidity shocks)"
                     >
-                      <Zap className="w-3.5 h-3.5 text-[var(--bearish)]" />
-                      <span>CRITICAL ONLY</span>
-                      <span className="text-[9px] px-1 py-0 rounded bg-[var(--bearish-border)] text-[var(--bearish)]">
+                      <Zap className="w-3 h-3" />
+                      <span>Critical</span>
+                      <span className="tabular-nums opacity-70">
                         {events.filter(e => e.impact_level === 'CRITICAL').length}
                       </span>
                     </button>
 
                     <button
                       onClick={() => setImpactFilter('ALL')}
-                      className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-mono font-medium border transition cursor-pointer ${
+                      className={`flex items-center gap-1.5 px-2.5 h-7 rounded text-[11px] font-medium transition cursor-pointer ${
                         impactFilter === 'ALL'
-                          ? 'bg-[var(--active-bg)] text-[var(--active-text)] border-[var(--active-border)] shadow-xs font-semibold'
-                          : 'bg-[var(--bg-section-alt)] text-[var(--text-muted)] border-[var(--border-subtle)] hover:text-[var(--text-primary)]'
+                          ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm'
+                          : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                       }`}
                     >
-                      <span>ALL LEVELS ({events.length})</span>
+                      <span>All</span>
+                      <span className="tabular-nums opacity-70">{events.length}</span>
                     </button>
                   </div>
 
                   {/* Category Filter Chips */}
-                  <div className="flex items-center gap-1 overflow-x-auto text-xs font-mono">
+                  <div className="flex items-center gap-0.5 p-0.5 rounded-md bg-[var(--bg-section-alt)] overflow-x-auto">
                     {['ALL', 'MACRO', 'CENTRAL_BANK', 'COMMODITIES', 'GEOPOLITICS', 'CRYPTO'].map((cat) => (
                       <button
                         key={cat}
                         onClick={() => setCategoryFilter(cat)}
-                        className={`px-2 py-0.5 rounded text-[11px] whitespace-nowrap transition cursor-pointer border ${
+                        className={`px-2.5 h-7 rounded text-[11px] whitespace-nowrap font-medium transition cursor-pointer ${
                           categoryFilter === cat
-                            ? 'bg-[var(--active-bg)] text-[var(--active-text)] border-[var(--active-border)] font-bold shadow-xs'
-                            : 'bg-[var(--bg-section-alt)] text-[var(--text-secondary)] border-[var(--border-subtle)] hover:text-[var(--text-primary)]'
+                            ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm'
+                            : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                         }`}
                       >
-                        {cat}
+                        {cat === 'ALL' ? 'All' : cat.charAt(0) + cat.slice(1).toLowerCase().replace('_', ' ')}
                       </button>
                     ))}
                   </div>
@@ -745,25 +748,28 @@ export default function App() {
 
                 {/* High Impact Mode Explanatory Banner */}
                 {impactFilter !== 'ALL' && (
-                  <div className="p-2.5 rounded border flex items-center justify-between text-xs font-mono badge-warning">
-                    <div className="flex items-center gap-2">
+                  <div
+                    className="p-3 rounded-lg flex items-center justify-between gap-3 text-xs"
+                    style={{ backgroundColor: 'var(--warning-bg)' }}
+                  >
+                    <div className="flex items-center gap-2.5 text-[var(--text-secondary)]">
                       <Flame className="w-4 h-4 text-[var(--warning)] shrink-0" />
                       <span>
-                        <strong>High Impact Filter Active:</strong> Displaying high-volatility macro drivers (Monetary Policy, CPI, Geopolitics, Commodities) for maximum transmission precision.
+                        Filtered to high-volatility drivers: monetary policy, CPI, geopolitics and commodities.
                       </span>
                     </div>
-                    <span className="text-[10px] text-[var(--text-muted)] shrink-0 hidden sm:inline ml-2">
-                      {filteredEvents.length} of {events.length} events
+                    <span className="text-[11px] text-[var(--warning)] font-semibold shrink-0 hidden sm:inline tabular-nums">
+                      {filteredEvents.length} of {events.length}
                     </span>
                   </div>
                 )}
               </div>
 
               {filteredEvents.length === 0 ? (
-                <div className="terminal-panel p-10 text-center space-y-3 font-mono">
+                <div className="py-16 text-center space-y-3">
                   <Flame className="w-8 h-8 text-[var(--text-muted)] mx-auto" />
-                  <h3 className="text-sm font-bold text-[var(--text-primary)]">No events match the selected criteria</h3>
-                  <p className="text-xs text-[var(--text-secondary)] max-w-md mx-auto">
+                  <h3 className="text-sm font-semibold text-[var(--text-primary)]">No events match these filters</h3>
+                  <p className="text-xs text-[var(--text-muted)] max-w-md mx-auto">
                     No active wire stories found {impactFilter !== 'ALL' ? `with impact ${impactFilter}` : ''} in the selected category.
                   </p>
                   <button
