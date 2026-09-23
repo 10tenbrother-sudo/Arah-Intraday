@@ -108,81 +108,77 @@ export const ArahMarketView: React.FC<ArahMarketViewProps> = React.memo(({
   return (
     <div className="space-y-4" id="arah-market-dossier-view">
       {/* 1. TOP HEADER & SESSION BAROMETER */}
-      <section className="terminal-panel p-4 sm:p-5 space-y-4">
-        <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
-          <div className="space-y-1.5 max-w-3xl">
+      <section className="space-y-5">
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-3 pb-3 border-b" style={{ borderColor: 'var(--border-hairline)' }}>
+          <div className="space-y-1 max-w-3xl">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="metadata-label text-[10px] text-[var(--accent)]">
-                TRIPLE-CONFLUENCE DOSSIER
+              <span className="metadata-label text-[9px] text-[var(--accent)]">
+                Triple-confluence dossier
               </span>
-              <span className="text-[var(--border-subtle)]">·</span>
-              <span className="text-[10px] font-mono text-[var(--text-secondary)] font-semibold flex items-center gap-1">
+              <span className="text-[var(--border-strong)]">·</span>
+              <span className="text-[11px] text-[var(--text-muted)] flex items-center gap-1">
                 <Clock className="w-3 h-3 text-[var(--accent)]" />
-                <span>{activeSession.toUpperCase()} SESSION ACTIVE</span>
+                <span>{activeSession.charAt(0).toUpperCase() + activeSession.slice(1)} session active</span>
               </span>
             </div>
 
             <h1 className="headline-h2 text-[var(--text-primary)]">
-              MARKET BIAS & CONFLUENCE DOSSIER
+              Market bias and confluence
             </h1>
 
-            <p className="text-xs sm:text-[13px] text-[var(--text-secondary)] font-sans leading-relaxed">
-              {sessionStatusText} — Multi-pillar alignment combining macroeconomic catalysts, intermarket transmissions (US10Y and DXY), and intraday auction market structure.
+            <p className="text-xs sm:text-[13px] text-[var(--text-muted)] leading-relaxed">
+              {sessionStatusText} — macro catalysts, intermarket transmission through US10Y and DXY, and intraday auction structure, read together.
             </p>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0 font-mono">
-            <button
-              onClick={onRefresh}
-              disabled={isRefreshing}
-              className="h-7 px-3 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-xs font-semibold text-[var(--text-primary)] flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
-              <span>SYNC SESSION</span>
-            </button>
-          </div>
+          <button
+            onClick={onRefresh}
+            disabled={isRefreshing}
+            className="h-9 px-3.5 rounded-md text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-section-alt)] flex items-center gap-1.5 transition cursor-pointer shrink-0 disabled:opacity-50"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-[var(--accent)]' : ''}`} />
+            <span>Sync session</span>
+          </button>
         </div>
 
         {/* Global Regime & DXY Position Bar */}
         <div className="pt-3 border-t grid grid-cols-1 md:grid-cols-3 gap-3" style={{ borderColor: 'var(--border-hairline)' }}>
-          <div className="md:col-span-2 terminal-panel-alt p-3 flex flex-col justify-between space-y-2 border border-[var(--border-subtle)]">
+          <div className="md:col-span-2 rounded-lg p-3.5 flex flex-col justify-between gap-2.5" style={{ backgroundColor: 'var(--bg-section-alt)' }}>
             <div className="flex items-center justify-between">
-              <span className="metadata-label text-[10px] text-[var(--text-muted)]">
-                GLOBAL INTRADAY REGIME
+              <span className="metadata-label text-[9px] text-[var(--text-muted)]">
+                Global intraday regime
               </span>
-              <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded badge-bullish">
-                {globalRegime.title.toUpperCase()}
+              <span className="text-[9px] px-2 py-0.5 rounded-full font-semibold badge-bullish">
+                {globalRegime.title}
               </span>
             </div>
             <p className="text-xs text-[var(--text-primary)] leading-relaxed font-sans">
               {globalRegime.summaryNarrative}
             </p>
             {globalRegime.topCatalystHeadline && (
-              <div className="pt-1.5 border-t text-[11px] text-[var(--text-secondary)] flex items-center gap-1.5 font-mono" style={{ borderColor: 'var(--border-hairline)' }}>
+              <div className="pt-2 border-t text-[11px] text-[var(--text-secondary)] flex items-center gap-1.5" style={{ borderColor: 'var(--border-hairline)' }}>
                 <Flame className="w-3 h-3 text-[var(--accent)] shrink-0" />
-                <span className="truncate">
-                  <strong>PRIMARY DRIVER:</strong> {globalRegime.topCatalystHeadline}
-                </span>
+                <span className="truncate">{globalRegime.topCatalystHeadline}</span>
               </div>
             )}
           </div>
 
-          <div className="terminal-panel-alt p-3 flex flex-col justify-between space-y-2 border border-[var(--border-subtle)] font-mono text-xs">
+          <div className="rounded-lg p-3.5 flex flex-col justify-between gap-2.5" style={{ backgroundColor: 'var(--bg-section-alt)' }}>
             <div className="flex items-center justify-between">
-              <span className="metadata-label text-[10px] text-[var(--text-muted)]">
-                DXY SESSION OPEN
+              <span className="metadata-label text-[9px] text-[var(--text-muted)]">
+                DXY session open
               </span>
-              <span className={`text-[9.5px] px-1.5 py-0.5 rounded font-bold ${
+              <span className={`text-[9px] px-2 py-0.5 rounded-full font-semibold ${
                 globalRegime.dxyBiasVsOpen === 'ABOVE_OPEN' ? 'badge-bearish' : 'badge-bullish'
               }`}>
-                {globalRegime.dxyBiasVsOpen === 'ABOVE_OPEN' ? '▲ ABOVE OPEN' : '▼ BELOW OPEN'}
+                {globalRegime.dxyBiasVsOpen === 'ABOVE_OPEN' ? 'Above open' : 'Below open'}
               </span>
             </div>
             <p className="text-[11px] text-[var(--text-secondary)] font-sans leading-snug">
               Dollar index direction relative to session open sets the gravitational pull across major foreign exchange crosses.
             </p>
-            <div className="pt-1.5 border-t flex items-center justify-between text-[10px] text-[var(--text-muted)]" style={{ borderColor: 'var(--border-hairline)' }}>
-              <span>RISK APPETITE SCORE:</span>
+            <div className="pt-2 border-t flex items-center justify-between text-[10px] text-[var(--text-muted)]" style={{ borderColor: 'var(--border-hairline)' }}>
+              <span>Risk appetite</span>
               <span className="font-bold text-[var(--text-primary)]">
                 {globalRegime.riskScore > 0 ? `+${globalRegime.riskScore}` : globalRegime.riskScore} / 100
               </span>
@@ -194,11 +190,11 @@ export const ArahMarketView: React.FC<ArahMarketViewProps> = React.memo(({
       {/* 2. INTERMARKET SPREAD ENGINE & ANOMALY RADAR */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
         {/* Anomaly Alerts (1 column) */}
-        <div className="lg:col-span-1 terminal-panel p-3.5 space-y-2.5 flex flex-col justify-between">
+        <div className="lg:col-span-1 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4 flex flex-col justify-between gap-3">
           <div>
-            <div className="flex items-center gap-1.5 metadata-label text-[10px] text-[var(--text-primary)] mb-2">
+            <div className="flex items-center gap-1.5 text-[13px] font-semibold text-[var(--text-primary)] mb-2">
               <AlertTriangle className="w-3.5 h-3.5 text-[var(--accent)]" />
-              <span>SESSION ANOMALY RADAR</span>
+              <span>Session anomaly radar</span>
             </div>
             <div className="space-y-2">
               {anomalyAlerts.map(alert => (
@@ -231,7 +227,8 @@ export const ArahMarketView: React.FC<ArahMarketViewProps> = React.memo(({
           {intermarketSpreads.map(spread => (
             <div
               key={spread.id}
-              className="terminal-panel p-3 flex flex-col justify-between space-y-2"
+              className="rounded-lg p-3.5 flex flex-col justify-between gap-2"
+              style={{ backgroundColor: 'var(--bg-section-alt)' }}
             >
               <div>
                 <div className="flex items-center justify-between text-[10px] font-mono text-[var(--text-muted)] mb-1">
@@ -264,7 +261,7 @@ export const ArahMarketView: React.FC<ArahMarketViewProps> = React.memo(({
       </div>
 
       {/* 3. PRIMARY CONFLUENCE PAIRS BOARD */}
-      <section className="terminal-panel p-4 space-y-3.5">
+      <section className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b" style={{ borderColor: 'var(--border-hairline)' }}>
           <div>
             <h2 className="headline-h3 text-[var(--text-primary)] flex items-center gap-2">
@@ -322,7 +319,7 @@ export const ArahMarketView: React.FC<ArahMarketViewProps> = React.memo(({
               return (
                 <div
                   key={p.pair}
-                  className="terminal-panel p-3.5 flex flex-col justify-between space-y-3 hover:border-[var(--border-strong)] transition"
+                  className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3.5 flex flex-col justify-between gap-3 hover:border-[var(--border-strong)] hover:shadow-[var(--shadow-raised)] transition"
                 >
                   <div>
                     {/* Top Row: Symbol, Price, & 24h Change */}
@@ -379,8 +376,8 @@ export const ArahMarketView: React.FC<ArahMarketViewProps> = React.memo(({
                     {/* Currency Strength Net Divergence */}
                     {p.currencyStrength ? (
                       <div className="mb-2.5 p-2 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] text-[10px] font-mono">
-                        <div className="flex items-center justify-between mb-1 text-[9px] uppercase tracking-wider text-[var(--text-muted)]">
-                          <span>G8 SPREAD:</span>
+                        <div className="flex items-center justify-between mb-1 text-[9px] text-[var(--text-muted)]">
+                          <span>G8 spread</span>
                           <span className="font-bold text-[var(--text-primary)]">
                             {p.currencyStrength.alignment}
                           </span>
@@ -404,8 +401,8 @@ export const ArahMarketView: React.FC<ArahMarketViewProps> = React.memo(({
                     {/* 3 Pillars Breakdown */}
                     <div className="space-y-1.5 text-[10.5px] font-mono p-2 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)]">
                       <div>
-                        <div className="flex items-center justify-between text-[9.5px] text-[var(--text-muted)] uppercase">
-                          <span>1. FUNDAMENTAL</span>
+                        <div className="flex items-center justify-between text-[9.5px] text-[var(--text-muted)]">
+                          <span>Fundamental</span>
                           <span className={`font-bold ${p.fundamental.bias === 'BULLISH' ? 'text-[var(--bullish)]' : p.fundamental.bias === 'BEARISH' ? 'text-[var(--bearish)]' : 'text-[var(--text-muted)]'}`}>
                             {p.fundamental.bias}
                           </span>
@@ -416,8 +413,8 @@ export const ArahMarketView: React.FC<ArahMarketViewProps> = React.memo(({
                       </div>
 
                       <div className="pt-1 border-t" style={{ borderColor: 'var(--border-hairline)' }}>
-                        <div className="flex items-center justify-between text-[9.5px] text-[var(--text-muted)] uppercase">
-                          <span>2. INTERMARKET</span>
+                        <div className="flex items-center justify-between text-[9.5px] text-[var(--text-muted)]">
+                          <span>Intermarket</span>
                           <span className={`font-bold ${p.intermarket.bias === 'BULLISH' ? 'text-[var(--bullish)]' : p.intermarket.bias === 'BEARISH' ? 'text-[var(--bearish)]' : 'text-[var(--text-muted)]'}`}>
                             {p.intermarket.bias}
                           </span>
@@ -428,8 +425,8 @@ export const ArahMarketView: React.FC<ArahMarketViewProps> = React.memo(({
                       </div>
 
                       <div className="pt-1 border-t" style={{ borderColor: 'var(--border-hairline)' }}>
-                        <div className="flex items-center justify-between text-[9.5px] text-[var(--text-muted)] uppercase">
-                          <span>3. PRICE ACTION</span>
+                        <div className="flex items-center justify-between text-[9.5px] text-[var(--text-muted)]">
+                          <span>Price action</span>
                           <span className={`font-bold ${p.priceAction.bias === 'BULLISH' ? 'text-[var(--bullish)]' : p.priceAction.bias === 'BEARISH' ? 'text-[var(--bearish)]' : 'text-[var(--text-muted)]'}`}>
                             {p.priceAction.bias}
                           </span>
@@ -444,7 +441,7 @@ export const ArahMarketView: React.FC<ArahMarketViewProps> = React.memo(({
                   {/* Footer Action */}
                   <div className="pt-2 border-t font-mono" style={{ borderColor: 'var(--border-hairline)' }}>
                     <div className="flex items-center justify-between mb-2 text-[10px]">
-                      <span className="text-[var(--text-muted)] uppercase">PLAN:</span>
+                      <span className="text-[var(--text-muted)]">Plan</span>
                       <span className="font-bold text-[var(--text-primary)]">
                         {p.intradayPlan.recommendedAction.replace(/_/g, ' ')}
                       </span>
