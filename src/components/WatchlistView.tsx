@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { UserWatchlist, MarketPrice, User } from '../types';
 import { Star, Trash2, Plus, TrendingUp, TrendingDown, Minus, LogIn, ShieldAlert, ArrowUpRight } from 'lucide-react';
 import { getUserLimits } from '../lib/plans';
+import { PageHeader } from './shared/PageHeader';
 
 interface WatchlistViewProps {
   watchlist: UserWatchlist[];
@@ -42,11 +43,11 @@ export const WatchlistView: React.FC<WatchlistViewProps> = React.memo(({
 
   return (
     <section className="space-y-5 font-sans">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 pb-3 border-b" style={{ borderColor: 'var(--border-hairline)' }}>
-        <div className="space-y-1">
-          <div className="flex items-center gap-2.5">
-            <h2 className="headline-h3 text-[var(--text-primary)]">Watchlist</h2>
+      <PageHeader
+        eyebrow="TOOLS · WATCHLIST"
+        title="Watchlist"
+        titleAdornment={
+          <>
             <span className="text-[11px] text-[var(--text-muted)] tabular-nums">
               {watchlist.length} of {limits.watchlistLimit}
             </span>
@@ -55,29 +56,27 @@ export const WatchlistView: React.FC<WatchlistViewProps> = React.memo(({
                 Quota reached
               </span>
             )}
-          </div>
-          <p className="text-xs text-[var(--text-muted)]">
-            Real-time quotes and 24-hour ranges for the instruments you track.
-          </p>
-        </div>
-
-        {/* Add custom symbol form */}
-        <form onSubmit={handleAdd} className="flex items-center gap-2">
-          <input
-            type="text"
-            placeholder="Add ticker, e.g. XAUUSD"
-            value={newSymbol}
-            onChange={(e) => setNewSymbol(e.target.value)}
-            className="bg-[var(--bg-section-alt)] border border-transparent focus:border-[var(--border-strong)] px-3 h-9 rounded-md text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none w-48 transition"
-          />
-          <button
-            type="submit"
-            className="px-3.5 h-9 rounded-md bg-[var(--accent)] hover:opacity-90 text-white font-semibold text-xs transition cursor-pointer shadow-[var(--accent-glow)]"
-          >
-            Add
-          </button>
-        </form>
-      </div>
+          </>
+        }
+        description="Real-time quotes and 24-hour ranges for the instruments you track."
+        actions={
+          <form onSubmit={handleAdd} className="flex items-center gap-2">
+            <input
+              type="text"
+              placeholder="Add ticker, e.g. XAUUSD"
+              value={newSymbol}
+              onChange={(e) => setNewSymbol(e.target.value)}
+              className="bg-[var(--bg-section-alt)] border border-transparent focus:border-[var(--border-strong)] px-3 h-9 rounded-md text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none w-48 transition"
+            />
+            <button
+              type="submit"
+              className="px-3.5 h-9 rounded-md bg-[var(--accent)] hover:opacity-90 text-white font-semibold text-xs transition cursor-pointer shadow-[var(--accent-glow)]"
+            >
+              Add
+            </button>
+          </form>
+        }
+      />
 
       {/* Guest Mode Notice */}
       {!user && (

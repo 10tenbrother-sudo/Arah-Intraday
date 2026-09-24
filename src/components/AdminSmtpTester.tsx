@@ -134,7 +134,7 @@ export const AdminSmtpTester: React.FC<AdminSmtpTesterProps> = ({
             </div>
             <p className="text-xs text-[var(--text-secondary)] mt-0.5 font-sans">
               Test a direct connection to the mail server (Gmail/Brevo/SendGrid) to validate the credentials{' '}
-              <code className="text-[var(--accent)] font-mono">SMTP_USER</code> dan{' '}
+              <code className="text-[var(--accent)] font-mono">SMTP_USER</code> and{' '}
               <code className="text-[var(--accent)] font-mono">SMTP_PASS</code>.
             </p>
           </div>

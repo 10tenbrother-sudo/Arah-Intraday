@@ -21,6 +21,7 @@ import {
   ChevronRight as ChevronRightIcon,
 } from 'lucide-react';
 import { Tooltip, MetricTooltip, MetricInfoIcon } from './Tooltip';
+import { PageHeader } from './shared/PageHeader';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
@@ -299,17 +300,19 @@ export const MacroCalendarView: React.FC<MacroCalendarViewProps> = React.memo(({
 
   return (
     <section className="flex flex-col h-full space-y-5 font-sans" id="macro-calendar-root">
-      {/* Top Header */}
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-3 pb-3 border-b" style={{ borderColor: 'var(--border-hairline)' }}>
-        <div className="space-y-1">
-          <div className="flex items-center gap-2.5 flex-wrap">
-            <h2 className="headline-h3 text-[var(--text-primary)]">Economic calendar</h2>
+      <PageHeader
+        eyebrow="MAIN · ECONOMIC CALENDAR"
+        title="Economic calendar"
+        titleAdornment={
+          <>
             <MetricInfoIcon term="MACRO_CALENDAR" position="bottom" />
             <span className="text-[11px] text-[var(--text-muted)] tabular-nums">
               {upcomingCount} scheduled
             </span>
-          </div>
-          <div className="flex items-center gap-2 text-[11px] text-[var(--text-muted)] flex-wrap">
+          </>
+        }
+        description={
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="flex items-center gap-1.5">
               <span className={`w-1.5 h-1.5 rounded-full ${
                 liveStatus === 'LIVE' ? 'bg-[var(--bullish)]' :
@@ -322,79 +325,79 @@ export const MacroCalendarView: React.FC<MacroCalendarViewProps> = React.memo(({
             <span className="text-[var(--border-strong)]">·</span>
             <span>Synced {latestUpdated ? `${latestUpdated} WIB` : 'live'}</span>
           </div>
-        </div>
+        }
+        actions={
+          <>
+            {/* Live WIB Reference Clock */}
+            <div className="flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5 text-[var(--accent)]" />
+              <span className="text-xs font-semibold tabular-nums text-[var(--text-primary)]">{currentWibTime}</span>
+              <span className="metadata-label text-[9px] text-[var(--text-muted)]">WIB</span>
+            </div>
 
-        {/* Action Controls & Selectors */}
-        <div className="flex items-center gap-2.5 flex-wrap">
-          {/* Live WIB Reference Clock */}
-          <div className="flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5 text-[var(--accent)]" />
-            <span className="text-xs font-semibold tabular-nums text-[var(--text-primary)]">{currentWibTime}</span>
-            <span className="metadata-label text-[9px] text-[var(--text-muted)]">WIB</span>
-          </div>
+            <span className="w-px h-5 bg-[var(--border-hairline)]" />
 
-          <span className="w-px h-5 bg-[var(--border-hairline)]" />
+            {/* Timezone Selector */}
+            <div className="flex items-center gap-1.5 text-[var(--text-muted)]">
+              <Globe className="w-3.5 h-3.5" />
+              <select
+                value={selectedTimezone}
+                onChange={(e) => setSelectedTimezone(e.target.value)}
+                className="bg-transparent text-[var(--text-primary)] text-[11px] outline-none cursor-pointer"
+              >
+                {TIMEZONES.map(tz => (
+                  <option key={tz.value} value={tz.value} className="bg-[var(--bg-surface)] text-[var(--text-primary)]">
+                    {tz.label}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          {/* Timezone Selector */}
-          <div className="flex items-center gap-1.5 text-[var(--text-muted)]">
-            <Globe className="w-3.5 h-3.5" />
+            {/* Currency Filter */}
             <select
-              value={selectedTimezone}
-              onChange={(e) => setSelectedTimezone(e.target.value)}
+              value={currencyFilter}
+              onChange={(e) => setCurrencyFilter(e.target.value)}
               className="bg-transparent text-[var(--text-primary)] text-[11px] outline-none cursor-pointer"
             >
-              {TIMEZONES.map(tz => (
-                <option key={tz.value} value={tz.value} className="bg-[var(--bg-surface)] text-[var(--text-primary)]">
-                  {tz.label}
-                </option>
-              ))}
+              <option value="ALL">All currencies</option>
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+              <option value="GBP">GBP</option>
+              <option value="JPY">JPY</option>
+              <option value="CAD">CAD</option>
+              <option value="AUD">AUD</option>
+              <option value="NZD">NZD</option>
+              <option value="CHF">CHF</option>
             </select>
-          </div>
 
-          {/* Currency Filter */}
-          <select
-            value={currencyFilter}
-            onChange={(e) => setCurrencyFilter(e.target.value)}
-            className="bg-transparent text-[var(--text-primary)] text-[11px] outline-none cursor-pointer"
-          >
-            <option value="ALL">All currencies</option>
-            <option value="USD">USD</option>
-            <option value="EUR">EUR</option>
-            <option value="GBP">GBP</option>
-            <option value="JPY">JPY</option>
-            <option value="CAD">CAD</option>
-            <option value="AUD">AUD</option>
-            <option value="NZD">NZD</option>
-            <option value="CHF">CHF</option>
-          </select>
+            {/* Impact Filter */}
+            <div className="flex items-center gap-0.5 p-0.5 rounded-md bg-[var(--bg-section-alt)]">
+              {['ALL', 'CRITICAL', 'HIGH', 'MEDIUM'].map(f => (
+                <button
+                  key={f}
+                  onClick={() => setImpactFilter(f)}
+                  className={`h-7 px-2.5 rounded text-[11px] font-medium transition cursor-pointer ${
+                    impactFilter === f
+                      ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm'
+                      : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+                  }`}
+                >
+                  {f === 'ALL' ? 'All' : f.charAt(0) + f.slice(1).toLowerCase()}
+                </button>
+              ))}
+            </div>
 
-          {/* Impact Filter */}
-          <div className="flex items-center gap-0.5 p-0.5 rounded-md bg-[var(--bg-section-alt)]">
-            {['ALL', 'CRITICAL', 'HIGH', 'MEDIUM'].map(f => (
-              <button
-                key={f}
-                onClick={() => setImpactFilter(f)}
-                className={`h-7 px-2.5 rounded text-[11px] font-medium transition cursor-pointer ${
-                  impactFilter === f
-                    ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm'
-                    : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
-                }`}
-              >
-                {f === 'ALL' ? 'All' : f.charAt(0) + f.slice(1).toLowerCase()}
-              </button>
-            ))}
-          </div>
-
-          <button
-            onClick={onRefresh}
-            disabled={isRefreshing}
-            title="Refresh macro calendar"
-            className="h-8 w-8 rounded-md text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-section-alt)] flex items-center justify-center transition cursor-pointer disabled:opacity-50"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-[var(--accent)]' : ''}`} />
-          </button>
-        </div>
-      </div>
+            <button
+              onClick={onRefresh}
+              disabled={isRefreshing}
+              title="Refresh macro calendar"
+              className="h-8 w-8 rounded-md text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-section-alt)] flex items-center justify-center transition cursor-pointer disabled:opacity-50"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-[var(--accent)]' : ''}`} />
+            </button>
+          </>
+        }
+      />
 
       {/* Next Upcoming Event Spotlight Banner */}
       {nextEvent && (
@@ -833,7 +836,7 @@ export const MacroCalendarView: React.FC<MacroCalendarViewProps> = React.memo(({
                                 <p className="text-xs text-[var(--text-secondary)] leading-relaxed font-sans">
                                   {item.fundamental_implication ||
                                     (hasActual
-                                      ? `Rilis aktual ${item.actual} mengindikasikan pergeseran baseline fundamental terhadap ekspektasi konsensus (${item.forecast || 'N/A'}).`
+                                      ? `The actual print of ${item.actual} signals a fundamental baseline shift against the consensus estimate (${item.forecast || 'N/A'}).`
                                       : 'Awaiting the official release before setting policy transmission implications.')}
                                 </p>
                               </div>

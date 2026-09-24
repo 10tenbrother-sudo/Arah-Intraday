@@ -43,6 +43,7 @@ import { AuthPage } from './components/AuthPage';
 import { AutoTriggerNewsModal } from './components/AutoTriggerNewsModal';
 import { BreakingNewsAlertPopup } from './components/BreakingNewsAlertPopup';
 import { Toaster } from './components/ui/sonner';
+import { PageHeader } from './components/shared/PageHeader';
 import { useMarketDataStream } from './hooks/useMarketDataStream';
 import { useNewsAlertManager } from './hooks/useNewsAlertManager';
 import {
@@ -549,18 +550,10 @@ export default function App() {
               events={filteredEvents}
               calendar={calendar}
               overview={overview}
-              watchlistSymbols={watchlistSymbols}
-              selectedSymbol={selectedSymbol}
-              onSelectSymbol={handleSelectSymbol}
               onNavigateTab={handleTabChange}
               globalRegime={arahMarketData?.globalRegime ?? null}
-              onToggleWatchlist={handleToggleWatchlist}
               onOpenChart={handleOpenChart}
               onSelectEvent={handleSelectEvent}
-              onRefreshPrices={refreshPrices}
-              isRefreshingPrices={isRefreshingPrices}
-              onRefreshCS={refreshCurrencyStrength}
-              isRefreshingCS={isRefreshingCS}
               onSyncWire={refreshEvents}
               isSyncingWire={isSyncing}
             />
@@ -610,21 +603,29 @@ export default function App() {
 
           {/* VIEW 5: CURRENCY MATRIX */}
           {activeTab === 'currency' && (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-              <div className="lg:col-span-5">
-                <CurrencyStrengthWidget
-                  strengths={strengths}
-                  onRefresh={refreshCurrencyStrength}
-                  isRefreshing={isRefreshingCS}
-                />
-              </div>
+            <div className="space-y-4">
+              <PageHeader
+                eyebrow="RESEARCH · CURRENCY G8"
+                title="Currency strength matrix"
+                description="Relative G8 strength, live parity timelines, and the pair opportunity matrix built from the same readings."
+              />
 
-              <div className="lg:col-span-7">
-                <CurrencyPairOpportunityMatrix
-                  strengths={strengths}
-                  onOpenChart={handleOpenChart}
-                  onSelectSymbol={handleSelectSymbol}
-                />
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                <div className="lg:col-span-5">
+                  <CurrencyStrengthWidget
+                    strengths={strengths}
+                    onRefresh={refreshCurrencyStrength}
+                    isRefreshing={isRefreshingCS}
+                  />
+                </div>
+
+                <div className="lg:col-span-7">
+                  <CurrencyPairOpportunityMatrix
+                    strengths={strengths}
+                    onOpenChart={handleOpenChart}
+                    onSelectSymbol={handleSelectSymbol}
+                  />
+                </div>
               </div>
             </div>
           )}
@@ -642,39 +643,32 @@ export default function App() {
           {activeTab === 'events' && (
             <div className="space-y-5">
               <div className="space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 pb-3 border-b" style={{ borderColor: 'var(--border-hairline)' }}>
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2.5">
-                      <Layers className="w-4 h-4 text-[var(--accent)]" />
-                      <h1 className="headline-h3 text-[var(--text-primary)]">
-                        Canonical news wire
-                      </h1>
-                    </div>
-                    <p className="text-xs text-[var(--text-muted)]">
-                      One event, one canonical id, every source that carried it.
-                    </p>
-                  </div>
+                <PageHeader
+                  eyebrow="MAIN · NEWS WIRE"
+                  title="Canonical news wire"
+                  description="One event, one canonical id, every source that carried it."
+                  actions={
+                    <>
+                      <button
+                        onClick={refreshEvents}
+                        disabled={isSyncing}
+                        className="flex items-center gap-1.5 px-3 h-8 rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-section-alt)] text-xs font-medium transition cursor-pointer disabled:opacity-50"
+                        title="Sync wire with latest source releases"
+                      >
+                        <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-[var(--accent)]' : ''}`} />
+                        <span>Sync wire</span>
+                      </button>
 
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={refreshEvents}
-                      disabled={isSyncing}
-                      className="flex items-center gap-1.5 px-3 h-9 rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-section-alt)] text-xs font-medium transition cursor-pointer disabled:opacity-50"
-                      title="Sync wire with latest source releases"
-                    >
-                      <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-[var(--accent)]' : ''}`} />
-                      <span>Sync Wire</span>
-                    </button>
-
-                    <input
-                      type="text"
-                      placeholder="Search news, pairs, assets..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="bg-[var(--bg-section-alt)] border border-transparent px-3 h-9 rounded-md text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] outline-none w-48 sm:w-60 focus:border-[var(--border-strong)] transition"
-                    />
-                  </div>
-                </div>
+                      <input
+                        type="text"
+                        placeholder="Search news, pairs, assets..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="bg-[var(--bg-section-alt)] border border-transparent px-3 h-8 rounded-md text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] outline-none w-48 sm:w-60 focus:border-[var(--border-strong)] transition"
+                      />
+                    </>
+                  }
+                />
 
                 {/* Filter Controls: Impact Level & Category */}
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2.5 pt-2 border-t" style={{ borderColor: 'var(--border-hairline)' }}>

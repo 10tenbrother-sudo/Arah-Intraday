@@ -159,9 +159,9 @@ export const Header: React.FC<HeaderProps> = React.memo(({
           </button>
 
           <div className="flex items-center gap-2.5">
-            <h1 className="font-display text-[15px] font-semibold tracking-tight text-[var(--text-primary)]">
+            <span className="text-xs font-medium text-[var(--text-secondary)] whitespace-nowrap">
               {formatViewLabel(activeTab)}
-            </h1>
+            </span>
 
             {/* Connection Live Indicator */}
             <Tooltip

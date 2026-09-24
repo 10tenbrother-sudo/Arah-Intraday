@@ -183,9 +183,9 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({ eventId, onC
               </span>
             </div>
 
-            <h1 className="text-lg sm:text-xl font-bold text-[var(--text-primary)] leading-snug mb-2 font-display">
+            <h2 className="text-lg sm:text-xl font-bold text-[var(--text-primary)] leading-snug mb-2 font-display">
               {event.title}
-            </h1>
+            </h2>
             <p className="text-sm text-[var(--text-secondary)] leading-relaxed bg-[var(--bg-section-alt)] p-3.5 rounded border border-[var(--border-subtle)] font-sans">
               {event.summary}
             </p>
