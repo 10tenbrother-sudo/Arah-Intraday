@@ -13,11 +13,16 @@ Server listens on port **3000** (hardcoded in `server.ts`). It serves the Vite
 dev middleware in-process, so there is no separate frontend server.
 
 To expose it on the sandbox work ports (12000/12001), forward 12000 -> 3000.
-`socat` is not installed; a small Node TCP proxy works.
+`socat` is not installed; a small Node TCP proxy works. The forward is not
+persistent: recreate it after any container or session restart, otherwise the
+public URL returns 502 while local port 3000 still answers.
 
 ## Environment
 - `.env` (gitignored) supplies `GEMINI_API_KEY`. Without it the AI layer falls
   back to heuristic mode instead of calling Gemini.
+- Set `APP_SECRET` (>= 32 chars) in `.env` to keep sessions across restarts.
+  Without it `resolveSecret()` mints a random per-process secret, so every
+  restart invalidates all JWTs and users are bounced to the login screen.
 - The Gemini key is a live, working credential. Model names in
   `server/intelligence/gemini.ts` (`gemini-3.8-flash`, `gemini-3.1-flash-lite`)
   are real and correct for the current catalog — do not "fix" them. The primary
