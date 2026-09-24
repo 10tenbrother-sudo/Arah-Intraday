@@ -571,13 +571,13 @@ export const MacroCalendarView: React.FC<MacroCalendarViewProps> = React.memo(({
                           onClick={() => setTimingFilter('UPCOMING')}
                           className="px-3 py-1.5 rounded-md bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent)] font-bold hover:opacity-90 transition cursor-pointer"
                         >
-                          Lihat Rilis Akan Datang ({upcomingCount})
+                          View upcoming releases ({upcomingCount})
                         </button>
                         <button
                           onClick={() => setTimingFilter('ALL')}
                           className="px-3 py-1.5 rounded-md bg-[var(--bg-section-alt)] text-[var(--text-primary)] border border-[var(--border-strong)] hover:bg-[var(--border-subtle)] transition cursor-pointer"
                         >
-                          Semua Jadwal ({events.length})
+                          All scheduled ({events.length})
                         </button>
                       </div>
                     </div>

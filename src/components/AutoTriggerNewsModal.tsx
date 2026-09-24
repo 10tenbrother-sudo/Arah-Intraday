@@ -53,7 +53,7 @@ interface AutoTriggerNewsModalProps {
 const PRESET_TRIGGER_OPTIONS = [
   {
     id: 'live_telegram',
-    title: 'Telegram Live Wire (Berita Asli Terkini)',
+    title: 'Telegram Live Wire (verified live news)',
     desc: 'Pull live breaking messages from @financialjuice, @WatcherGuru, @SM_News_24h, @fxstreetforexindonesia',
     icon: Send,
     color: 'text-[var(--accent-strong)] border-[var(--accent-border)] bg-[var(--accent-subtle)] hover:bg-[var(--accent)] hover:text-white',
@@ -210,7 +210,7 @@ export const AutoTriggerNewsModal: React.FC<AutoTriggerNewsModalProps> = ({
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <span className="font-semibold text-[var(--text-primary)] text-sm">
-                  Aktifkan Auto-Trigger Berita Berkala
+                  Enable scheduled news auto-trigger
                 </span>
                 {config.enabled && (
                   <Badge variant="cyan" className="flex items-center gap-1 text-[11px]">
@@ -393,7 +393,7 @@ export const AutoTriggerNewsModal: React.FC<AutoTriggerNewsModalProps> = ({
               onClick={() => setShowCustomForm(prev => !prev)}
               className="text-[11px] font-semibold text-[var(--accent)] hover:text-[var(--accent)] flex items-center gap-1.5 cursor-pointer"
             >
-              <span>{showCustomForm ? '▼ Sembunyikan Form Berita Custom' : '▶ Buat Berita Custom Manual Sendiri...'}</span>
+              <span>{showCustomForm ? '▼ Hide custom news form' : '▶ Compose custom news manually...'}</span>
             </button>
 
             <AnimatePresence>
@@ -407,7 +407,7 @@ export const AutoTriggerNewsModal: React.FC<AutoTriggerNewsModalProps> = ({
                 >
                   <div>
                     <label className="block text-[10px] text-[var(--text-secondary)] mb-1 font-semibold">
-                      Judul / Headline Berita:
+                      Headline:
                     </label>
                     <input
                       type="text"
@@ -421,7 +421,7 @@ export const AutoTriggerNewsModal: React.FC<AutoTriggerNewsModalProps> = ({
 
                   <div>
                     <label className="block text-[10px] text-[var(--text-secondary)] mb-1 font-semibold">
-                      Isi Ringkasan Berita (Opsional):
+                      Summary (optional):
                     </label>
                     <textarea
                       rows={2}

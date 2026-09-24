@@ -61,7 +61,7 @@ export const BreakingNewsAlertPopup: React.FC<BreakingNewsAlertPopupProps> = ({
 
   return (
     <aside
-      aria-label="Pemberitahuan Berita Terkini"
+      aria-label="Breaking news alert"
       className="fixed bottom-4 right-4 sm:right-6 z-50 w-[calc(100vw-2rem)] sm:w-80 pointer-events-auto"
       id="breaking-news-alert-popup"
       onMouseEnter={() => setIsHovered(true)}

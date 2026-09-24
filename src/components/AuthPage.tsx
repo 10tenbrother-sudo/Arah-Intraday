@@ -452,7 +452,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
           id="back-home-btn"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Kembali ke Beranda</span>
+          <span>Back to home</span>
         </Button>
 
         <div
@@ -497,7 +497,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
             <div className="p-4 rounded-md bg-[var(--bullish-bg)]/60 border border-[var(--bullish-border)]/80 text-[var(--bullish)] text-xs space-y-2 font-sans">
               <div className="flex items-center gap-2 font-semibold text-[var(--bullish)]">
                 <CheckCircle2 className="w-4 h-4 text-[var(--bullish)] shrink-0" />
-                <span>Otentikasi Berhasil</span>
+                <span>Authentication verified</span>
               </div>
               <p>{tokenVerifySuccess}</p>
             </div>
@@ -508,7 +508,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
             <div className="p-4 rounded-md bg-[var(--bullish-bg)]/60 border border-[var(--bullish-border)]/80 text-[var(--bullish)] text-xs space-y-2 font-sans">
               <div className="flex items-center gap-2 font-semibold text-[var(--bullish)]">
                 <CheckCircle2 className="w-4 h-4 text-[var(--bullish)] shrink-0" />
-                <span>Berhasil</span>
+                <span>Success</span>
               </div>
               <p>{successMessage}</p>
             </div>
@@ -547,7 +547,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   </span>
                 </div>
                 <h1 className="text-xl font-bold font-mono tracking-tight text-[var(--text-primary)]">
-                  Aktivasi Email Anda
+                  Activate your email
                 </h1>
                 <p className="text-xs text-[var(--text-secondary)] font-sans leading-relaxed">
                   A verification link and code were sent to:
@@ -590,13 +590,13 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                     className="px-4 py-2.5 rounded-md bg-[var(--accent)] hover:opacity-90 text-white font-bold font-mono text-xs flex items-center justify-center gap-1.5 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
                   >
                     {otpVerifying ? <RefreshCw className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
-                    <span>Verifikasi</span>
+                    <span>Verify</span>
                   </button>
                 </div>
 
                 <div className="flex items-center gap-2 text-[10px] text-[var(--text-secondary)] font-mono pt-1">
                   <span className="w-2 h-2 rounded-full bg-[var(--accent)] animate-pulse inline-block shrink-0" />
-                  <span>Sistem otomatis mendeteksi ketika Anda mengklik tautan di email.</span>
+                  <span>This page updates on its own once you open the link in your email.</span>
                 </div>
               </form>
 
@@ -620,7 +620,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   }}
                   className="w-full py-2 rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] font-mono text-xs transition cursor-pointer text-center"
                 >
-                  Sudah terverifikasi? Masuk ke Akun
+                  Already verified? Sign in
                 </button>
               </div>
             </div>
@@ -678,7 +678,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
               <form onSubmit={handleForgotPassword} className="space-y-4 font-mono text-xs">
                 <div className="space-y-1.5">
                   <label className="block text-[var(--text-secondary)] text-[11px] font-semibold">
-                    Alamat Email Terdaftar
+                    Registered email address
                   </label>
                   <div className="relative">
                     <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] z-10" />
@@ -687,7 +687,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="contoh: trader@marketintel.pro"
+                      placeholder="e.g. trader@marketintel.pro"
                       className="pl-9 h-10"
                     />
                   </div>
@@ -717,7 +717,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   className="text-[var(--accent)] hover:underline font-mono text-xs cursor-pointer inline-flex items-center gap-1"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
-                  <span>Kembali ke Halaman Masuk</span>
+                  <span>Back to sign in</span>
                 </button>
               </div>
             </div>
@@ -748,14 +748,14 @@ export const AuthPage: React.FC<AuthPageProps> = ({
               <form onSubmit={handleResetPassword} className="space-y-4 font-mono text-xs">
                 {!resetToken && (
                   <div className="p-3.5 rounded-md bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-[var(--text-secondary)] text-xs font-sans leading-relaxed">
-                    Reset password hanya bisa dilakukan lewat tautan yang kami kirim ke email Anda.
-                    Minta tautan baru dari halaman{' '}
+                    Password resets only happen through the link we email you.
+                    Request a new link from the{' '}
                     <button
                       type="button"
                       onClick={() => onNavigate('/forgot-password')}
                       className="text-[var(--accent)] underline underline-offset-2"
                     >
-                      lupa password
+                      forgot password
                     </button>
                     .
                   </div>
@@ -854,7 +854,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   }`}
                   id="tab-login"
                 >
-                  Masuk
+                  Sign in
                 </button>
                 <button
                   type="button"
@@ -866,7 +866,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   }`}
                   id="tab-register"
                 >
-                  Buat Akun Baru
+                  Create account
                 </button>
               </div>
 
@@ -910,7 +910,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                             type="text"
                             inputMode="numeric"
                             maxLength={6}
-                            placeholder="6-digit kode OTP"
+                            placeholder="6-digit OTP code"
                             value={otpCode}
                             onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                             className="flex-1 px-2.5 py-1.5 bg-[var(--bg-canvas)] border border-[var(--border-strong)] focus:border-[var(--accent)] rounded text-center font-mono text-sm tracking-widest font-bold text-[var(--accent)] outline-none placeholder:text-[var(--text-muted)] placeholder:tracking-normal placeholder:font-sans placeholder:text-xs"
@@ -922,7 +922,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                             className="px-3 py-1.5 rounded bg-[var(--accent)] hover:opacity-90 text-white font-bold font-mono text-xs flex items-center gap-1 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
                           >
                             {otpVerifying ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />}
-                            <span>Aktifkan</span>
+                            <span>Activate</span>
                           </button>
                         </div>
                       </div>
@@ -962,7 +962,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                         className="w-full py-1.5 px-3 rounded-md bg-[var(--accent)] hover:opacity-90 text-white font-bold font-mono text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
                       >
                         <UserIcon className="w-3.5 h-3.5" />
-                        <span>Daftarkan Akun Ini Sekarang</span>
+                        <span>Create this account now</span>
                       </button>
                     </div>
                   )}
@@ -1030,7 +1030,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                           required
                           value={name}
                           onChange={(e) => setName(e.target.value)}
-                          placeholder="contoh: Alexander Vance"
+                          placeholder="e.g. Alexander Vance"
                           className="pl-9 h-10"
                           id="auth-name-input"
                         />
@@ -1040,7 +1040,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 
                   <div className="space-y-1.5">
                     <label className="block text-[var(--text-secondary)] text-[11px] font-semibold">
-                      Alamat Email (Wajib Aktif)
+                      Email address (must be active)
                     </label>
                     <div className="relative">
                       <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] z-10" />
@@ -1049,7 +1049,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="contoh: trader@marketintel.pro"
+                        placeholder="e.g. trader@marketintel.pro"
                         className="pl-9 h-10"
                         id="auth-email-input"
                       />
@@ -1108,24 +1108,24 @@ export const AuthPage: React.FC<AuthPageProps> = ({
               <div className="text-center text-[11px] text-[var(--text-secondary)] font-sans pt-2 border-t border-[var(--border-subtle)]">
                 {isRegister ? (
                   <p>
-                    Sudah memiliki akun?{' '}
+                    Already have an account?{' '}
                     <button
                       type="button"
                       onClick={() => onNavigate('/login')}
                       className="text-[var(--accent)] hover:underline font-semibold cursor-pointer"
                     >
-                      Masuk
+                      Sign in
                     </button>
                   </p>
                 ) : (
                   <p>
-                    Belum memiliki akun terminal?{' '}
+                    No terminal account yet?{' '}
                     <button
                       type="button"
                       onClick={() => onNavigate('/register')}
                       className="text-[var(--accent)] hover:underline font-semibold cursor-pointer"
                     >
-                      Daftar akun baru
+                      Create a new account
                     </button>
                   </p>
                 )}
