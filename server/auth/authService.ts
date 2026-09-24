@@ -8,7 +8,7 @@ import crypto from 'node:crypto';
 import { Request, Response, NextFunction } from 'express';
 import { db } from '../db/database.js';
 import { User, UserRole, UserPreferences } from '../types.js';
-import { mailService, EmailSendResult } from '../services/mailService.js';
+import { mailService, MailService, EmailSendResult } from '../services/mailService.js';
 
 const PBKDF2_ITERATIONS = 210_000;
 const PBKDF2_KEYLEN = 64;
@@ -293,7 +293,7 @@ export class AuthService {
   public static async requestPasswordReset(
     email: string,
     baseUrl: string
-  ): Promise<{ success: boolean; message: string; resetUrl?: string; email: string }> {
+  ): Promise<{ success: boolean; message: string; mailSent: boolean; resetUrl?: string; email: string }> {
     const cleanEmail = email.toLowerCase().trim();
     const user = await db.getUserByEmail(cleanEmail);
     if (!user) {
@@ -311,10 +311,31 @@ export class AuthService {
       baseUrl
     );
 
+    // Never claim an email went out when the transport never ran. The previous
+    // unconditional "sent to your email" made a misconfigured SMTP look like a
+    // missing inbox message, which is the hardest possible thing to debug.
+    const linkVisible = MailService.linksVisibleToCaller();
+    let message: string;
+    if (result.devMode) {
+      message = linkVisible
+        ? 'No mail transport is configured, so no email was sent. Use the reset link returned below.'
+        : 'No mail transport is configured, so no email was sent. Ask an operator for the link in the server log.';
+      console.warn(
+        `[Auth] Password reset for ${user.email} was generated in dev mode; no email left the server. ` +
+        'Set AUTH_DEV_LINK_ECHO=true to receive the link in the response, or configure SMTP_* for real delivery.'
+      );
+    } else if (!result.success) {
+      message = 'The reset link was created but the email could not be delivered. Request a new link or contact support.';
+      console.error(`[Auth] Password reset email for ${user.email} failed: ${result.error || 'unknown error'}`);
+    } else {
+      message = 'A password reset link has been sent to your email.';
+    }
+
     return {
       success: true,
-      message: 'A password reset link has been sent to your email.',
-      resetUrl: result.resetUrl,
+      message,
+      mailSent: !result.devMode && result.success,
+      resetUrl: result.devMode && linkVisible ? result.resetUrl : undefined,
       email: user.email,
     };
   }

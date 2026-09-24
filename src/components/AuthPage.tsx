@@ -281,7 +281,15 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     setError(null);
     setErrorCode(null);
     try {
-      const result = await signInWithPopup(auth, googleProvider);
+      // signInWithPopup never settles when the user closes the popup window
+      // without making a choice, which left the button stuck on "Connecting to
+      // Google...". Race it so the button always recovers.
+      const result = await Promise.race([
+        signInWithPopup(auth, googleProvider),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('GOOGLE_POPUP_TIMEOUT')), 60000)
+        ),
+      ]);
       const fbUser = result.user;
       if (!fbUser.email) throw new Error('The Google account has no public email address.');
 
@@ -311,7 +319,24 @@ export const AuthPage: React.FC<AuthPageProps> = ({
       onSuccess(apiRes.user, apiRes.token);
     } catch (err: any) {
       console.error('Google sign in error:', err);
-      setError(err.message || 'Google sign-in failed');
+      const code = err?.code || '';
+      if (code === 'auth/unauthorized-domain') {
+        setError(
+          'Google sign-in is blocked: this site\u2019s domain is not in the Firebase project\u2019s ' +
+          'Authorized domains. An administrator must add it under Firebase Console \u2192 ' +
+          'Authentication \u2192 Settings \u2192 Authorized domains.'
+        );
+      } else if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
+        setError('Google sign-in was cancelled before it finished.');
+      } else if (code === 'auth/popup-blocked') {
+        setError('Your browser blocked the Google sign-in popup. Allow popups for this site and try again.');
+      } else if (err?.message === 'GOOGLE_POPUP_TIMEOUT') {
+        setError('Google sign-in timed out. Close any open Google window and try again.');
+      } else if (code === 'auth/operation-not-allowed') {
+        setError('Google sign-in is not enabled for this Firebase project. An administrator must enable it.');
+      } else {
+        setError(err?.message || 'Google sign-in failed');
+      }
     } finally {
       setGoogleLoading(false);
     }
@@ -648,6 +673,15 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                 </div>
               )}
 
+              {successMessage && (
+                <div className="p-3.5 rounded-md bg-[var(--bullish-bg)]/60 border border-[var(--bullish-border)]/80 text-[var(--bullish)] text-xs space-y-2 font-sans">
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-[var(--bullish)]" />
+                    <span>{successMessage}</span>
+                  </div>
+                </div>
+              )}
+
               {/* Instant Reset URL fallback */}
               {resetUrl && (
                 <div className="p-3.5 rounded-md bg-[var(--accent-subtle)]/60 border border-[var(--accent)]/80 text-[var(--text-primary)] text-xs space-y-2">
@@ -662,10 +696,10 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                     type="button"
                     onClick={() => {
                       const match = resetUrl.match(/token=([^&]+)/);
-                      if (match) {
-                        setResetToken(decodeURIComponent(match[1]));
-                      }
-                      onNavigate(`/reset-password?token=${encodeURIComponent(resetToken || '')}`);
+                      const token = match ? decodeURIComponent(match[1]) : '';
+                      if (!token) return;
+                      setResetToken(token);
+                      onNavigate(`/reset-password?token=${encodeURIComponent(token)}`);
                     }}
                     className="w-full py-2 px-3 rounded-md bg-[var(--accent)] hover:opacity-90 text-white font-bold font-mono text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
                   >
