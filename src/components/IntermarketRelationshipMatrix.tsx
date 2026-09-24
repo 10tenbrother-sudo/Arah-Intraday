@@ -509,7 +509,7 @@ export const IntermarketRelationshipMatrix: React.FC<IntermarketRelationshipMatr
         {/* LEFT COLUMN: INTERDEPENDENCY MATRIX (7 COLS) */}
         <div className="lg:col-span-7 space-y-3">
           <div className="terminal-panel p-4">
-            <div className="flex items-center justify-between pb-3 border-b" style={{ borderColor: 'var(--border-subtle)' }}>
+            <div className="flex flex-wrap items-center justify-between gap-y-2 pb-3 border-b" style={{ borderColor: 'var(--border-subtle)' }}>
               <div className="flex items-center gap-2">
                 <BarChart3 className="w-3.5 h-3.5 text-[var(--accent)]" />
                 <h2 className="section-title text-xs text-[var(--text-primary)]">

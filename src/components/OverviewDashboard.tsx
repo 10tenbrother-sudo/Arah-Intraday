@@ -370,7 +370,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
           <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4 space-y-3">
             {/* Header with Switcher Tabs & Impact Filter */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2.5 border-b" style={{ borderColor: 'var(--border-hairline)' }}>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <div className="flex items-center gap-0.5 rounded-md bg-[var(--bg-section-alt)] p-0.5">
                   <button
                     onClick={() => setNewsFeedTab('news')}

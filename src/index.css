@@ -139,6 +139,33 @@
   }
 }
 
+/* The ticker strip and similar rails scroll horizontally on phones. Hiding the
+   bar there is deliberate, but it shipped without a definition, so nothing was
+   hidden and no scroll hint existed either. Keep it scrollable and add a hint. */
+@layer utilities {
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .scroll-hint-x {
+    background-image: none;
+  }
+
+  @media (max-width: 639px) {
+    .scroll-hint-x {
+      background-image: linear-gradient(to right, transparent, var(--bg-surface));
+      background-repeat: no-repeat;
+      background-position: right center;
+      background-size: 22px 100%;
+    }
+  }
+}
+
 /* Typography Hierarchy Classes (Swiss Editorial System) */
 .font-display {
   font-family: var(--font-display);

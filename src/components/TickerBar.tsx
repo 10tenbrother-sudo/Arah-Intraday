@@ -17,7 +17,7 @@ export const TickerBar: React.FC<TickerBarProps> = React.memo(({
 }) => {
   return (
     <div
-      className="border-b overflow-x-auto no-scrollbar py-1 px-3 sm:px-4 flex items-center gap-2 shrink-0 select-none text-xs font-mono"
+      className="border-b overflow-x-auto no-scrollbar scroll-hint-x py-1 px-3 sm:px-4 flex items-center gap-2 shrink-0 select-none text-xs font-mono"
       style={{
         backgroundColor: 'var(--bg-surface)',
         borderColor: 'var(--border-subtle)',

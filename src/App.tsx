@@ -725,7 +725,7 @@ export default function App() {
                   </div>
 
                   {/* Category Filter Chips */}
-                  <div className="flex items-center gap-0.5 p-0.5 rounded-md bg-[var(--bg-section-alt)] overflow-x-auto">
+                  <div className="flex items-center flex-wrap gap-0.5 p-0.5 rounded-md bg-[var(--bg-section-alt)] min-w-0">
                     {['ALL', 'MACRO', 'CENTRAL_BANK', 'COMMODITIES', 'GEOPOLITICS', 'CRYPTO'].map((cat) => (
                       <button
                         key={cat}
