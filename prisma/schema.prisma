@@ -1,15 +1,19 @@
 // Prisma schema for the Market Intelligence platform.
 //
-// SQLite has no array or native-JSON column type, so list/object fields that were
-// plain JSON in the old file store are kept as JSON-encoded TEXT and converted in
-// one place (server/db/codec.ts). Do not hand-edit those columns.
+// Postgres now backs this schema (migrated from the original JSON file store,
+// then SQLite). List/object fields are still persisted as JSON-encoded TEXT and
+// converted in one place (server/db/codec.ts) rather than as native `Json`
+// columns: the codec is the single boundary that guarantees an array never
+// reaches the API layer as a string, and moving to `Json` would require
+// auditing every reader for the changed runtime type. Do not hand-edit those
+// columns.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 

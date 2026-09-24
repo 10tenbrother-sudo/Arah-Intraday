@@ -276,6 +276,42 @@ WIB` stamp from `created_at`; keep that stamp whenever this card is reworked, or
 stale figures will look current. Do not regenerate the row on every page load —
 it is a deliberate quota guard while Gemini quota is exhausted.
 
+
+## Data layer is PostgreSQL (cut over 2026-09-24)
+
+`prisma/schema.prisma` targets `provider = "postgresql"`; the local cluster is
+PostgreSQL 17 on port 5432, role `arah`, database `arah_market`, and the
+connection string lives in `.env` as `DATABASE_URL`.
+
+Two things bite when running Prisma by hand:
+
+* `dotenv.config()` in `server.ts` does **not** override an existing shell
+  variable, and an older session may still export the SQLite URL
+  (`file:../data/market_intelligence.sqlite`). Prisma then fails with P1012
+  ("URL must start with postgresql://"). `prisma db push` loads `.env` itself,
+  so use that for schema changes, or export the Postgres URL for the command.
+* JSON columns are deliberately still `TEXT`, not Prisma `Json`. `server/db/codec.ts`
+  is the single encode/decode boundary, so switching to native `jsonb` would mean
+  touching every call site - not worth it at this data size.
+
+Migrations: `prisma/migrations/0_init` is a baseline that mirrors the existing
+schema and was marked applied with `prisma migrate resolve --applied 0_init`
+(the database already existed when the folder was created). Add further
+migrations normally with `prisma migrate dev`.
+
+The legacy SQLite store at `data/market_intelligence.sqlite` is left in place as
+a rollback source. How the data was moved, and why, is in
+`prisma/README-migration.md`.
+
+### Truncation must not split surrogate pairs
+
+`server/text.ts` exports `truncateText`, and ingestion truncates titles and
+summaries through it. A plain `substring(0, n)` can cut an emoji in half and
+leave a lone high surrogate; JSON serialisation then rejects the write with
+`unexpected end of hex escape`, which surfaces as a failed insert rather than a
+parse error. Do not reintroduce raw `substring`/`slice` on text destined for the
+database.
+
 ## Phone-width layout (audited 2026-09-24)
 
 Header rows that pair a title with a single-line control group must wrap: at

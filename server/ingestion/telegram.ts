@@ -9,6 +9,7 @@ import { db } from '../db/database.js';
 import { TelegramChannel, NewsItem, MarketEvent } from '../types.js';
 import { processNewsThroughPipeline } from './pipeline.js';
 import { sseBroker } from '../realtime/sse.js';
+import { truncateText } from '../text.js';
 
 export class TelegramIngestionService {
   /**
@@ -80,7 +81,7 @@ export class TelegramIngestionService {
       }
     }
 
-    headline = headline.substring(0, 160).trim();
+    headline = truncateText(headline, 160).trim();
 
     // Content is either remaining lines or full text
     let content = '';
