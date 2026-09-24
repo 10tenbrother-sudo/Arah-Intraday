@@ -179,6 +179,19 @@ Bootstrap credentials: the seed creates the first admin only on an empty
 database, using `ADMIN_INITIAL_PASSWORD` or a random password printed once. The
 old hardcoded `Admin123!@#` is gone from the repo.
 
+`data/*.db.json` is gitignored because it holds per-user password hashes. A
+tracked copy was readable in the public repo, and because the seed's passwords
+were also in the source, two ADMIN accounts could be logged into by anyone who
+cloned it. That file is now a runtime artifact only — an empty database is
+seeded on first boot. Do not commit it again.
+
+Rotating the exposed credentials is an operator action, not something the code
+can do: the affected password hashes remain in git history, and anything derived
+from them is still valid until the passwords change. The accounts that were
+seeded with known passwords (`admin@marketintel.pro`, `trader@marketintel.pro`,
+`wildanmn1933@gmail.com`) should have their passwords reset, and `APP_SECRET`
+should be set to a fresh value so existing session tokens stop verifying.
+
 ## Pushing to this repository
 
 The configured `GITHUB_TOKEN` is read-only for this repo: `git push` and the
