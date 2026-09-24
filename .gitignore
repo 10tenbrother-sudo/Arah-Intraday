@@ -14,3 +14,8 @@ package-lock.json
 # `npm run seed:sqlite` instead of committing a file that mutates every run.
 data/*.sqlite
 data/*.sqlite-journal
+
+# Runtime data store. It contains user credential hashes and was readable in the
+# public repo. Not needed on a fresh clone: `tsx server.ts` seeds an empty
+# database on first boot.
+data/*.db.json
