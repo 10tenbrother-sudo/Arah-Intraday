@@ -367,6 +367,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser }) => {
 
                       <button
                         onClick={() => handleDeleteChannel(ch.handle)}
+                        title={`Delete channel ${ch.handle}`}
+                        aria-label={`Delete channel ${ch.handle}`}
                         className="p-1 rounded text-[var(--text-muted)] hover:text-[var(--bearish)] hover:bg-[var(--bg-surface)] transition"
                       >
                         <Trash2 className="w-3.5 h-3.5" />

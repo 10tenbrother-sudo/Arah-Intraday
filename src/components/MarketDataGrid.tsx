@@ -228,6 +228,9 @@ export const MarketDataGrid: React.FC<MarketDataGridProps> = React.memo(({
                         e.stopPropagation();
                         onToggleWatchlist(item.symbol, item.asset_type);
                       }}
+                      title={isBookmarked ? `Remove ${item.symbol} from watchlist` : `Add ${item.symbol} to watchlist`}
+                      aria-label={isBookmarked ? `Remove ${item.symbol} from watchlist` : `Add ${item.symbol} to watchlist`}
+                      aria-pressed={isBookmarked}
                       className={`p-1.5 rounded-md transition cursor-pointer ${
                         isBookmarked ? 'text-[var(--warning)]' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                       }`}
