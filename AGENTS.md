@@ -147,3 +147,43 @@ reference when anyone proposes changing a threshold. Measured results:
 
 Regenerating: `npx tsx backtest.ts` (delete `/tmp/bt` to refetch). The harness
 takes ~90s and is not wired into `npm run build`.
+
+## Authentication and secrets
+
+The auth surface had account-takeover holes that are now closed. Do not
+reintroduce the patterns below; the regression suite at
+`/tmp/verify_security.py` (rerun it after touching auth) covers them.
+
+- `APP_SECRET` signs session JWTs. Production refuses to boot without it. There
+  is deliberately no fixed development fallback: the previous constant was in
+  the repo, so anyone could forge an ADMIN token. Without the env var a random
+  per-process secret is used and sessions do not survive a restart.
+- Password reset always requires a token. Never add an email-only or
+  `directReset` path — it let any caller overwrite any account's password.
+- Verification, reset and magic-link URLs are never echoed in API responses
+  unless `AUTH_DEV_LINK_ECHO=true` (ignored in production). This exists only for
+  local work without SMTP.
+- `firebase-login` verifies the Firebase ID token and ignores `email`/`uid` in
+  the request body. The body is attacker-controlled; only the signed token
+  proves identity.
+- Registration grants `USER`/`FREE` only. Admin rights come from the admin API or
+  `ADMIN_EMAILS` at startup, and `ADMIN_EMAILS` promotes existing accounts only —
+  it never creates one.
+- `toPublicUser()` strips `password_hash`, `salt` and billing fields. Every auth
+  response must go through it.
+- Rate limiting lives in `server/middleware/rateLimit.ts`. It is an in-process
+  fixed-window counter, so it is per-instance and resets on restart; it needs a
+  shared store if the app is ever scaled horizontally.
+
+Bootstrap credentials: the seed creates the first admin only on an empty
+database, using `ADMIN_INITIAL_PASSWORD` or a random password printed once. The
+old hardcoded `Admin123!@#` is gone from the repo.
+
+## Pushing to this repository
+
+The configured `GITHUB_TOKEN` is read-only for this repo: `git push` and the
+refs API both return 403 ("Resource not accessible by integration") even though
+the API reports `push: true`. The stored remote URL also carries an expired
+token and will hang on a password prompt. Use
+`git push "https://${GITHUB_TOKEN}@github.com/..."` only if a write-capable
+token is supplied; otherwise the commit stays local.
