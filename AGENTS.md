@@ -277,6 +277,24 @@ panel. Navigating to a path outside `PUBLIC_ROUTES`/`PRIVATE_ROUTES` silently
 falls back to the Overview tab rather than erroring, so a blank-looking page is
 often just a wrong URL.
 
+## Granting the ADMIN role (chicken-and-egg)
+
+The admin panel is gated on `user.role === 'ADMIN'` in both the sidebar (which
+hides the "System & Feeds" entry) and `adminRouter.use(requireAdmin)`. There is
+no self-service path to that role — an admin grants it from inside the panel,
+which is unreachable without already holding it. So when nobody has the role,
+use the CLI:
+
+```bash
+npm run set:role -- someone@example.com ADMIN
+npm run set:role -- someone@example.com USER
+```
+
+`scripts/set-role.ts` refuses to demote the last remaining ADMIN so the panel
+cannot be orphaned. Role changes are read at sign-in and on `/api/auth/me`, so
+the affected user must sign out and back in for the navigation to update — a
+stale `arah_market_user` in localStorage will keep showing the old role.
+
 ## Market overview synthesis is cached, not live
 
 `MARKET_OVERVIEW` rows are written only by `POST /api/intelligence/ai/refresh`
