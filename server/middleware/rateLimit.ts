@@ -66,12 +66,12 @@ function createLimiter({ windowMs, max, message }: LimiterOptions) {
 export const credentialLimiter = createLimiter({
   windowMs: 15 * 60 * 1000,
   max: 10,
-  message: 'Terlalu banyak percobaan. Coba lagi beberapa menit lagi.',
+  message: 'Too many attempts. Try again in a few minutes.',
 });
 
 /** Token/link issuance endpoints: looser, still bounded. */
 export const authLimiter = createLimiter({
   windowMs: 15 * 60 * 1000,
   max: 30,
-  message: 'Terlalu banyak permintaan. Coba lagi beberapa menit lagi.',
+  message: 'Too many requests. Try again in a few minutes.',
 });
