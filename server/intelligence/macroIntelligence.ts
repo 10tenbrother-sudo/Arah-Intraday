@@ -119,8 +119,8 @@ export class MacroIntelligenceEngine {
    * Inflation + Employment + Growth + PMI + Interest Rate + Central Bank Tone + Currency Strength
    * Output: STRONG / WEAK / MIXED with all underlying evidence
    */
-  public static getCurrencyMacroContext(): CurrencyMacroContext[] {
-    const cs = db.getCurrencyStrength();
+  static async getCurrencyMacroContext(): Promise<CurrencyMacroContext[]> {
+    const cs = await db.getCurrencyStrength();
     const csMap = new Map<string, CurrencyStrength>();
     cs.forEach(c => csMap.set(c.currency, c));
 
@@ -488,13 +488,13 @@ export class MacroIntelligenceEngine {
    * Synthesizes unified Market Context combining:
    * NEWS + MACRO + CENTRAL BANK + CURRENCY STRENGTH + MARKET DATA
    */
-  public static getUnifiedMarketContext(): UnifiedMarketContext {
-    const prices = db.getAllMarketPrices();
-    const strengths = db.getCurrencyStrength();
-    const events = db.getAllEvents(8);
-    const macro = db.getEconomicEvents(10);
+  static async getUnifiedMarketContext(): Promise<UnifiedMarketContext> {
+    const prices = await db.getAllMarketPrices();
+    const strengths = await db.getCurrencyStrength();
+    const events = await db.getAllEvents(8);
+    const macro = await db.getEconomicEvents(10);
     const speeches = this.getCentralBankSpeeches();
-    const macroContexts = this.getCurrencyMacroContext();
+    const macroContexts = await this.getCurrencyMacroContext();
 
     const nowIso = new Date().toISOString();
 

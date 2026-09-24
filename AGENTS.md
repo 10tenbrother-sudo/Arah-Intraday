@@ -24,9 +24,15 @@ To expose it on the sandbox work ports (12000/12001), forward 12000 -> 3000.
   model frequently returns 429 and the fallback 503; the engine's retry/failover
   and its deterministic grounded-synthesis fallback are working as intended, so
   those log lines are not a bug.
-- Storage is a single JSON file at `data/market_intelligence.db.json` (file-based
-  relational engine in `server/db/database.ts`). It mutates on every run, so
-  revert it before committing unrelated changes.
+- Storage is SQLite via Prisma at `data/market_intelligence.sqlite` (data layer
+  `server/db/database.ts`, client singleton `server/db/prisma.ts`, JSON codec
+  `server/db/codec.ts`). Schema lives in `prisma/schema.prisma`; push changes
+  with `npm run db:push`. The data layer is fully async - every call site awaits.
+- `data/market_intelligence.db.json` is the retired file store. It is kept
+  read-only for provenance; nothing writes it. Migrate it into SQLite with
+  `npm run seed:sqlite` (add `--force` to overwrite an existing database). The
+  migration dedupes ids and repairs dangling foreign keys, because the old file
+  was pruned over time and contained orphans.
 - Seeded demo login: `trader@marketintel.pro` / `Trader123!`
   (`server/auth/authService.ts`).
 
@@ -48,3 +54,96 @@ opening PRs, and creating issues do not. Produce a patch with
   (see `components.json`); shared composites in `src/components/shared/`.
 - Class merging goes through `cn()` from `src/lib/utils.ts` (clsx + tailwind-merge).
 - Design skills from the taste-skill bundle are installed under `.agents/skills/`.
+
+## Market Bias vs Overview (single-source rule)
+The server dossier (`/api/intelligence/arah-market` -> `ArahMarketTodayData`)
+owns the market regime and every per-pair entry plan. The client must not
+derive a second opinion:
+
+- `ArahMarketView.tsx` (tab `arah_market` / "Market Bias") is the only
+  surface that renders entry setups, including `intradayPlan.invalidationTrigger`
+  and `intradayPlan.warningNote`.
+- `ExecutiveMarketBrief.tsx` (Overview) is a macro conclusion only. It reads
+  `globalRegime` from the dossier (passed from `App.tsx`) and renders no trade
+  grid. Do not re-add a local `bullishCount`/`bearishCount` regime or hardcoded
+  calls like "Long US100 & G8 Divergence Pairs" - they contradicted the server.
+
+## TradingView symbol contract
+`onOpenChart` accepts either a raw ticker (`US100`, `XAUUSD`) or a `tv_symbol`.
+`resolveSymbolToTVMeta` in `TradingViewChartModal.tsx` maps both, because
+`PRIMARY_INSTRUMENTS` has explicit `US100`/`XAUUSD` entries and the market
+payload carries `tv_symbol`. Passing a raw ticker is safe; it does not break
+the chart.
+
+## Data fidelity rules in `arahMarketEngine.ts`
+Only these feeds exist: DXY, US10Y, six FX pairs, US100/US30/US500, XAUUSD, BTC,
+plus the 1-10 currency strength feed. There is **no** 2Y yield, TIPS, Bund, or
+JGB feed. Consequences to respect when editing:
+
+- Do not synthesise an instrument that is not fed. A `US10Y - US02Y` curve
+  slope was previously fabricated as `0.14 - dxyChange * 0.30`, which made the
+  "US Yield Curve Slope" spread a restatement of DXY. It was removed.
+- `us10yChangeBps = us10yPrice * us10yChange` converts the feed's percent
+  change into basis points (a 3.05% move on 5.1% is ~15.6bps). `changeSessionBps`
+  values used to be hardcoded literals (3.2/4.5/5.1/2.8); they are now real.
+- The currency strength feed is a 1-10 scale whose live basket average runs
+  near 4.0, well below its midpoint. Never test it against a fixed cut such as
+  `usdScore > 5.2`: that skews every downstream bias. Compare against the
+  basket average (`usdVsBasket`).
+- `fundScore` / `interScore` / `paScore` are not read anywhere, and
+  `priceAction.structure` is not rendered. They are diagnostics only, so a
+  wrong value there has no user-visible effect.
+
+Verification tip: signal output can be compared deterministically by stubbing
+`db.getAllMarketPrices` / `getCurrencyStrength` / `getAllEvents` /
+`getEconomicEvents` and calling `ArahMarketEngine.getArahMarketToday()` under
+`npx tsx` over a frozen JSON snapshot.
+
+## Signal calibration evidence (backtest of 2026-07 -> 2026-09)
+
+`backtest.ts` replays the real engine over 12 instruments of 15m Yahoo Finance
+bars (fetched automatically into `/tmp/bt`, resampled to 1h/4h). It is the
+reference when anyone proposes changing a threshold. Measured results:
+
+- Directional edge over 4 horizons (15m/1h/6h/24h forward, 15m and 1h bars,
+  106k-153k samples) is ~zero: hit rate 46.9-49.3% against an "always long"
+  benchmark of 49.6-51.7%. `corr(engineBiasSign, forwardReturn)` = 0.021-0.038.
+  **The engine has no measurable forecasting skill; do not claim it does.**
+  The apparent 60-90% hit rates seen on a single live session are directional
+  beta from a one-sided tape, not skill.
+- `HIGH_CONVICTION` is not an edge signal. Before the pillar fix it was *worse*
+  than no filter at the 24h horizon (45.0% vs 51.7% benchmark). After removing
+  the duplicate pillar (see below) it is still 45.6% vs 51.7%. The label now
+  reads "3/3 ALIGNED" and carries an explicit `warningNote` telling the user it
+  is context, not a trigger. Do not reintroduce action language for it.
+- The currency-strength pillar must NOT be voted into the confluence count. For
+  an FX pair `fundBias` is already a function of the same two strength scores
+  (base minus quote) at a tighter threshold (0.1 vs 0.4), so the two pillars were
+  mathematically incapable of disagreeing: "4 pillars" was really 3. Voting both
+  counted one signal twice. CS still functions as a veto through
+  `hasCsDivergence`. Removing it moved ~10pp of pairs from 3/3 to 2/3 and
+  rebalanced per-pair direction (USDJPY went 1794 bull / 1269 bear -> 0 / 950),
+  with no change to aggregate hit rate.
+- Deliberately left uncalibrated: `directionalBias` thresholds, the XAUUSD
+  neutral band, and the CS `netDiff` 0.4 cut. Tuning them against 70 days of one
+  regime would be curve-fitting, and the backtest cannot yet tell a real edge
+  from momentum. Do not tune them without new evidence.
+- `NEUTRAL_CHOP` is assigned a NEUTRAL bias and is excluded from hit stats, so
+  its ~15% share is inert, not informative.
+- Per-pair at 15m-24h (post-fix), the remaining pairs are heavily USD-driven and
+  add little timing information: USDCAD 1368 bull / 1339 bear; AUDUSD
+  1015/1170. So the 15m `directionalBias` direction is largely the sign of the
+  preceding 24h move - trade momentum, not a forecast.
+- `IntradayMarketMapEngine` is not independent evidence either, for a different
+  reason. Its `fundamentalScore` is piecewise-constant: several symbols are bare
+  literals (BTC `65`, US100 `55`, US30 `70`, and three at `-30`/`-35`/`-40`),
+  and the rest branch on a single currency-strength threshold with a wide dead
+  zone (e.g. XAUUSD `usdStrength < 5.0 ? 75 : 45`, EUR `> 6.0 ? 50 : < 4.0 ? -45
+  : -10`). `confidence` is a hardcoded literal in 15 places. Only
+  `priceActionScore` varies continuously with data. The `top_drivers` /
+  `today_key_catalyst` strings are fixed prose that does not branch on the
+  actual feeds, so treat the whole view as template text with a live price, not
+  as analysis.
+
+Regenerating: `npx tsx backtest.ts` (delete `/tmp/bt` to refetch). The harness
+takes ~90s and is not wired into `npm run build`.

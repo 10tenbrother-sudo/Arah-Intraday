@@ -553,6 +553,7 @@ export default function App() {
               selectedSymbol={selectedSymbol}
               onSelectSymbol={handleSelectSymbol}
               onNavigateTab={handleTabChange}
+              globalRegime={arahMarketData?.globalRegime ?? null}
               onToggleWatchlist={handleToggleWatchlist}
               onOpenChart={handleOpenChart}
               onSelectEvent={handleSelectEvent}

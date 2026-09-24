@@ -137,7 +137,7 @@ export class TelegramIngestionService {
         const isRedirected = title.includes('Telegram: Contact') || !html.includes('tgme_channel_info');
         if (isRedirected) {
           console.warn(`[Telegram Ingest] Channel ${channel.handle} has no public web preview or is redirected.`);
-          db.upsertTelegramChannel({
+          await db.upsertTelegramChannel({
             ...channel,
             status: 'DELAYED',
             last_ingested_at: new Date().toISOString(),
@@ -147,13 +147,13 @@ export class TelegramIngestionService {
       }
 
       // Update source status to LIVE
-      db.upsertTelegramChannel({
+      await db.upsertTelegramChannel({
         ...channel,
         status: 'LIVE',
         last_ingested_at: new Date().toISOString(),
         error_count: 0,
       });
-      db.updateSourceStatus(channel.source_id, 'LIVE');
+      await db.updateSourceStatus(channel.source_id, 'LIVE');
 
       let ingestedCount = 0;
       // Process newest posts (up to 15 latest items)
@@ -162,7 +162,7 @@ export class TelegramIngestionService {
       for (const post of toProcess) {
         const newsId = `news_${cleanHandle}_${post.id.replace('/', '_')}`;
         // Skip if already in database
-        if (db.getNewsById(newsId)) continue;
+        if (await db.getNewsById(newsId)) continue;
 
         const parsed = this.parseTelegramPost(post.text, channel.title);
         if (!parsed) {
@@ -205,12 +205,12 @@ export class TelegramIngestionService {
       const updatedErrorCount = (channel.error_count || 0) + 1;
       const status = updatedErrorCount > 3 ? 'ERROR' : 'DELAYED';
 
-      db.upsertTelegramChannel({
+      await db.upsertTelegramChannel({
         ...channel,
         status,
         error_count: updatedErrorCount,
       });
-      db.updateSourceStatus(channel.source_id, status, err.message);
+      await db.updateSourceStatus(channel.source_id, status, err.message);
 
       // If network is completely offline/firewalled during dev container preview,
       // generate legitimate baseline updates from historical channel posts
@@ -224,7 +224,7 @@ export class TelegramIngestionService {
    * Provides verified benchmark posts for initial load if live network is unreachable
    */
   private static async injectBaselineWireIfEmpty(channel: TelegramChannel): Promise<number> {
-    const existing = db.getAllNews(10, 0);
+    const existing = await db.getAllNews(10, 0);
     const channelNews = existing.filter(n => n.source_id === channel.source_id);
     if (channelNews.length >= 3) return 0;
 
@@ -306,7 +306,7 @@ export class TelegramIngestionService {
    * Ingests from all active registered Telegram channels
    */
   public static async runAllChannels(): Promise<{ totalIngested: number; results: Record<string, any> }> {
-    const channels = db.getAllTelegramChannels().filter(c => c.is_enabled);
+    const channels = (await db.getAllTelegramChannels()).filter(c => c.is_enabled);
     const results: Record<string, any> = {};
     let totalIngested = 0;
 
@@ -331,7 +331,7 @@ export class TelegramIngestionService {
     isFreshScrape: boolean;
     isNew: boolean;
   }> {
-    const channels = db.getAllTelegramChannels().filter(c => c.is_enabled);
+    const channels = (await db.getAllTelegramChannels()).filter(c => c.is_enabled);
     const targetChannels: TelegramChannel[] = channels.length > 0 ? channels : [
       {
         id: 'chan_tg_financialjuice',
@@ -453,7 +453,7 @@ export class TelegramIngestionService {
               const post = rawPosts[pIdx];
               const newsId = `news_${cleanHandle}_${post.id.replace('/', '_')}`;
 
-              if (!db.getNewsById(newsId)) {
+              if (!await db.getNewsById(newsId)) {
                 const parsed = this.parseTelegramPost(post.text, ch.title);
                 if (!parsed) {
                   // Casual chatter or non-substantive post, skip and look at next post

@@ -37,12 +37,12 @@ export class IntradayMarketMapEngine {
   /**
    * Generates the real-time Intraday Market Map for all 13 assets
    */
-  public static getIntradayMarketMap(): IntradayAssetBias[] {
-    const prices = db.getAllMarketPrices();
-    const strengths = db.getCurrencyStrength();
-    const macroEvents = db.getEconomicEvents(40);
+  static async getIntradayMarketMap(): Promise<IntradayAssetBias[]> {
+    const prices = await db.getAllMarketPrices();
+    const strengths = await db.getCurrencyStrength();
+    const macroEvents = await db.getEconomicEvents(40);
     const speeches = MacroIntelligenceEngine.getCentralBankSpeeches();
-    const macroContexts = MacroIntelligenceEngine.getCurrencyMacroContext();
+    const macroContexts = await MacroIntelligenceEngine.getCurrencyMacroContext();
 
     const priceMap = new Map<string, MarketPrice>();
     prices.forEach(p => priceMap.set(p.symbol, p));
@@ -450,8 +450,8 @@ export class IntradayMarketMapEngine {
   /**
    * Generates Today's Key Catalysts enriched with real-time surprises & market reaction
    */
-  public static getTodayKeyCatalysts(): TodayCatalyst[] {
-    const macroEvents = db.getEconomicEvents(200);
+  static async getTodayKeyCatalysts(): Promise<TodayCatalyst[]> {
+    const macroEvents = await db.getEconomicEvents(200);
     const now = new Date();
     const nowMs = now.getTime();
     const nowIso = now.toISOString();

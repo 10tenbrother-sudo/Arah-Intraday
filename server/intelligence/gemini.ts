@@ -174,17 +174,17 @@ async function callGeminiWithResilience(
 
 export async function analyzeMarketEventWithGemini(event: MarketEvent): Promise<AIAnalysis> {
   // Check if analysis already exists for this event (Deduplicated events must not be re-analyzed repeatedly)
-  const existing = db.getAIAnalysisForEvent(event.id);
+  const existing = await db.getAIAnalysisForEvent(event.id);
   if (existing && Date.now() - new Date(existing.created_at).getTime() < 30 * 60 * 1000) {
     return existing;
   }
 
   // Gather verified system context
-  const eventSources = db.getEventSources(event.id);
-  const marketPrices = db.getAllMarketPrices();
-  const currencyStrengths = db.getCurrencyStrength();
-  const macroReleases = db.getEconomicEvents(10);
-  const activeThemes = db.getMarketThemes();
+  const eventSources = await db.getEventSources(event.id);
+  const marketPrices = await db.getAllMarketPrices();
+  const currencyStrengths = await db.getCurrencyStrength();
+  const macroReleases = await db.getEconomicEvents(10);
+  const activeThemes = await db.getMarketThemes();
 
   // Build price snapshot for affected assets
   const priceSnapshot: Record<string, number> = {};
@@ -225,7 +225,7 @@ export async function analyzeMarketEventWithGemini(event: MarketEvent): Promise<
       created_at: new Date().toISOString(),
       is_insufficient_data: true,
     };
-    db.upsertAIAnalysis(insufficientAnalysis);
+    await db.upsertAIAnalysis(insufficientAnalysis);
     return insufficientAnalysis;
   }
 
@@ -306,8 +306,8 @@ STRICT RULES:
           is_insufficient_data: false,
         };
 
-        db.upsertAIAnalysis(analysis);
-        db.updateEvent(event.id, { ai_analysis_id: analysis.id });
+        await db.upsertAIAnalysis(analysis);
+        await db.updateEvent(event.id, { ai_analysis_id: analysis.id });
         sseBroker.broadcast('ai_analysis_updated', analysis);
         return analysis;
       }
@@ -357,17 +357,17 @@ STRICT RULES:
     is_insufficient_data: false,
   };
 
-  db.upsertAIAnalysis(analysis);
-  db.updateEvent(event.id, { ai_analysis_id: analysis.id });
+  await db.upsertAIAnalysis(analysis);
+  await db.updateEvent(event.id, { ai_analysis_id: analysis.id });
   sseBroker.broadcast('ai_analysis_updated', analysis);
   return analysis;
 }
 
 export async function generateMacroMarketOverview(): Promise<AIAnalysis> {
-  const prices = db.getAllMarketPrices();
-  const strength = db.getCurrencyStrength();
-  const events = db.getAllEvents(5);
-  const macro = db.getEconomicEvents(5);
+  const prices = await db.getAllMarketPrices();
+  const strength = await db.getCurrencyStrength();
+  const events = await db.getAllEvents(5);
+  const macro = await db.getEconomicEvents(5);
 
   const priceMap: Record<string, number> = {};
   prices.forEach(p => { priceMap[p.symbol] = p.price; });
@@ -428,7 +428,7 @@ Strict rules: No fabricated numbers. Return JSON:
           is_insufficient_data: false,
         };
 
-        db.upsertAIAnalysis(analysis);
+        await db.upsertAIAnalysis(analysis);
         return analysis;
       }
     } catch {
@@ -465,6 +465,6 @@ Strict rules: No fabricated numbers. Return JSON:
     is_insufficient_data: false,
   };
 
-  db.upsertAIAnalysis(fallback);
+  await db.upsertAIAnalysis(fallback);
   return fallback;
 }

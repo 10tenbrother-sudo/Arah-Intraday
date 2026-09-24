@@ -103,12 +103,12 @@ async function startServer() {
   });
 
   // Source Transparency & Integrity Audit Endpoint
-  app.get('/api/sources', (req, res) => {
+  app.get('/api/sources', async (req, res) => {
     try {
-      const sources = db.getAllSources();
-      const channels = db.getAllTelegramChannels();
-      const events = db.getAllEvents(100);
-      const news = db.getAllNews(100);
+      const sources = await db.getAllSources();
+      const channels = await db.getAllTelegramChannels();
+      const events = await db.getAllEvents(100);
+      const news = await db.getAllNews(100);
 
       res.json({
         total_sources: sources.length,
@@ -204,17 +204,17 @@ async function startServer() {
     }, 60000);
 
     // Automated Daily Market Snapshot Generator (every 10 minutes)
-    setInterval(() => {
+    setInterval(async () => {
       try {
         const todayStr = new Date().toISOString().slice(0, 10);
-        const existing = db.getDailySnapshotByDate(todayStr);
+        const existing = await db.getDailySnapshotByDate(todayStr);
         if (!existing) {
           console.log(`[Scheduler] Generating automated daily snapshot for ${todayStr}...`);
           // Trigger generation
-          const map = IntradayMarketMapEngine.getIntradayMarketMap();
-          const strengths = db.getCurrencyStrength();
+          const map = await IntradayMarketMapEngine.getIntradayMarketMap();
+          const strengths = await db.getCurrencyStrength();
           const biases: Record<string, any> = {};
-          map.forEach((item: any) => {
+          map.forEach(async (item: any) => {
             biases[item.symbol] = {
               symbol: item.symbol,
               bias: item.overall_bias,
@@ -227,7 +227,7 @@ async function startServer() {
             };
           });
 
-          db.saveDailySnapshot({
+          await db.saveDailySnapshot({
             id: `snapshot_${todayStr}`,
             date: todayStr,
             timestamp: new Date().toISOString(),

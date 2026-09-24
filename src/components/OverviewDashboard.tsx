@@ -19,6 +19,7 @@ import {
   AIAnalysis,
   IntradayAssetBias,
   TodayCatalyst,
+  ArahMarketTodayData,
 } from '../types';
 import { CurrencyStrengthWidget } from './CurrencyStrengthWidget';
 import { MarketDataGrid } from './MarketDataGrid';
@@ -39,6 +40,7 @@ interface OverviewDashboardProps {
   selectedSymbol: string | null;
   onSelectSymbol: (symbol: string | null) => void;
   onNavigateTab: (tab: NavTabId) => void;
+  globalRegime: ArahMarketTodayData['globalRegime'] | null;
   onToggleWatchlist: (symbol: string, assetType: string) => void;
   onOpenChart: (symbol: string) => void;
   onSelectEvent: (eventId: string) => void;
@@ -62,6 +64,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
   selectedSymbol,
   onSelectSymbol,
   onNavigateTab,
+  globalRegime,
   onToggleWatchlist,
   onOpenChart,
   onSelectEvent,
@@ -365,16 +368,14 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
       </div>
 
       {/* ======================================================== */}
-      {/* 3. EXECUTIVE MARKET BRIEF (KESIMPULAN & TRADE ENTRIES)   */}
+      {/* 3. EXECUTIVE MARKET BRIEF (MACRO CONCLUSION)             */}
       {/* ======================================================== */}
       <ExecutiveMarketBrief
         strengths={strengths}
-        intradayMap={intradayMap}
-        todayCatalysts={todayCatalysts}
         prices={prices}
-        calendar={calendar}
+        globalRegime={globalRegime}
         onOpenChart={onOpenChart}
-        onSelectSymbol={onSelectSymbol}
+        onNavigateMarketBias={() => onNavigateTab('arah_market')}
       />
 
       {/* ======================================================== */}
