@@ -56,7 +56,8 @@ export async function seedDatabase(): Promise<void> {
       );
     }
 
-    const traderPass = hashPassword('Trader123!');
+    const traderPassword = process.env.DEMO_USER_PASSWORD || crypto.randomBytes(18).toString('base64url');
+    const traderPass = hashPassword(traderPassword);
     const traderUser: User = {
       id: 'usr_trader_002',
       email: 'trader@marketintel.pro',
@@ -71,6 +72,14 @@ export async function seedDatabase(): Promise<void> {
       updated_at: new Date().toISOString(),
     };
     await db.insertUser(traderUser);
+
+    if (!process.env.DEMO_USER_PASSWORD) {
+      console.warn(
+        `[Seed] Demo account created: ${traderUser.email}\n` +
+        `[Seed] Generated password (shown once): ${traderPassword}\n` +
+        `[Seed] Set DEMO_USER_PASSWORD to control this value.`
+      );
+    }
 
     await db.upsertUserPreferences({
       user_id: traderUser.id,
