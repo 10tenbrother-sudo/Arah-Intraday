@@ -3,18 +3,49 @@ import { CurrencyStrength } from '../types';
 import { api } from '../lib/api';
 import { RefreshCw, TrendingUp, Sparkles, ExternalLink, Calendar, SlidersHorizontal } from 'lucide-react';
 
+// Identity palette: each currency keeps its hue family so existing users are not
+// re-taught the legend, but saturation and lightness are pulled into one narrow
+// band. The previous values were full-saturation primaries (#ff0000, #0033ff),
+// which shouted over the muted accent and fought each other on a white canvas.
+// All eight hold ~4.5:1 against white and stay legible on the dark canvas.
 export const CURRENCY_COLORS: Record<string, { hex: string; bg: string; text: string; border: string; name: string }> = {
-  USD: { hex: '#ff9900', bg: 'bg-[var(--warning-bg)]', text: 'text-[var(--warning-strong)]', border: 'border-[var(--warning-border)]', name: 'US Dollar' },
-  EUR: { hex: '#ff0000', bg: 'bg-[var(--bearish-bg)]', text: 'text-[var(--bearish)]', border: 'border-[var(--bearish-border)]', name: 'Euro' },
-  JPY: { hex: '#00ccff', bg: 'bg-[var(--accent-subtle)]', text: 'text-[var(--accent-strong)]', border: 'border-[var(--accent-border)]', name: 'Japanese Yen' },
-  GBP: { hex: '#00cc00', bg: 'bg-[var(--bullish-bg)]', text: 'text-[var(--bullish)]', border: 'border-[var(--bullish-border)]', name: 'British Pound' },
-  AUD: { hex: '#0033ff', bg: 'bg-[var(--accent-subtle)]', text: 'text-[var(--accent-strong)]', border: 'border-[var(--accent-border)]', name: 'Australian Dollar' },
-  CHF: { hex: '#996600', bg: 'bg-[var(--warning-bg)]', text: 'text-[var(--warning-strong)]', border: 'border-[var(--warning-border)]', name: 'Swiss Franc' },
-  CAD: { hex: '#9900ff', bg: 'bg-[var(--accent-subtle)]', text: 'text-[var(--accent-strong)]', border: 'border-[var(--accent-border)]', name: 'Canadian Dollar' },
-  NZD: { hex: '#ff33cc', bg: 'bg-[var(--accent-subtle)]', text: 'text-[var(--accent-strong)]', border: 'border-[var(--accent-border)]', name: 'New Zealand Dollar' },
+  USD: { hex: '#C2760B', bg: 'bg-[var(--warning-bg)]', text: 'text-[var(--warning-strong)]', border: 'border-[var(--warning-border)]', name: 'US Dollar' },
+  EUR: { hex: '#C0392B', bg: 'bg-[var(--bearish-bg)]', text: 'text-[var(--bearish)]', border: 'border-[var(--bearish-border)]', name: 'Euro' },
+  JPY: { hex: '#0E7490', bg: 'bg-[var(--accent-subtle)]', text: 'text-[var(--accent-strong)]', border: 'border-[var(--accent-border)]', name: 'Japanese Yen' },
+  GBP: { hex: '#15803D', bg: 'bg-[var(--bullish-bg)]', text: 'text-[var(--bullish)]', border: 'border-[var(--bullish-border)]', name: 'British Pound' },
+  AUD: { hex: '#1D4ED8', bg: 'bg-[var(--accent-subtle)]', text: 'text-[var(--accent-strong)]', border: 'border-[var(--accent-border)]', name: 'Australian Dollar' },
+  CHF: { hex: '#8A6D1F', bg: 'bg-[var(--warning-bg)]', text: 'text-[var(--warning-strong)]', border: 'border-[var(--warning-border)]', name: 'Swiss Franc' },
+  CAD: { hex: '#7C3AED', bg: 'bg-[var(--accent-subtle)]', text: 'text-[var(--accent-strong)]', border: 'border-[var(--accent-border)]', name: 'Canadian Dollar' },
+  NZD: { hex: '#BE185D', bg: 'bg-[var(--accent-subtle)]', text: 'text-[var(--accent-strong)]', border: 'border-[var(--accent-border)]', name: 'New Zealand Dollar' },
 };
 
 export const G8_CURRENCIES = ['USD', 'EUR', 'JPY', 'GBP', 'AUD', 'CHF', 'CAD', 'NZD'];
+
+/**
+ * SVG cannot use CSS custom properties, and a hardcoded palette only matches the
+ * theme it was written for. These are resolved from the live theme tokens on each
+ * render, so the chart stays legible when the theme is toggled.
+ */
+function themeColor(token: string, fallback: string): string {
+  if (typeof window === 'undefined') return fallback;
+  const value = getComputedStyle(document.documentElement).getPropertyValue(token).trim();
+  return value || fallback;
+}
+
+function readGridColors() {
+  return {
+    line: themeColor('--border-strong', '#a1a1aa'),
+    label: themeColor('--text-muted', '#71717a'),
+    zero: themeColor('--text-secondary', '#52525b'),
+    // Sits on the zero baseline, so it must be the highest-contrast text token.
+    zeroLabel: themeColor('--text-primary', '#09090b'),
+    crosshair: themeColor('--accent', '#e25c26'),
+    // Ring around the end-of-line marker; matches the canvas so it reads as a cut.
+    nodeRing: themeColor('--bg-surface', '#ffffff'),
+    territoryUp: themeColor('--bullish', '#15803d'),
+    territoryDown: themeColor('--bearish', '#dc2626'),
+  };
+}
 
 interface CurrencyStrengthChartProps {
   strengths?: CurrencyStrength[];
@@ -45,6 +76,18 @@ export const CurrencyStrengthChart: React.FC<CurrencyStrengthChartProps> = React
   const [lastUpdated, setLastUpdated] = useState<string>('');
 
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Recomputed when the theme class flips so the SVG picks up the new tokens.
+  const [themeTick, setThemeTick] = useState(0);
+  useEffect(() => {
+    const observer = new MutationObserver(() => setThemeTick(t => t + 1));
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class', 'data-theme'],
+    });
+    return () => observer.disconnect();
+  }, []);
+  const GRID = useMemo(() => readGridColors(), [themeTick]);
 
   // Fetch real-time chart feed from server proxy
   const loadChartData = async (selectedRange: '1d' | '2d') => {
@@ -410,12 +453,12 @@ export const CurrencyStrengthChart: React.FC<CurrencyStrengthChartProps> = React
             <defs>
               {/* Subtle background gradients for positive vs negative territory */}
               <linearGradient id="positiveTerritory" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#10B981" stopOpacity="0.05" />
-                <stop offset="100%" stopColor="#10B981" stopOpacity="0.0" />
+                <stop offset="0%" stopColor={GRID.territoryUp} stopOpacity="0.05" />
+                <stop offset="100%" stopColor={GRID.territoryUp} stopOpacity="0.0" />
               </linearGradient>
               <linearGradient id="negativeTerritory" x1="0" y1="1" x2="0" y2="0">
-                <stop offset="0%" stopColor="#EF4444" stopOpacity="0.05" />
-                <stop offset="100%" stopColor="#EF4444" stopOpacity="0.0" />
+                <stop offset="0%" stopColor={GRID.territoryDown} stopOpacity="0.05" />
+                <stop offset="100%" stopColor={GRID.territoryDown} stopOpacity="0.0" />
               </linearGradient>
             </defs>
 
@@ -453,7 +496,7 @@ export const CurrencyStrengthChart: React.FC<CurrencyStrengthChartProps> = React
                     y1={y}
                     x2={padding.left + chartWidth}
                     y2={y}
-                    stroke={isZero ? '#94a3b8' : '#1e293b'}
+                    stroke={isZero ? GRID.zero : GRID.line}
                     strokeWidth={isZero ? 1.5 : 0.8}
                     strokeDasharray={isZero ? undefined : '2 3'}
                     strokeOpacity={isZero ? 0.7 : 0.4}
@@ -461,7 +504,7 @@ export const CurrencyStrengthChart: React.FC<CurrencyStrengthChartProps> = React
                   <text
                     x={padding.left - 6}
                     y={y + 3}
-                    fill={isZero ? '#f8fafc' : '#64748b'}
+                    fill={isZero ? GRID.zeroLabel : GRID.label}
                     fontSize={isZero ? '9' : '8'}
                     fontWeight={isZero ? 'bold' : 'normal'}
                     textAnchor="end"
@@ -473,7 +516,7 @@ export const CurrencyStrengthChart: React.FC<CurrencyStrengthChartProps> = React
                     <text
                       x={padding.left + chartWidth + 4}
                       y={y + 3}
-                      fill="#94a3b8"
+                      fill={GRID.label}
                       fontSize="7"
                       fontWeight="bold"
                       fontFamily="monospace"
@@ -496,7 +539,7 @@ export const CurrencyStrengthChart: React.FC<CurrencyStrengthChartProps> = React
                     y1={padding.top}
                     x2={x}
                     y2={padding.top + chartHeight}
-                    stroke="#1e293b"
+                    stroke={GRID.line}
                     strokeWidth="0.8"
                     strokeDasharray="2 3"
                     strokeOpacity="0.5"
@@ -504,7 +547,7 @@ export const CurrencyStrengthChart: React.FC<CurrencyStrengthChartProps> = React
                   <text
                     x={x}
                     y={padding.top + chartHeight + 16}
-                    fill="#64748b"
+                    fill={GRID.label}
                     fontSize="8"
                     textAnchor="middle"
                     fontFamily="monospace"
@@ -559,7 +602,7 @@ export const CurrencyStrengthChart: React.FC<CurrencyStrengthChartProps> = React
                     cy={lastY}
                     r={isHovered ? 4 : 2.5}
                     fill={style.hex}
-                    stroke="#020617"
+                    stroke={GRID.nodeRing}
                     strokeWidth="1.5"
                   />
 
@@ -587,7 +630,7 @@ export const CurrencyStrengthChart: React.FC<CurrencyStrengthChartProps> = React
                   y1={padding.top}
                   x2={getX(hoveredIndex, chartData.pointCount)}
                   y2={padding.top + chartHeight}
-                  stroke="#38bdf8"
+                  stroke={GRID.crosshair}
                   strokeWidth="1.2"
                   strokeDasharray="2 2"
                 />

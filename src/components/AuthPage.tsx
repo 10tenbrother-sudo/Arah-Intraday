@@ -983,7 +983,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   type="button"
                   onClick={handleGoogleSignIn}
                   disabled={loading || googleLoading}
-                  className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-md bg-white hover:bg-[#f4f4f6] text-[#18181b] text-xs font-semibold font-sans transition-all duration-150 shadow-[var(--shadow-raised)] hover:shadow-[var(--shadow-raised)] disabled:opacity-50 cursor-pointer border border-[#e4e4e7]"
+                  className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-md bg-[var(--bg-surface)] hover:bg-[var(--bg-section-alt)] text-[var(--text-primary)] text-xs font-semibold font-sans transition-all duration-150 disabled:opacity-50 cursor-pointer border border-[var(--border-strong)]"
                   id="google-signin-btn"
                 >
                   <svg className="w-4 h-4" viewBox="0 0 24 24">
