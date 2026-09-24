@@ -275,3 +275,15 @@ old, quoting stale prices. `AIIntelligenceView` now prints an `AS OF <time>
 WIB` stamp from `created_at`; keep that stamp whenever this card is reworked, or
 stale figures will look current. Do not regenerate the row on every page load —
 it is a deliberate quota guard while Gemini quota is exhausted.
+
+## Phone-width layout (audited 2026-09-24)
+
+Header rows that pair a title with a single-line control group must wrap: at
+360-390px `justify-between` lets the group escape its card. News category
+chips, the Overview wire impact filter, and the Intermarket category tabs all
+needed `flex-wrap` for this reason. Re-check with a real viewport, not the
+desktop browser, since the spill is invisible above `sm`.
+
+`.no-scrollbar` is defined in `src/index.css` and hides the bar on the ticker
+rail; pair it with `.scroll-hint-x` so the sideways scroll is still signalled.
+The ticker is ~2600px wide on phones by design - scroll, not truncation.
