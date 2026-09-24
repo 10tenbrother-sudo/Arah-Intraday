@@ -53,7 +53,7 @@ export async function processNewsThroughPipeline(rawNews: NewsItem): Promise<{
   rawNews.status = 'NORMALIZED';
 
   // 4. DEDUPLICATE & MATCH EVENT
-  const existingEvents = db.getAllEvents(40);
+  const existingEvents = await db.getAllEvents(40);
   const dedup = DeduplicationEngine.evaluateDuplicate(rawNews, existingEvents);
 
   let targetEvent: MarketEvent;
@@ -66,7 +66,7 @@ export async function processNewsThroughPipeline(rawNews: NewsItem): Promise<{
     rawNews.event_id = targetEvent.id;
     rawNews.status = 'EVENT_LINKED';
 
-    db.insertNewsItem(rawNews);
+    await db.insertNewsItem(rawNews);
     DeduplicationEngine.linkNewsToEvent(rawNews, targetEvent, dedup.matchReason, dedup.similarityScore);
     console.log(`[Pipeline] DEDUPLICATED: "${rawNews.title}" -> Event [${targetEvent.id}] (${dedup.matchReason})`);
   } else {
@@ -92,8 +92,8 @@ export async function processNewsThroughPipeline(rawNews: NewsItem): Promise<{
     rawNews.event_id = eventId;
     rawNews.status = 'EVENT_LINKED';
 
-    db.insertEvent(targetEvent);
-    db.insertNewsItem(rawNews);
+    await db.insertEvent(targetEvent);
+    await db.insertNewsItem(rawNews);
 
     DeduplicationEngine.linkNewsToEvent(rawNews, targetEvent, 'Canonical initial source for event', 1.0);
     console.log(`[Pipeline] NEW EVENT CREATED: [${eventId}] "${targetEvent.title}"`);

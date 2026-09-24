@@ -1,18 +1,23 @@
 /**
- * Relational Database Engine for Market Intelligence Platform
- * Provides strict normalization, foreign key integrity, secondary indices,
- * atomic persistence, and relational query helpers.
+ * Relational data layer for the Market Intelligence platform, backed by SQLite
+ * through Prisma.
+ *
+ * Method names and return shapes are unchanged from the previous JSON-file
+ * implementation, so callers only needed an `await`. Two behavioural notes:
+ *
+ *  - Every method is now asynchronous, and durability comes from SQLite rather
+ *    than a debounced atomic file rewrite. Callers must await writes before
+ *    responding, otherwise the write may not have committed yet.
+ *  - The old in-memory `pruneOldData` caps are preserved by `enforce*Cap`
+ *    helpers that delete the oldest rows after insert.
  */
 
-import fs from 'node:fs';
-import path from 'node:path';
 import crypto from 'node:crypto';
 import {
   User,
   VerificationToken,
   UserPreferences,
   UserWatchlist,
-  UserAlert,
   Source,
   TelegramChannel,
   NewsItem,
@@ -30,688 +35,555 @@ import {
 } from '../types.js';
 import { MacroEnricher } from '../intelligence/enrichment.js';
 import { calculatePairImpacts } from '../relationships/assetMapper.js';
+import { prisma } from './prisma.js';
+import { parseJson, toJson, toJsonRequired } from './codec.js';
+import { DEFAULT_DAILY_SNAPSHOTS } from './defaultSnapshots.js';
 
-interface DatabaseSchema {
-  users: User[];
-  verification_tokens: VerificationToken[];
-  user_preferences: UserPreferences[];
-  user_watchlists: UserWatchlist[];
-  user_alerts: UserAlert[];
-  sources: Source[];
-  telegram_channels: TelegramChannel[];
-  news: NewsItem[];
-  events: MarketEvent[];
-  event_sources: EventSource[];
-  event_assets: Array<{ id: string; event_id: string; asset_symbol: string; correlation_rationale: string }>;
-  event_currencies: Array<{ id: string; event_id: string; currency_code: string; impact_direction: string }>;
-  market_prices: MarketPrice[];
-  currency_strength: CurrencyStrength[];
-  currency_strength_history: CurrencyStrengthHistory[];
-  economic_events: EconomicEvent[];
-  market_themes: MarketTheme[];
-  ai_analysis: AIAnalysis[];
-  daily_snapshots: DailyMarketSnapshot[];
+const NEWS_CAP = 350;
+const EVENT_CAP = 250;
+const HISTORY_CAP = 1000;
+const AI_ANALYSIS_CAP = 200;
+
+/** Drops the SQLite autoincrement bookkeeping column from a price row. */
+function stripSeq<T extends { seq?: number }>(row: T): Omit<T, 'seq'> {
+  const { seq, ...rest } = row;
+  return rest;
 }
 
 export class RelationalDatabase {
-  private data: DatabaseSchema;
-  private filePath: string;
-  private saveTimeout: NodeJS.Timeout | null = null;
-  private isSaving = false;
-
-  // Secondary indexes for ultra-fast lookup
-  private indexes = {
-    usersByEmail: new Map<string, User>(),
-    usersById: new Map<string, User>(),
-    tokensByToken: new Map<string, VerificationToken>(),
-    sourcesById: new Map<string, Source>(),
-    telegramByHandle: new Map<string, TelegramChannel>(),
-    newsById: new Map<string, NewsItem>(),
-    newsByEventId: new Map<string, NewsItem[]>(),
-    eventsById: new Map<string, MarketEvent>(),
-    eventSourcesByEventId: new Map<string, EventSource[]>(),
-    pricesBySymbol: new Map<string, MarketPrice>(),
-    currencyStrengthByCode: new Map<string, CurrencyStrength>(),
-  };
-
-  constructor(filePath?: string) {
-    this.filePath = filePath || path.join(process.cwd(), 'data', 'market_intelligence.db.json');
-    this.data = this.initializeEmptySchema();
-    this.load();
-    this.rebuildIndexes();
+  // ==================== USERS ====================
+  public async getAllUsers(): Promise<User[]> {
+    const rows = await prisma.user.findMany();
+    return rows as unknown as User[];
   }
 
-  private initializeEmptySchema(): DatabaseSchema {
-    return {
-      users: [],
-      verification_tokens: [],
-      user_preferences: [],
-      user_watchlists: [],
-      user_alerts: [],
-      sources: [],
-      telegram_channels: [],
-      news: [],
-      events: [],
-      event_sources: [],
-      event_assets: [],
-      event_currencies: [],
-      market_prices: [],
-      currency_strength: [],
-      currency_strength_history: [],
-      economic_events: [],
-      market_themes: [],
-      ai_analysis: [],
-      daily_snapshots: [],
-    };
+  public async getUserByEmail(email: string): Promise<User | undefined> {
+    const row = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+    return (row as unknown as User) ?? undefined;
   }
 
-  private load(): void {
-    try {
-      const dir = path.dirname(this.filePath);
-      if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
-      }
-
-      if (fs.existsSync(this.filePath)) {
-        const raw = fs.readFileSync(this.filePath, 'utf-8');
-        const parsed = JSON.parse(raw);
-        this.data = { ...this.initializeEmptySchema(), ...parsed };
-        if (!this.data.verification_tokens) {
-          this.data.verification_tokens = [];
-        }
-        if (!this.data.daily_snapshots) {
-          this.data.daily_snapshots = [];
-        }
-
-        // Apply proactive pruning on startup to keep DB memory and disk footprint lean
-        this.pruneOldData();
-
-        // Ensure all events have calculated pair impacts and directional biases
-        if (this.data.events) {
-          for (const ev of this.data.events) {
-            if (!ev.pair_impacts || ev.pair_impacts.length === 0) {
-              ev.pair_impacts = calculatePairImpacts(
-                ev.title,
-                ev.summary || ev.title,
-                ev.primary_category,
-                ev.affected_assets || [],
-                ev.affected_currencies || []
-              );
-            }
-          }
-        }
-      }
-    } catch (err) {
-      console.error('[DB] Error loading database file, initializing clean state:', err);
-      this.data = this.initializeEmptySchema();
-    }
+  public async getUserById(id: string): Promise<User | undefined> {
+    const row = await prisma.user.findUnique({ where: { id } });
+    return (row as unknown as User) ?? undefined;
   }
 
-  /**
-   * Safe data pruning to prevent disk bloat and memory leaks.
-   * Keeps high-value news & events while capping granular history ticks.
-   */
-  private pruneOldData(): void {
-    // 1. Cap currency_strength_history (max 1000 data points is ample for multi-day charts)
-    if (this.data.currency_strength_history && this.data.currency_strength_history.length > 1000) {
-      this.data.currency_strength_history = this.data.currency_strength_history.slice(-1000);
-    }
-
-    // 2. Cap news items (keep latest 350 items)
-    if (this.data.news && this.data.news.length > 350) {
-      this.data.news = this.data.news.slice(0, 350);
-    }
-
-    // 3. Cap events (keep latest 250 items)
-    if (this.data.events && this.data.events.length > 250) {
-      this.data.events = this.data.events.slice(0, 250);
-    }
-
-    // 4. Cap event sources (keep latest 350 items)
-    if (this.data.event_sources && this.data.event_sources.length > 350) {
-      this.data.event_sources = this.data.event_sources.slice(0, 350);
-    }
-
-    // 5. Cap AI analysis cache (keep latest 200 items)
-    if (this.data.ai_analysis && this.data.ai_analysis.length > 200) {
-      this.data.ai_analysis = this.data.ai_analysis.slice(-200);
-    }
+  public async insertUser(user: User): Promise<User> {
+    const nowIso = new Date().toISOString();
+    const row = await prisma.user.create({
+      data: {
+        id: user.id,
+        email: user.email.toLowerCase(),
+        password_hash: user.password_hash,
+        salt: user.salt,
+        name: user.name,
+        role: user.role,
+        is_verified: user.is_verified ?? false,
+        verification_status: user.verification_status ?? null,
+        avatar_url: user.avatar_url ?? null,
+        plan: user.plan ?? null,
+        subscription_status: user.subscription_status ?? null,
+        subscription_expires_at: user.subscription_expires_at ?? null,
+        last_order_id: user.last_order_id ?? null,
+        payment_method: user.payment_method ?? null,
+        billing_cycle: user.billing_cycle ?? null,
+        created_at: user.created_at ?? nowIso,
+        updated_at: nowIso,
+      },
+    });
+    return row as unknown as User;
   }
 
-  public saveSync(): void {
-    try {
-      this.pruneOldData();
-      const dir = path.dirname(this.filePath);
-      if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
-      }
-      const tempPath = `${this.filePath}.tmp`;
-      fs.writeFileSync(tempPath, JSON.stringify(this.data, null, 2), 'utf-8');
-      fs.renameSync(tempPath, this.filePath);
-    } catch (err) {
-      console.error('[DB] Error saving database:', err);
-    }
+  public async updateUser(id: string, updates: Partial<User>): Promise<User | null> {
+    const exists = await prisma.user.findUnique({ where: { id }, select: { id: true } });
+    if (!exists) return null;
+
+    const { email, ...rest } = updates;
+    const row = await prisma.user.update({
+      where: { id },
+      data: {
+        ...(rest as any),
+        ...(email ? { email: email.toLowerCase() } : {}),
+        updated_at: new Date().toISOString(),
+      },
+    });
+    return row as unknown as User;
   }
 
-  /**
-   * Non-blocking asynchronous save with atomic file rename and robust fallback
-   */
-  public async saveAsync(): Promise<void> {
-    if (this.isSaving) return;
-    this.isSaving = true;
-    try {
-      this.pruneOldData();
-      const dir = path.dirname(this.filePath);
-      if (!fs.existsSync(dir)) {
-        await fs.promises.mkdir(dir, { recursive: true });
-      }
-      const tempPath = `${this.filePath}.${Date.now()}.${Math.random().toString(36).substring(2, 7)}.tmp`;
-      const payload = JSON.stringify(this.data, null, 2);
-      await fs.promises.writeFile(tempPath, payload, 'utf-8');
-      try {
-        await fs.promises.rename(tempPath, this.filePath);
-      } catch (renameErr) {
-        // Fallback for cross-device, lock or fs race conditions: copy and remove
-        await fs.promises.copyFile(tempPath, this.filePath);
-        await fs.promises.unlink(tempPath).catch(() => {});
-      }
-    } catch (err) {
-      console.error('[DB] Error in saveAsync:', err);
-    } finally {
-      this.isSaving = false;
-    }
-  }
-
-  public scheduleSave(): void {
-    if (this.saveTimeout) return;
-    // Debounce save by 500ms to batch high-frequency updates without freezing event loop
-    this.saveTimeout = setTimeout(() => {
-      this.saveTimeout = null;
-      this.saveAsync().catch(() => {});
-    }, 500);
-  }
-
-  public rebuildIndexes(): void {
-    this.indexes.usersByEmail.clear();
-    this.indexes.usersById.clear();
-    this.indexes.tokensByToken.clear();
-    this.indexes.sourcesById.clear();
-    this.indexes.telegramByHandle.clear();
-    this.indexes.newsById.clear();
-    this.indexes.newsByEventId.clear();
-    this.indexes.eventsById.clear();
-    this.indexes.eventSourcesByEventId.clear();
-    this.indexes.pricesBySymbol.clear();
-    this.indexes.currencyStrengthByCode.clear();
-
-    for (const u of this.data.users) {
-      this.indexes.usersByEmail.set(u.email.toLowerCase(), u);
-      this.indexes.usersById.set(u.id, u);
-    }
-
-    for (const vt of (this.data.verification_tokens || [])) {
-      this.indexes.tokensByToken.set(vt.token, vt);
-    }
-
-    for (const s of this.data.sources) {
-      this.indexes.sourcesById.set(s.id, s);
-    }
-
-    for (const t of this.data.telegram_channels) {
-      this.indexes.telegramByHandle.set(t.handle.toLowerCase(), t);
-    }
-
-    for (const n of this.data.news) {
-      this.indexes.newsById.set(n.id, n);
-      if (n.event_id) {
-        const list = this.indexes.newsByEventId.get(n.event_id) || [];
-        list.push(n);
-        this.indexes.newsByEventId.set(n.event_id, list);
-      }
-    }
-
-    for (const e of this.data.events) {
-      this.indexes.eventsById.set(e.id, e);
-    }
-
-    for (const es of this.data.event_sources) {
-      const list = this.indexes.eventSourcesByEventId.get(es.event_id) || [];
-      list.push(es);
-      this.indexes.eventSourcesByEventId.set(es.event_id, list);
-    }
-
-    for (const p of this.data.market_prices) {
-      this.indexes.pricesBySymbol.set(p.symbol.toUpperCase(), p);
-    }
-
-    for (const cs of this.data.currency_strength) {
-      this.indexes.currencyStrengthByCode.set(cs.currency.toUpperCase(), cs);
-    }
-  }
-
-  // ==================== USERS & PREFERENCES ====================
-  public getAllUsers(): User[] {
-    return [...this.data.users];
-  }
-
-  public getUserByEmail(email: string): User | undefined {
-    return this.indexes.usersByEmail.get(email.toLowerCase());
-  }
-
-  public getUserById(id: string): User | undefined {
-    return this.indexes.usersById.get(id);
-  }
-
-  public insertUser(user: User): User {
-    this.data.users.push(user);
-    this.indexes.usersByEmail.set(user.email.toLowerCase(), user);
-    this.indexes.usersById.set(user.id, user);
-    this.saveSync();
-    return user;
-  }
-
-  public updateUser(id: string, updates: Partial<User>): User | null {
-    const user = this.indexes.usersById.get(id);
-    if (!user) return null;
-    Object.assign(user, updates, { updated_at: new Date().toISOString() });
-    this.indexes.usersByEmail.set(user.email.toLowerCase(), user);
-    this.saveSync();
-    return user;
-  }
-
-  public deleteUser(id: string): boolean {
-    const user = this.indexes.usersById.get(id);
-    if (!user) return false;
-
-    this.indexes.usersById.delete(id);
-    this.indexes.usersByEmail.delete(user.email.toLowerCase());
-    this.data.users = this.data.users.filter(u => u.id !== id);
-
-    if (this.data.verification_tokens) {
-      this.data.verification_tokens = this.data.verification_tokens.filter(t => t.user_id !== id);
-    }
-    if (this.data.user_preferences) {
-      this.data.user_preferences = this.data.user_preferences.filter(p => p.user_id !== id);
-    }
-    if (this.data.user_watchlists) {
-      this.data.user_watchlists = this.data.user_watchlists.filter(w => w.user_id !== id);
-    }
-    if (this.data.user_alerts) {
-      this.data.user_alerts = this.data.user_alerts.filter(a => a.user_id !== id);
-    }
-
-    this.scheduleSave();
+  public async deleteUser(id: string): Promise<boolean> {
+    const exists = await prisma.user.findUnique({ where: { id }, select: { id: true } });
+    if (!exists) return false;
+    // Tokens, preferences, watchlist and alerts cascade per the schema.
+    await prisma.user.delete({ where: { id } });
     return true;
   }
 
   // ==================== EMAIL VERIFICATION & AUTH TOKENS ====================
-  public createVerificationToken(
+  public async createVerificationToken(
     userId: string,
     email: string,
     expiresInHours = 24,
     type: 'email_verification' | 'password_reset' | 'magic_link' = 'email_verification'
-  ): VerificationToken {
-    if (!this.data.verification_tokens) {
-      this.data.verification_tokens = [];
-    }
-
+  ): Promise<VerificationToken> {
     const now = new Date();
-    const tokenString = crypto.randomBytes(32).toString('hex');
-    const numericCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(now.getTime() + expiresInHours * 60 * 60 * 1000).toISOString();
-
     const record: VerificationToken = {
       id: `vtok_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`,
       user_id: userId,
       email: email.toLowerCase().trim(),
-      token: tokenString,
-      code: numericCode,
-      expires_at: expiresAt,
+      token: crypto.randomBytes(32).toString('hex'),
+      code: Math.floor(100000 + Math.random() * 900000).toString(),
+      expires_at: new Date(now.getTime() + expiresInHours * 60 * 60 * 1000).toISOString(),
       created_at: now.toISOString(),
       type,
     };
 
-    this.data.verification_tokens.push(record);
-    this.indexes.tokensByToken.set(tokenString, record);
-    this.scheduleSave();
-    return record;
+    const row = await prisma.verificationToken.create({
+      data: {
+        id: record.id,
+        user_id: record.user_id,
+        email: record.email,
+        token: record.token,
+        code: record.code ?? null,
+        expires_at: record.expires_at,
+        created_at: record.created_at,
+        used_at: null,
+        type: record.type ?? null,
+      },
+    });
+    return row as unknown as VerificationToken;
   }
 
-  public consumeVerificationCode(email: string, inputCode: string): { success: boolean; error?: string; user?: User } {
+  public async consumeVerificationCode(
+    email: string,
+    inputCode: string
+  ): Promise<{ success: boolean; error?: string; user?: User }> {
     const cleanEmail = email.toLowerCase().trim();
-    const cleanCode = inputCode.trim();
-    const user = this.getUserByEmail(cleanEmail);
-    if (!user) {
-      return { success: false, error: 'No user found with this email.' };
-    }
+    const user = await this.getUserByEmail(cleanEmail);
+    if (!user) return { success: false, error: 'No user found with this email.' };
+    if (user.is_verified || user.verification_status === 'verified') return { success: true, user };
 
-    if (user.is_verified || user.verification_status === 'verified') {
-      return { success: true, user };
-    }
-
-    const tokens = (this.data.verification_tokens || []).filter(
-      vt => vt.email.toLowerCase() === cleanEmail && vt.type === 'email_verification'
-    );
-
-    // Look for matching code
-    const matchingToken = tokens.find(vt => vt.code === cleanCode);
-    if (!matchingToken) {
+    const candidates = await prisma.verificationToken.findMany({
+      where: { email: cleanEmail, type: 'email_verification' },
+    });
+    const matching = candidates.find(vt => vt.code === inputCode.trim());
+    if (!matching) {
       return { success: false, error: 'Verification code is incorrect. Check the 6 digits in your email.' };
     }
-
-    if (new Date(matchingToken.expires_at) <= new Date()) {
+    if (new Date(matching.expires_at) <= new Date()) {
       return { success: false, error: 'The verification code has expired. Request a new code.' };
     }
 
-    matchingToken.used_at = new Date().toISOString();
-    user.is_verified = true;
-    user.verification_status = 'verified';
-    user.updated_at = new Date().toISOString();
-    this.scheduleSave();
-
-    return { success: true, user };
+    const nowIso = new Date().toISOString();
+    await prisma.verificationToken.update({ where: { id: matching.id }, data: { used_at: nowIso } });
+    const updated = await prisma.user.update({
+      where: { id: user.id },
+      data: { is_verified: true, verification_status: 'verified', updated_at: nowIso },
+    });
+    return { success: true, user: updated as unknown as User };
   }
 
-  public createPasswordResetToken(userId: string, email: string, expiresInHours = 2): VerificationToken {
+  public async createPasswordResetToken(userId: string, email: string, expiresInHours = 2): Promise<VerificationToken> {
     return this.createVerificationToken(userId, email, expiresInHours, 'password_reset');
   }
 
-  public createMagicLinkToken(userId: string, email: string, expiresInHours = 1): VerificationToken {
+  public async createMagicLinkToken(userId: string, email: string, expiresInHours = 1): Promise<VerificationToken> {
     return this.createVerificationToken(userId, email, expiresInHours, 'magic_link');
   }
 
-  public getValidToken(token: string, type?: 'email_verification' | 'password_reset' | 'magic_link'): VerificationToken | undefined {
-    const vt = this.indexes.tokensByToken.get(token);
+  public async getValidToken(
+    token: string,
+    type?: 'email_verification' | 'password_reset' | 'magic_link'
+  ): Promise<VerificationToken | undefined> {
+    const vt = await prisma.verificationToken.findUnique({ where: { token } });
     if (!vt) return undefined;
     if (vt.used_at) return undefined;
     if (new Date(vt.expires_at) <= new Date()) return undefined;
     if (type && vt.type && vt.type !== type) return undefined;
-    return vt;
+    return vt as unknown as VerificationToken;
   }
 
-  public consumeToken(token: string, type?: 'email_verification' | 'password_reset' | 'magic_link'): {
-    success: boolean;
-    error?: string;
-    tokenRecord?: VerificationToken;
-    user?: User;
-  } {
-    const vt = this.indexes.tokensByToken.get(token);
+  public async consumeToken(
+    token: string,
+    type?: 'email_verification' | 'password_reset' | 'magic_link'
+  ): Promise<{ success: boolean; error?: string; tokenRecord?: VerificationToken; user?: User }> {
+    const vt = await prisma.verificationToken.findUnique({ where: { token } });
     if (!vt) return { success: false, error: 'That link or token is invalid or not found.' };
     if (vt.used_at) return { success: false, error: 'This link or token has already been used.' };
-    if (new Date(vt.expires_at) <= new Date()) return { success: false, error: 'This link or token has expired. Request a new link.' };
+    if (new Date(vt.expires_at) <= new Date()) {
+      return { success: false, error: 'This link or token has expired. Request a new link.' };
+    }
     if (type && vt.type && vt.type !== type) return { success: false, error: 'Token type mismatch.' };
 
-    const user = this.getUserById(vt.user_id);
+    const user = await this.getUserById(vt.user_id);
     if (!user) return { success: false, error: 'No user account found for this token.' };
 
-    vt.used_at = new Date().toISOString();
-    this.scheduleSave();
-    return { success: true, tokenRecord: vt, user };
+    const updated = await prisma.verificationToken.update({
+      where: { id: vt.id },
+      data: { used_at: new Date().toISOString() },
+    });
+    return { success: true, tokenRecord: updated as unknown as VerificationToken, user };
   }
 
-  public getVerificationToken(token: string): VerificationToken | undefined {
-    return this.indexes.tokensByToken.get(token);
+  public async getVerificationToken(token: string): Promise<VerificationToken | undefined> {
+    const row = await prisma.verificationToken.findUnique({ where: { token } });
+    return (row as unknown as VerificationToken) ?? undefined;
   }
 
-  public getLatestPendingVerificationToken(userId: string): VerificationToken | undefined {
-    const tokens = (this.data.verification_tokens || []).filter(
-      vt => vt.user_id === userId && !vt.used_at && new Date(vt.expires_at) > new Date()
-    );
-    return tokens[tokens.length - 1];
+  public async getLatestPendingVerificationToken(userId: string): Promise<VerificationToken | undefined> {
+    const row = await prisma.verificationToken.findFirst({
+      where: { user_id: userId, used_at: null, expires_at: { gt: new Date().toISOString() } },
+      orderBy: { created_at: 'desc' },
+    });
+    return (row as unknown as VerificationToken) ?? undefined;
   }
 
-  public consumeVerificationToken(token: string): { success: boolean; error?: string; user?: User } {
-    const vt = this.getVerificationToken(token);
-    if (!vt) {
-      return { success: false, error: 'That verification link is invalid or not found.' };
-    }
+  public async consumeVerificationToken(token: string): Promise<{ success: boolean; error?: string; user?: User }> {
+    const vt = await this.getVerificationToken(token);
+    if (!vt) return { success: false, error: 'That verification link is invalid or not found.' };
 
-    const user = this.getUserById(vt.user_id);
-    if (!user) {
-      return { success: false, error: 'No user account found for this token.' };
-    }
+    const user = await this.getUserById(vt.user_id);
+    if (!user) return { success: false, error: 'No user account found for this token.' };
 
-    // 1. If user is already verified, always treat as success (idempotent verification)
-    if (user.is_verified || user.verification_status === 'verified') {
-      return { success: true, user };
-    }
+    // Idempotent: an already-verified account is success regardless of token state.
+    if (user.is_verified || user.verification_status === 'verified') return { success: true, user };
 
     const now = new Date();
-    // 2. Check if token is expired (> 24 hours)
     if (new Date(vt.expires_at) <= now) {
       return { success: false, error: 'The verification link has expired. Request a new activation link.' };
     }
 
-    // 3. Mark token as consumed and activate user
-    vt.used_at = now.toISOString();
-    user.is_verified = true;
-    user.verification_status = 'verified';
-    user.updated_at = now.toISOString();
-    this.scheduleSave();
-
-    return { success: true, user };
+    const nowIso = now.toISOString();
+    await prisma.verificationToken.update({ where: { id: vt.id }, data: { used_at: nowIso } });
+    const updated = await prisma.user.update({
+      where: { id: user.id },
+      data: { is_verified: true, verification_status: 'verified', updated_at: nowIso },
+    });
+    return { success: true, user: updated as unknown as User };
   }
 
-  public deleteExpiredVerificationTokens(): number {
-    const now = new Date();
-    const initial = (this.data.verification_tokens || []).length;
-    this.data.verification_tokens = (this.data.verification_tokens || []).filter(
-      vt => new Date(vt.expires_at) > now || !vt.used_at
-    );
-    this.rebuildIndexes();
-    this.scheduleSave();
-    return initial - this.data.verification_tokens.length;
+  public async deleteExpiredVerificationTokens(): Promise<number> {
+    const result = await prisma.verificationToken.deleteMany({
+      where: { expires_at: { lte: new Date().toISOString() }, used_at: { not: null } },
+    });
+    return result.count;
   }
 
-  public getUserPreferences(userId: string): UserPreferences | undefined {
-    return this.data.user_preferences.find(p => p.user_id === userId);
+  // ==================== PREFERENCES & WATCHLIST ====================
+  public async getUserPreferences(userId: string): Promise<UserPreferences | undefined> {
+    const row = await prisma.userPreferences.findUnique({ where: { user_id: userId } });
+    return (row as unknown as UserPreferences) ?? undefined;
   }
 
-  public upsertUserPreferences(pref: UserPreferences): UserPreferences {
-    const idx = this.data.user_preferences.findIndex(p => p.user_id === pref.user_id);
-    if (idx >= 0) {
-      this.data.user_preferences[idx] = { ...pref, updated_at: new Date().toISOString() };
-    } else {
-      this.data.user_preferences.push(pref);
-    }
-    this.scheduleSave();
-    return pref;
+  public async upsertUserPreferences(pref: UserPreferences): Promise<UserPreferences> {
+    const nowIso = new Date().toISOString();
+    const mutable = {
+      timezone: pref.timezone,
+      language: pref.language,
+      theme: pref.theme,
+      default_market_view: pref.default_market_view,
+      density: pref.density,
+      audio_alerts: pref.audio_alerts,
+      updated_at: nowIso,
+    };
+    const row = await prisma.userPreferences.upsert({
+      where: { user_id: pref.user_id },
+      create: { user_id: pref.user_id, ...mutable, created_at: pref.created_at ?? nowIso },
+      update: mutable,
+    });
+    return row as unknown as UserPreferences;
   }
 
-  public getUserWatchlist(userId: string): UserWatchlist[] {
-    return this.data.user_watchlists.filter(w => w.user_id === userId);
+  public async getUserWatchlist(userId: string): Promise<UserWatchlist[]> {
+    const rows = await prisma.userWatchlist.findMany({ where: { user_id: userId } });
+    return rows as unknown as UserWatchlist[];
   }
 
-  public addToWatchlist(item: UserWatchlist): UserWatchlist {
-    const exists = this.data.user_watchlists.find(
-      w => w.user_id === item.user_id && w.symbol === item.symbol
-    );
-    if (!exists) {
-      this.data.user_watchlists.push(item);
-      this.scheduleSave();
-    }
-    return item;
+  public async addToWatchlist(item: UserWatchlist): Promise<UserWatchlist> {
+    const existing = await prisma.userWatchlist.findFirst({
+      where: { user_id: item.user_id, symbol: item.symbol },
+    });
+    if (existing) return existing as unknown as UserWatchlist;
+
+    const row = await prisma.userWatchlist.create({
+      data: {
+        id: item.id,
+        user_id: item.user_id,
+        symbol: item.symbol,
+        asset_type: item.asset_type,
+        notes: item.notes ?? null,
+        added_at: item.added_at ?? new Date().toISOString(),
+      },
+    });
+    return row as unknown as UserWatchlist;
   }
 
-  public removeFromWatchlist(userId: string, symbol: string): boolean {
-    const initialLen = this.data.user_watchlists.length;
-    this.data.user_watchlists = this.data.user_watchlists.filter(
-      w => !(w.user_id === userId && w.symbol === symbol)
-    );
-    if (this.data.user_watchlists.length !== initialLen) {
-      this.scheduleSave();
-      return true;
-    }
-    return false;
+  public async removeFromWatchlist(userId: string, symbol: string): Promise<boolean> {
+    const result = await prisma.userWatchlist.deleteMany({ where: { user_id: userId, symbol } });
+    return result.count > 0;
   }
 
   // ==================== SOURCES & TELEGRAM ====================
-  public getAllSources(): Source[] {
-    return [...this.data.sources];
+  public async getAllSources(): Promise<Source[]> {
+    const rows = await prisma.source.findMany();
+    return rows.map(r => this.hydrateSource(r));
   }
 
-  public getSourceById(id: string): Source | undefined {
-    return this.indexes.sourcesById.get(id);
+  public async getSourceById(id: string): Promise<Source | undefined> {
+    const row = await prisma.source.findUnique({ where: { id } });
+    return row ? this.hydrateSource(row) : undefined;
   }
 
-  public upsertSource(source: Source): Source {
-    const idx = this.data.sources.findIndex(s => s.id === source.id);
-    if (idx >= 0) {
-      this.data.sources[idx] = { ...this.data.sources[idx], ...source, updated_at: new Date().toISOString() };
-      this.indexes.sourcesById.set(source.id, this.data.sources[idx]);
-    } else {
-      this.data.sources.push(source);
-      this.indexes.sourcesById.set(source.id, source);
+  public async upsertSource(source: Source): Promise<Source> {
+    const nowIso = new Date().toISOString();
+    const mutable = {
+      name: source.name,
+      type: source.type,
+      endpoint_url: source.endpoint_url,
+      is_enabled: source.is_enabled,
+      status: source.status,
+      last_success_at: source.last_success_at ?? null,
+      last_error_at: source.last_error_at ?? null,
+      last_error_message: source.last_error_message ?? null,
+      error_count: source.error_count ?? 0,
+      interval_seconds: source.interval_seconds,
+      metadata: toJson(source.metadata),
+      updated_at: nowIso,
+    };
+    const row = await prisma.source.upsert({
+      where: { id: source.id },
+      create: { id: source.id, ...mutable, created_at: source.created_at ?? nowIso },
+      update: mutable,
+    });
+    return this.hydrateSource(row);
+  }
+
+  public async updateSourceStatus(
+    id: string,
+    status: Source['status'],
+    errorMsg: string | null = null
+  ): Promise<void> {
+    const existing = await prisma.source.findUnique({ where: { id } });
+    if (!existing) return;
+
+    const nowIso = new Date().toISOString();
+    const data: Record<string, unknown> = { status, updated_at: nowIso };
+    if (status === 'LIVE' || status === 'RECENT') {
+      data.last_success_at = nowIso;
+    } else if (status === 'ERROR') {
+      data.last_error_at = nowIso;
+      data.last_error_message = errorMsg;
+      data.error_count = (existing.error_count ?? 0) + 1;
     }
-    this.scheduleSave();
-    return source;
+    await prisma.source.update({ where: { id }, data });
   }
 
-  public updateSourceStatus(id: string, status: Source['status'], errorMsg: string | null = null): void {
-    const src = this.indexes.sourcesById.get(id);
-    if (src) {
-      src.status = status;
-      src.updated_at = new Date().toISOString();
-      if (status === 'LIVE' || status === 'RECENT') {
-        src.last_success_at = new Date().toISOString();
-      } else if (status === 'ERROR') {
-        src.last_error_at = new Date().toISOString();
-        src.last_error_message = errorMsg;
-        src.error_count += 1;
+  private hydrateSource(row: Record<string, any>): Source {
+    return {
+      ...row,
+      metadata: parseJson<Record<string, any> | undefined>(row.metadata, undefined),
+    } as unknown as Source;
+  }
+
+  public async getAllTelegramChannels(): Promise<TelegramChannel[]> {
+    const rows = await prisma.telegramChannel.findMany();
+    return rows as unknown as TelegramChannel[];
+  }
+
+  public async getTelegramChannel(handle: string): Promise<TelegramChannel | undefined> {
+    // SQLite does not support Prisma's `mode: 'insensitive'`; the channel list is
+    // tiny, so match case-insensitively in memory instead.
+    const rows = await prisma.telegramChannel.findMany();
+    const match = rows.find(r => r.handle.toLowerCase() === handle.toLowerCase());
+    return (match as unknown as TelegramChannel) ?? undefined;
+  }
+
+  public async upsertTelegramChannel(channel: TelegramChannel): Promise<TelegramChannel> {
+    const existing = await this.getTelegramChannel(channel.handle);
+    const mutable = {
+      handle: channel.handle,
+      title: channel.title,
+      source_id: channel.source_id,
+      is_enabled: channel.is_enabled,
+      language: channel.language,
+      last_ingested_at: channel.last_ingested_at ?? null,
+      status: channel.status,
+      error_count: channel.error_count ?? 0,
+    };
+    const row = existing
+      ? await prisma.telegramChannel.update({ where: { id: existing.id }, data: mutable })
+      : await prisma.telegramChannel.create({ data: { id: channel.id, ...mutable } });
+    return row as unknown as TelegramChannel;
+  }
+
+  public async deleteTelegramChannel(handle: string): Promise<boolean> {
+    const existing = await this.getTelegramChannel(handle);
+    if (!existing) return false;
+    await prisma.telegramChannel.delete({ where: { id: existing.id } });
+    return true;
+  }
+
+  // ==================== NEWS ====================
+  public async getAllNews(limit = 100, offset = 0, category?: string): Promise<NewsItem[]> {
+    const rows = await prisma.newsItem.findMany({
+      where: category ? { category: { equals: category } } : undefined,
+      orderBy: { published_at: 'desc' },
+      skip: offset,
+      take: limit,
+    });
+    return rows.map(r => this.hydrateNews(r));
+  }
+
+  public async getNewsById(id: string): Promise<NewsItem | undefined> {
+    const row = await prisma.newsItem.findUnique({ where: { id } });
+    return row ? this.hydrateNews(row) : undefined;
+  }
+
+  public async getNewsByEventId(eventId: string): Promise<NewsItem[]> {
+    const rows = await prisma.newsItem.findMany({ where: { event_id: eventId } });
+    return rows.map(r => this.hydrateNews(r));
+  }
+
+  public async insertNewsItem(item: NewsItem): Promise<NewsItem> {
+    const row = await prisma.newsItem.create({
+      data: {
+        id: item.id,
+        title: item.title,
+        content: item.content,
+        source_id: item.source_id,
+        source_name: item.source_name,
+        source_url: item.source_url,
+        language: item.language,
+        published_at: item.published_at,
+        received_at: item.received_at,
+        updated_at: item.updated_at ?? new Date().toISOString(),
+        event_id: item.event_id ?? null,
+        affected_assets: toJsonRequired(item.affected_assets, 'array'),
+        affected_currencies: toJsonRequired(item.affected_currencies, 'array'),
+        category: item.category,
+        status: item.status,
+        raw_payload: item.raw_payload ?? null,
+        entities_extracted: toJson(item.entities_extracted),
+      },
+    });
+    await this.enforceNewsCap();
+    return this.hydrateNews(row);
+  }
+
+  public async updateNewsItem(id: string, updates: Partial<NewsItem>): Promise<NewsItem | null> {
+    const exists = await prisma.newsItem.findUnique({ where: { id }, select: { id: true } });
+    if (!exists) return null;
+
+    const data: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    for (const [key, value] of Object.entries(updates)) {
+      if (key === 'id') continue;
+      if (key === 'affected_assets' || key === 'affected_currencies') {
+        data[key] = toJsonRequired(value, 'array');
+      } else if (key === 'entities_extracted') {
+        data[key] = toJson(value);
+      } else {
+        data[key] = value ?? null;
       }
-      this.scheduleSave();
     }
+    const row = await prisma.newsItem.update({ where: { id }, data });
+    return this.hydrateNews(row);
   }
 
-  public getAllTelegramChannels(): TelegramChannel[] {
-    return [...this.data.telegram_channels];
+  private hydrateNews(row: Record<string, any>): NewsItem {
+    return {
+      ...row,
+      affected_assets: parseJson<string[]>(row.affected_assets, []),
+      affected_currencies: parseJson<string[]>(row.affected_currencies, []),
+      entities_extracted: parseJson<NewsItem['entities_extracted']>(row.entities_extracted, undefined),
+    } as unknown as NewsItem;
   }
 
-  public getTelegramChannel(handle: string): TelegramChannel | undefined {
-    return this.indexes.telegramByHandle.get(handle.toLowerCase());
+  /** Keeps the news table bounded, matching the old in-memory cap. */
+  private async enforceNewsCap(): Promise<void> {
+    const count = await prisma.newsItem.count();
+    if (count <= NEWS_CAP) return;
+    const stale = await prisma.newsItem.findMany({
+      orderBy: { published_at: 'asc' },
+      take: count - NEWS_CAP,
+      select: { id: true },
+    });
+    await prisma.newsItem.deleteMany({ where: { id: { in: stale.map(s => s.id) } } });
   }
 
-  public upsertTelegramChannel(channel: TelegramChannel): TelegramChannel {
-    const idx = this.data.telegram_channels.findIndex(c => c.handle.toLowerCase() === channel.handle.toLowerCase());
-    if (idx >= 0) {
-      this.data.telegram_channels[idx] = { ...this.data.telegram_channels[idx], ...channel, updated_at: new Date().toISOString() };
-      this.indexes.telegramByHandle.set(channel.handle.toLowerCase(), this.data.telegram_channels[idx]);
-    } else {
-      this.data.telegram_channels.push(channel);
-      this.indexes.telegramByHandle.set(channel.handle.toLowerCase(), channel);
-    }
-    this.scheduleSave();
-    return channel;
-  }
-
-  public deleteTelegramChannel(handle: string): boolean {
-    const initialLen = this.data.telegram_channels.length;
-    this.data.telegram_channels = this.data.telegram_channels.filter(
-      c => c.handle.toLowerCase() !== handle.toLowerCase()
-    );
-    this.indexes.telegramByHandle.delete(handle.toLowerCase());
-    if (this.data.telegram_channels.length !== initialLen) {
-      this.scheduleSave();
-      return true;
-    }
-    return false;
-  }
-
-  // ==================== NEWS & ARTICLES ====================
-  public getAllNews(limit = 100, offset = 0, category?: string): NewsItem[] {
-    let list = this.data.news;
-    if (category) {
-      list = list.filter(n => n.category.toUpperCase() === category.toUpperCase());
-    }
-    return list
-      .slice()
-      .sort((a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime())
-      .slice(offset, offset + limit);
-  }
-
-  public getNewsById(id: string): NewsItem | undefined {
-    return this.indexes.newsById.get(id);
-  }
-
-  public getNewsByEventId(eventId: string): NewsItem[] {
-    return this.indexes.newsByEventId.get(eventId) || [];
-  }
-
-  public insertNewsItem(item: NewsItem): NewsItem {
-    this.data.news.unshift(item);
-    this.indexes.newsById.set(item.id, item);
-    if (item.event_id) {
-      const list = this.indexes.newsByEventId.get(item.event_id) || [];
-      list.push(item);
-      this.indexes.newsByEventId.set(item.event_id, list);
-    }
-    // Cap news in memory/disk to 350 items
-    if (this.data.news.length > 350) {
-      const removed = this.data.news.pop();
-      if (removed) this.indexes.newsById.delete(removed.id);
-    }
-    this.scheduleSave();
-    return item;
-  }
-
-  public updateNewsItem(id: string, updates: Partial<NewsItem>): NewsItem | null {
-    const item = this.indexes.newsById.get(id);
-    if (!item) return null;
-    Object.assign(item, updates, { updated_at: new Date().toISOString() });
-    this.scheduleSave();
-    return item;
-  }
-
-  // ==================== EVENTS (ONE SOURCE OF TRUTH) ====================
-  public getAllEvents(limit = 50, offset = 0, impactFilter?: string): MarketEvent[] {
-    let rawList = this.data.events.slice();
-
-    const normalizedFilter = (impactFilter || '').toUpperCase().trim();
-    if (normalizedFilter === 'HIGH' || normalizedFilter === 'HIGH_IMPACT') {
-      rawList = rawList.filter(e => e.impact_level === 'CRITICAL' || e.impact_level === 'HIGH');
-    } else if (normalizedFilter === 'CRITICAL') {
-      rawList = rawList.filter(e => e.impact_level === 'CRITICAL');
+  // ==================== EVENTS ====================
+  public async getAllEvents(limit = 50, offset = 0, impactFilter?: string): Promise<MarketEvent[]> {
+    const normalized = (impactFilter || '').toUpperCase().trim();
+    let impactWhere: Record<string, unknown> | undefined;
+    if (normalized === 'HIGH' || normalized === 'HIGH_IMPACT') {
+      impactWhere = { in: ['CRITICAL', 'HIGH'] };
+    } else if (normalized === 'CRITICAL') {
+      impactWhere = { equals: 'CRITICAL' };
     }
 
-    const list = rawList
-      .sort((a, b) => {
-        const timeA = new Date(a.first_detected_at).getTime() || 0;
-        const timeB = new Date(b.first_detected_at).getTime() || 0;
-        return timeB - timeA;
-      })
-      .slice(offset, offset + limit);
+    const rows = await prisma.marketEvent.findMany({
+      where: impactWhere ? { impact_level: impactWhere } : undefined,
+      orderBy: { first_detected_at: 'desc' },
+      skip: offset,
+      take: limit,
+    });
+    return rows.map(r => this.hydrateEvent(r));
+  }
 
-    // Guaranteed pair_impacts presence
-    for (const ev of list) {
-      if (!ev.pair_impacts || ev.pair_impacts.length === 0) {
-        ev.pair_impacts = calculatePairImpacts(
-          ev.title,
-          ev.summary || ev.title,
-          ev.primary_category,
-          ev.affected_assets || [],
-          ev.affected_currencies || []
-        );
+  public async getEventById(id: string): Promise<MarketEvent | undefined> {
+    const row = await prisma.marketEvent.findUnique({ where: { id } });
+    return row ? this.hydrateEvent(row) : undefined;
+  }
+
+  public async insertEvent(event: MarketEvent): Promise<MarketEvent> {
+    const row = await prisma.marketEvent.create({
+      data: {
+        id: event.id,
+        title: event.title,
+        summary: event.summary,
+        primary_category: event.primary_category,
+        impact_level: event.impact_level,
+        first_detected_at: event.first_detected_at,
+        last_updated_at: event.last_updated_at ?? new Date().toISOString(),
+        source_count: event.source_count ?? 0,
+        source_names: toJsonRequired(event.source_names, 'array'),
+        affected_assets: toJsonRequired(event.affected_assets, 'array'),
+        affected_currencies: toJsonRequired(event.affected_currencies, 'array'),
+        key_facts: toJsonRequired(event.key_facts, 'array'),
+        image_url: event.image_url ?? null,
+        ai_analysis_id: event.ai_analysis_id ?? null,
+        is_duplicate_resolved: event.is_duplicate_resolved ?? null,
+      },
+    });
+    await this.enforceEventCap();
+    return this.hydrateEvent(row);
+  }
+
+  public async updateEvent(id: string, updates: Partial<MarketEvent>): Promise<MarketEvent | null> {
+    const exists = await prisma.marketEvent.findUnique({ where: { id }, select: { id: true } });
+    if (!exists) return null;
+
+    const jsonArrayKeys = ['source_names', 'affected_assets', 'affected_currencies', 'key_facts'];
+    const data: Record<string, unknown> = { last_updated_at: new Date().toISOString() };
+    for (const [key, value] of Object.entries(updates)) {
+      if (key === 'id') continue;
+      if (jsonArrayKeys.includes(key)) {
+        data[key] = toJsonRequired(value, 'array');
+      } else {
+        data[key] = value ?? null;
       }
     }
-
-    return list;
+    const row = await prisma.marketEvent.update({ where: { id }, data });
+    return this.hydrateEvent(row);
   }
 
-  public getEventById(id: string): MarketEvent | undefined {
-    const ev = this.indexes.eventsById.get(id);
-    if (ev && (!ev.pair_impacts || ev.pair_impacts.length === 0)) {
-      ev.pair_impacts = calculatePairImpacts(
-        ev.title,
-        ev.summary || ev.title,
-        ev.primary_category,
-        ev.affected_assets || [],
-        ev.affected_currencies || []
-      );
-    }
-    return ev;
-  }
+  private hydrateEvent(row: Record<string, any>): MarketEvent {
+    const event = {
+      ...row,
+      source_names: parseJson<string[]>(row.source_names, []),
+      affected_assets: parseJson<string[]>(row.affected_assets, []),
+      affected_currencies: parseJson<string[]>(row.affected_currencies, []),
+      key_facts: parseJson<string[]>(row.key_facts, []),
+    } as unknown as MarketEvent;
 
-  public insertEvent(event: MarketEvent): MarketEvent {
+    // Derived on read, never stored: a rule change then applies to existing rows.
     if (!event.pair_impacts || event.pair_impacts.length === 0) {
       event.pair_impacts = calculatePairImpacts(
         event.title,
@@ -721,125 +593,181 @@ export class RelationalDatabase {
         event.affected_currencies || []
       );
     }
-    this.data.events.unshift(event);
-    this.indexes.eventsById.set(event.id, event);
-    // Cap events to 250 items
-    if (this.data.events.length > 250) {
-      const removed = this.data.events.pop();
-      if (removed) this.indexes.eventsById.delete(removed.id);
-    }
-    this.scheduleSave();
     return event;
   }
 
-  public updateEvent(id: string, updates: Partial<MarketEvent>): MarketEvent | null {
-    const ev = this.indexes.eventsById.get(id);
-    if (!ev) return null;
-    Object.assign(ev, updates, { last_updated_at: new Date().toISOString() });
-    this.scheduleSave();
-    return ev;
+  private async enforceEventCap(): Promise<void> {
+    const count = await prisma.marketEvent.count();
+    if (count <= EVENT_CAP) return;
+    const stale = await prisma.marketEvent.findMany({
+      orderBy: { first_detected_at: 'asc' },
+      take: count - EVENT_CAP,
+      select: { id: true },
+    });
+    await prisma.marketEvent.deleteMany({ where: { id: { in: stale.map(s => s.id) } } });
   }
 
-  public addEventSource(sourceRecord: EventSource): void {
-    this.data.event_sources.push(sourceRecord);
-    const list = this.indexes.eventSourcesByEventId.get(sourceRecord.event_id) || [];
-    list.push(sourceRecord);
-    this.indexes.eventSourcesByEventId.set(sourceRecord.event_id, list);
-    this.scheduleSave();
+  public async addEventSource(sourceRecord: EventSource): Promise<void> {
+    await prisma.eventSource.create({
+      data: {
+        id: sourceRecord.id,
+        event_id: sourceRecord.event_id,
+        news_id: sourceRecord.news_id,
+        source_name: sourceRecord.source_name,
+        source_url: sourceRecord.source_url,
+        language: sourceRecord.language,
+        original_title: sourceRecord.original_title,
+        original_content: sourceRecord.original_content,
+        published_at: sourceRecord.published_at,
+        matched_reason: sourceRecord.matched_reason,
+        similarity_score: sourceRecord.similarity_score,
+        created_at: sourceRecord.created_at ?? new Date().toISOString(),
+      },
+    });
   }
 
-  public getEventSources(eventId: string): EventSource[] {
-    return this.indexes.eventSourcesByEventId.get(eventId) || [];
+  public async getEventSources(eventId: string): Promise<EventSource[]> {
+    const rows = await prisma.eventSource.findMany({ where: { event_id: eventId } });
+    return rows as unknown as EventSource[];
   }
 
   // ==================== MARKET PRICES ====================
-  public getAllMarketPrices(): MarketPrice[] {
-    return [...this.data.market_prices];
+  public async getAllMarketPrices(): Promise<MarketPrice[]> {
+    // Ordered by insertion sequence: the dashboard renders pairs in seed order.
+    const rows = await prisma.marketPrice.findMany({ orderBy: { seq: 'asc' } });
+    return rows.map(r => this.hydratePrice(r));
   }
 
-  public getMarketPrice(symbol: string): MarketPrice | undefined {
-    return this.indexes.pricesBySymbol.get(symbol.toUpperCase());
+  public async getMarketPrice(symbol: string): Promise<MarketPrice | undefined> {
+    const row = await prisma.marketPrice.findUnique({ where: { symbol: symbol.toUpperCase() } });
+    return row ? this.hydratePrice(row) : undefined;
   }
 
-  public upsertMarketPrice(price: MarketPrice): void {
+  public async upsertMarketPrice(price: MarketPrice): Promise<void> {
     const sym = price.symbol.toUpperCase();
-    const idx = this.data.market_prices.findIndex(p => p.symbol.toUpperCase() === sym);
-    if (idx >= 0) {
-      this.data.market_prices[idx] = { ...this.data.market_prices[idx], ...price, last_updated: new Date().toISOString() };
-      this.indexes.pricesBySymbol.set(sym, this.data.market_prices[idx]);
-    } else {
-      this.data.market_prices.push(price);
-      this.indexes.pricesBySymbol.set(sym, price);
-    }
-    this.scheduleSave();
+    const mutable = {
+      display_name: price.display_name,
+      asset_type: price.asset_type,
+      price: price.price,
+      change_24h: price.change_24h,
+      change_24h_pct: price.change_24h_pct,
+      high_24h: price.high_24h,
+      low_24h: price.low_24h,
+      volume_24h: price.volume_24h,
+      source: price.source,
+      timestamp: price.timestamp,
+      last_updated: new Date().toISOString(),
+      status: price.status,
+      sparkline_1h: toJsonRequired(price.sparkline_1h, 'array'),
+      tv_symbol: price.tv_symbol ?? null,
+      tradingview_url: price.tradingview_url ?? null,
+      is_delayed: price.is_delayed ?? null,
+    };
+    await prisma.marketPrice.upsert({
+      where: { symbol: sym },
+      create: { symbol: sym, ...mutable },
+      update: mutable,
+    });
+  }
+
+  private hydratePrice(row: Record<string, any>): MarketPrice {
+    return {
+      ...stripSeq(row),
+      sparkline_1h: parseJson<number[]>(row.sparkline_1h, []),
+    } as unknown as MarketPrice;
   }
 
   // ==================== CURRENCY STRENGTH ====================
-  public getCurrencyStrength(): CurrencyStrength[] {
-    return [...this.data.currency_strength].sort((a, b) => b.strength_score - a.strength_score);
+  public async getCurrencyStrength(): Promise<CurrencyStrength[]> {
+    const rows = await prisma.currencyStrength.findMany({ orderBy: { strength_score: 'desc' } });
+    return rows as unknown as CurrencyStrength[];
   }
 
-  public setCurrencyStrength(list: CurrencyStrength[]): void {
-    this.data.currency_strength = list;
-    const now = new Date().toISOString();
-    for (const item of list) {
-      this.indexes.currencyStrengthByCode.set(item.currency.toUpperCase(), item);
-      this.data.currency_strength_history.push({
-        id: `csh_${Date.now()}_${item.currency}`,
-        currency: item.currency,
-        strength_score: item.strength_score,
-        timestamp: now,
-      });
-    }
-    // Retain comprehensive historical intervals without unbounded memory growth
-    if (this.data.currency_strength_history.length > 1000) {
-      this.data.currency_strength_history = this.data.currency_strength_history.slice(-1000);
-    }
-    this.scheduleSave();
+  public async setCurrencyStrength(list: CurrencyStrength[]): Promise<void> {
+    const nowIso = new Date().toISOString();
+    await prisma.$transaction([
+      prisma.currencyStrength.deleteMany({}),
+      prisma.currencyStrength.createMany({
+        data: list.map(item => ({
+          currency: item.currency.toUpperCase(),
+          strength_score: item.strength_score,
+          change_direction: item.change_direction,
+          rank: item.rank,
+          source: item.source,
+          timestamp: item.timestamp,
+          last_updated: nowIso,
+          status: item.status,
+          raw_delta: item.raw_delta ?? null,
+        })),
+      }),
+      prisma.currencyStrengthHistory.createMany({
+        data: list.map(item => ({
+          id: `csh_${Date.now()}_${item.currency}_${crypto.randomBytes(3).toString('hex')}`,
+          currency: item.currency.toUpperCase(),
+          strength_score: item.strength_score,
+          timestamp: nowIso,
+        })),
+      }),
+    ]);
+    await this.enforceHistoryCap();
   }
 
-  public recordCurrencyStrengthHistory(currency: string, score: number): void {
-    this.data.currency_strength_history.push({
-      id: `csh_${Date.now()}_${currency}`,
-      currency: currency.toUpperCase(),
-      strength_score: score,
-      timestamp: new Date().toISOString(),
+  public async recordCurrencyStrengthHistory(currency: string, score: number): Promise<void> {
+    await prisma.currencyStrengthHistory.create({
+      data: {
+        id: `csh_${Date.now()}_${currency}_${crypto.randomBytes(3).toString('hex')}`,
+        currency: currency.toUpperCase(),
+        strength_score: score,
+        timestamp: new Date().toISOString(),
+      },
     });
-    if (this.data.currency_strength_history.length > 1000) {
-      this.data.currency_strength_history = this.data.currency_strength_history.slice(-1000);
-    }
-    this.scheduleSave();
+    await this.enforceHistoryCap();
   }
 
-  public getCurrencyStrengthHistory(currency?: string): CurrencyStrengthHistory[] {
-    if (currency) {
-      return this.data.currency_strength_history.filter(h => h.currency.toUpperCase() === currency.toUpperCase());
-    }
-    return this.data.currency_strength_history;
-  }
-
-  public getCurrencyStrengthHistoryByDate(dateStr: string, currency?: string): CurrencyStrengthHistory[] {
-    return this.data.currency_strength_history.filter(h => {
-      const matchDate = h.timestamp.startsWith(dateStr);
-      const matchCurr = currency ? h.currency.toUpperCase() === currency.toUpperCase() : true;
-      return matchDate && matchCurr;
+  private async enforceHistoryCap(): Promise<void> {
+    const count = await prisma.currencyStrengthHistory.count();
+    if (count <= HISTORY_CAP) return;
+    const stale = await prisma.currencyStrengthHistory.findMany({
+      orderBy: { timestamp: 'asc' },
+      take: count - HISTORY_CAP,
+      select: { id: true },
     });
+    await prisma.currencyStrengthHistory.deleteMany({ where: { id: { in: stale.map(s => s.id) } } });
   }
 
-  public getHistoricalCurrencyComparison(): HistoricalCurrencyComparison[] {
+  public async getCurrencyStrengthHistory(currency?: string): Promise<CurrencyStrengthHistory[]> {
+    const rows = await prisma.currencyStrengthHistory.findMany({
+      where: currency ? { currency: currency.toUpperCase() } : undefined,
+      orderBy: { timestamp: 'asc' },
+    });
+    return rows as unknown as CurrencyStrengthHistory[];
+  }
+
+  public async getCurrencyStrengthHistoryByDate(
+    dateStr: string,
+    currency?: string
+  ): Promise<CurrencyStrengthHistory[]> {
+    const rows = await prisma.currencyStrengthHistory.findMany({
+      where: {
+        timestamp: { startsWith: dateStr },
+        ...(currency ? { currency: currency.toUpperCase() } : {}),
+      },
+      orderBy: { timestamp: 'asc' },
+    });
+    return rows as unknown as CurrencyStrengthHistory[];
+  }
+
+  public async getHistoricalCurrencyComparison(): Promise<HistoricalCurrencyComparison[]> {
     const currencies = ['USD', 'EUR', 'GBP', 'JPY', 'AUD', 'NZD', 'CAD', 'CHF'];
     const nowMs = Date.now();
     const oneDayMs = 24 * 3600 * 1000;
-    const yesterdayMs = nowMs - oneDayMs;
-    const threeDaysMs = nowMs - 3 * oneDayMs;
-    const sevenDaysMs = nowMs - 7 * oneDayMs;
 
-    const history = this.data.currency_strength_history;
-    const currentList = this.getCurrencyStrength();
-    const currentMap = new Map<string, number>();
-    currentList.forEach(c => currentMap.set(c.currency, c.strength_score));
+    const current = await this.getCurrencyStrength();
+    const currentMap = new Map<string, number>(current.map(c => [c.currency, c.strength_score]));
+    const history = await this.getCurrencyStrengthHistory();
 
-    // Baseline historical offsets if platform started recently
+    // Baseline offsets, used only while the platform has less than a day of ticks
+    // so a freshly seeded install still renders a plausible trend.
     const baselineDeltas: Record<string, { yesterday: number; d3: number; d7: number }> = {
       USD: { yesterday: 0.5, d3: 0.8, d7: 1.2 },
       EUR: { yesterday: -0.4, d3: -0.9, d7: -1.4 },
@@ -853,38 +781,23 @@ export class RelationalDatabase {
 
     return currencies.map(curr => {
       const todayScore = currentMap.get(curr) ?? 5.0;
-
-      // Filter history for this currency
       const currHistory = history.filter(h => h.currency.toUpperCase() === curr.toUpperCase());
 
-      // Find closest score before yesterdayMs
-      const yesterdayEntry = currHistory
-        .filter(h => new Date(h.timestamp).getTime() <= yesterdayMs)
-        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
-
-      // Find closest score before threeDaysMs
-      const threeDayEntry = currHistory
-        .filter(h => new Date(h.timestamp).getTime() <= threeDaysMs)
-        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
-
-      // Find closest score before sevenDaysMs
-      const sevenDayEntry = currHistory
-        .filter(h => new Date(h.timestamp).getTime() <= sevenDaysMs)
-        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
+      const scoreBefore = (offsetDays: number): number | undefined => {
+        const cutoff = nowMs - offsetDays * oneDayMs;
+        const eligible = currHistory.filter(h => new Date(h.timestamp).getTime() <= cutoff);
+        if (eligible.length === 0) return undefined;
+        return eligible.reduce((latest, h) =>
+          new Date(h.timestamp).getTime() > new Date(latest.timestamp).getTime() ? h : latest
+        ).strength_score;
+      };
 
       const baseline = baselineDeltas[curr] || { yesterday: 0, d3: 0, d7: 0 };
+      const fallback = (delta: number) => Math.max(0.5, Math.min(9.8, Number((todayScore - delta).toFixed(2))));
 
-      const yesterdayScore = yesterdayEntry
-        ? yesterdayEntry.strength_score
-        : Math.max(0.5, Math.min(9.8, Number((todayScore - baseline.yesterday).toFixed(2))));
-
-      const threeDayScore = threeDayEntry
-        ? threeDayEntry.strength_score
-        : Math.max(0.5, Math.min(9.8, Number((todayScore - baseline.d3).toFixed(2))));
-
-      const sevenDayScore = sevenDayEntry
-        ? sevenDayEntry.strength_score
-        : Math.max(0.5, Math.min(9.8, Number((todayScore - baseline.d7).toFixed(2))));
+      const yesterdayScore = scoreBefore(1) ?? fallback(baseline.yesterday);
+      const threeDayScore = scoreBefore(3) ?? fallback(baseline.d3);
+      const sevenDayScore = scoreBefore(7) ?? fallback(baseline.d7);
 
       const delta_yesterday = Number((todayScore - yesterdayScore).toFixed(2));
       const delta_3d = Number((todayScore - threeDayScore).toFixed(2));
@@ -909,23 +822,23 @@ export class RelationalDatabase {
   }
 
   // ==================== MACRO & ECONOMIC CALENDAR ====================
-  public getEconomicEvents(
+  public async getEconomicEvents(
     limit = 200,
     filter?: { status?: 'UPCOMING' | 'RELEASED' | 'ALL'; currency?: string }
-  ): EconomicEvent[] {
+  ): Promise<EconomicEvent[]> {
     const nowMs = Date.now();
     const past24hMs = nowMs - 24 * 3600000;
 
-    let all = this.data.economic_events.slice();
+    const rows = await prisma.economicEvent.findMany();
+    let all = rows.map(r => ({
+      ...r,
+      market_reaction: parseJson<EconomicEvent['market_reaction']>(r.market_reaction, undefined),
+    })) as unknown as EconomicEvent[];
 
-    // Re-verify status relative to current timestamp
     all = all.map(e => {
       const eventTime = new Date(e.date_time_utc).getTime();
-      const isPast = eventTime < nowMs;
-      const status: EconomicEvent['status'] =
-        (e.actual !== null && e.actual !== undefined && e.actual !== '') || isPast
-          ? 'RELEASED'
-          : 'UPCOMING';
+      const hasActual = e.actual !== null && e.actual !== undefined && e.actual !== '';
+      const status: EconomicEvent['status'] = hasActual || eventTime < nowMs ? 'RELEASED' : 'UPCOMING';
       return { ...e, status };
     });
 
@@ -933,10 +846,13 @@ export class RelationalDatabase {
       all = all.filter(e => e.currency === filter.currency);
     }
 
+    const byTimeAsc = (a: EconomicEvent, b: EconomicEvent) =>
+      new Date(a.date_time_utc).getTime() - new Date(b.date_time_utc).getTime();
+
     if (filter?.status === 'UPCOMING') {
       return all
         .filter(e => e.status === 'UPCOMING' || new Date(e.date_time_utc).getTime() >= nowMs)
-        .sort((a, b) => new Date(a.date_time_utc).getTime() - new Date(b.date_time_utc).getTime())
+        .sort(byTimeAsc)
         .slice(0, limit)
         .map(e => MacroEnricher.enrichEconomicEvent(e, nowMs));
     }
@@ -949,268 +865,253 @@ export class RelationalDatabase {
         .map(e => MacroEnricher.enrichEconomicEvent(e, nowMs));
     }
 
-    // Default ALL:
-    // Strongly prioritize UPCOMING events (so they are never crowded out),
-    // combined with recent releases from today/past 24h.
-    const upcoming = all
-      .filter(e => new Date(e.date_time_utc).getTime() >= nowMs)
-      .sort((a, b) => new Date(a.date_time_utc).getTime() - new Date(b.date_time_utc).getTime());
-
+    // Default ALL: upcoming events are never crowded out by the release backlog.
+    const upcoming = all.filter(e => new Date(e.date_time_utc).getTime() >= nowMs).sort(byTimeAsc);
     const recentPast = all
-      .filter(e => new Date(e.date_time_utc).getTime() >= past24hMs && new Date(e.date_time_utc).getTime() < nowMs)
-      .sort((a, b) => new Date(a.date_time_utc).getTime() - new Date(b.date_time_utc).getTime());
-
+      .filter(e => {
+        const t = new Date(e.date_time_utc).getTime();
+        return t >= past24hMs && t < nowMs;
+      })
+      .sort(byTimeAsc);
     const olderPast = all
       .filter(e => new Date(e.date_time_utc).getTime() < past24hMs)
       .sort((a, b) => new Date(b.date_time_utc).getTime() - new Date(a.date_time_utc).getTime());
 
-    // Keep all or majority of upcoming events (e.g. up to 100)
     const upcomingToTake = upcoming.slice(0, Math.min(upcoming.length, 120));
     const remainingSlots = Math.max(20, limit - upcomingToTake.length);
     const pastToTake = recentPast.slice(-remainingSlots);
 
-    const merged = [...pastToTake, ...upcomingToTake];
+    let merged = [...pastToTake, ...upcomingToTake];
     if (merged.length < limit && olderPast.length > 0) {
       const extraNeeded = limit - merged.length;
-      const extraPast = olderPast.slice(0, extraNeeded).reverse();
-      return [...extraPast, ...merged]
-        .sort((a, b) => new Date(a.date_time_utc).getTime() - new Date(b.date_time_utc).getTime())
-        .map(e => MacroEnricher.enrichEconomicEvent(e, nowMs));
+      merged = [...olderPast.slice(0, extraNeeded).reverse(), ...merged];
     }
 
-    return merged
-      .sort((a, b) => new Date(a.date_time_utc).getTime() - new Date(b.date_time_utc).getTime())
-      .map(e => MacroEnricher.enrichEconomicEvent(e, nowMs));
+    return merged.sort(byTimeAsc).map(e => MacroEnricher.enrichEconomicEvent(e, nowMs));
   }
 
-  public setEconomicEvents(events: EconomicEvent[]): void {
-    this.data.economic_events = events;
-    this.saveSync();
+  public async setEconomicEvents(events: EconomicEvent[]): Promise<void> {
+    await prisma.$transaction([
+      prisma.economicEvent.deleteMany({}),
+      prisma.economicEvent.createMany({ data: events.map(e => this.economicEventData(e)) }),
+    ]);
   }
 
-  public upsertEconomicEvent(event: EconomicEvent): void {
-    const idx = this.data.economic_events.findIndex(e => e.id === event.id);
-    if (idx >= 0) {
-      this.data.economic_events[idx] = { ...this.data.economic_events[idx], ...event };
-    } else {
-      this.data.economic_events.push(event);
-    }
-    this.scheduleSave();
+  public async upsertEconomicEvent(event: EconomicEvent): Promise<void> {
+    const data = this.economicEventData(event);
+    await prisma.economicEvent.upsert({ where: { id: event.id }, create: data, update: data });
+  }
+
+  private economicEventData(event: EconomicEvent) {
+    return {
+      id: event.id,
+      event_name: event.event_name,
+      country_code: event.country_code,
+      currency: event.currency,
+      impact: event.impact,
+      date_time_utc: event.date_time_utc,
+      actual: event.actual ?? null,
+      forecast: event.forecast ?? null,
+      previous: event.previous ?? null,
+      status: event.status,
+      source: event.source,
+      last_updated: event.last_updated ?? new Date().toISOString(),
+      data_status: event.data_status ?? null,
+      surprise: event.surprise ?? null,
+      change: event.change ?? null,
+      confidence: event.confidence ?? null,
+      freshness: event.freshness ?? null,
+      market_reaction: toJson(event.market_reaction),
+      fundamental_implication: event.fundamental_implication ?? null,
+      actual_market_reaction: event.actual_market_reaction ?? null,
+    };
   }
 
   // ==================== MARKET THEMES & INTELLIGENCE ====================
-  public getMarketThemes(): MarketTheme[] {
-    return [...this.data.market_themes];
+  public async getMarketThemes(): Promise<MarketTheme[]> {
+    const rows = await prisma.marketTheme.findMany();
+    return rows.map(r => this.hydrateTheme(r));
   }
 
-  public upsertMarketTheme(theme: MarketTheme): void {
-    const idx = this.data.market_themes.findIndex(t => t.id === theme.id);
-    if (idx >= 0) {
-      this.data.market_themes[idx] = theme;
-    } else {
-      this.data.market_themes.push(theme);
-    }
-    this.scheduleSave();
+  public async upsertMarketTheme(theme: MarketTheme): Promise<void> {
+    const mutable = {
+      title: theme.title,
+      description: theme.description,
+      sentiment: theme.sentiment,
+      primary_assets: toJson(theme.primary_assets),
+      evidence_events: toJson(theme.evidence_events),
+      active_since: theme.active_since ?? null,
+    };
+    await prisma.marketTheme.upsert({
+      where: { id: theme.id },
+      create: { id: theme.id, ...mutable },
+      update: mutable,
+    });
   }
 
-  public getAIAnalysisForEvent(eventId: string): AIAnalysis | undefined {
-    return this.data.ai_analysis.find(a => a.event_id === eventId);
+  private hydrateTheme(row: Record<string, any>): MarketTheme {
+    return {
+      ...row,
+      primary_assets: parseJson<string[]>(row.primary_assets, []),
+      evidence_events: parseJson<string[]>(row.evidence_events, []),
+    } as unknown as MarketTheme;
   }
 
-  public upsertAIAnalysis(analysis: AIAnalysis): void {
-    const idx = this.data.ai_analysis.findIndex(a => a.id === analysis.id);
-    if (idx >= 0) {
-      this.data.ai_analysis[idx] = analysis;
-    } else {
-      this.data.ai_analysis.unshift(analysis);
-    }
-    this.scheduleSave();
+  public async getAIAnalysisForEvent(eventId: string): Promise<AIAnalysis | undefined> {
+    const row = await prisma.aIAnalysis.findFirst({ where: { event_id: eventId } });
+    return row ? this.hydrateAnalysis(row) : undefined;
   }
 
-  public getLatestMarketOverviewAnalysis(): AIAnalysis | undefined {
-    return this.data.ai_analysis.find(a => a.analysis_type === 'MARKET_OVERVIEW');
+  public async upsertAIAnalysis(analysis: AIAnalysis): Promise<void> {
+    const mutable = {
+      event_id: analysis.event_id ?? null,
+      analysis_type: analysis.analysis_type,
+      title: analysis.title,
+      summary: analysis.summary,
+      context_data_used: toJsonRequired(analysis.context_data_used, 'object'),
+      key_implications: toJsonRequired(analysis.key_implications, 'array'),
+      affected_assets_outlook: toJsonRequired(analysis.affected_assets_outlook, 'array'),
+      confidence: analysis.confidence,
+      disclaimer: analysis.disclaimer,
+      created_at: analysis.created_at ?? new Date().toISOString(),
+      is_insufficient_data: analysis.is_insufficient_data ?? false,
+    };
+    await prisma.aIAnalysis.upsert({
+      where: { id: analysis.id },
+      create: { id: analysis.id, ...mutable },
+      update: mutable,
+    });
+    await this.enforceAnalysisCap();
   }
 
-  // ==================== DAILY MARKET SNAPSHOTS & HISTORY ====================
-  public getDailySnapshots(limit = 30, range = 'ALL', customDate?: string): DailyMarketSnapshot[] {
-    this.ensureDefaultDailySnapshots();
-    let list = [...(this.data.daily_snapshots || [])].sort((a, b) => b.date.localeCompare(a.date));
+  private hydrateAnalysis(row: Record<string, any>): AIAnalysis {
+    return {
+      ...row,
+      context_data_used: parseJson<AIAnalysis['context_data_used']>(row.context_data_used, {
+        news_titles: [],
+        market_prices: {},
+        currency_strength: {},
+        macro_releases: [],
+      }),
+      key_implications: parseJson<string[]>(row.key_implications, []),
+      affected_assets_outlook: parseJson<AIAnalysis['affected_assets_outlook']>(row.affected_assets_outlook, []),
+    } as unknown as AIAnalysis;
+  }
 
-    if (customDate) {
-      return list.filter(s => s.date === customDate);
-    }
+  private async enforceAnalysisCap(): Promise<void> {
+    const count = await prisma.aIAnalysis.count();
+    if (count <= AI_ANALYSIS_CAP) return;
+    const stale = await prisma.aIAnalysis.findMany({
+      orderBy: { created_at: 'asc' },
+      take: count - AI_ANALYSIS_CAP,
+      select: { id: true },
+    });
+    await prisma.aIAnalysis.deleteMany({ where: { id: { in: stale.map(s => s.id) } } });
+  }
 
-    if (range === 'TODAY') {
-      const todayStr = new Date().toISOString().slice(0, 10);
-      return list.filter(s => s.date === todayStr);
-    }
+  public async getLatestMarketOverviewAnalysis(): Promise<AIAnalysis | undefined> {
+    const row = await prisma.aIAnalysis.findFirst({
+      where: { analysis_type: 'MARKET_OVERVIEW' },
+      orderBy: { created_at: 'desc' },
+    });
+    return row ? this.hydrateAnalysis(row) : undefined;
+  }
 
-    if (range === 'YESTERDAY') {
-      const yesterdayStr = new Date(Date.now() - 24 * 3600 * 1000).toISOString().slice(0, 10);
-      return list.filter(s => s.date === yesterdayStr);
-    }
+  // ==================== DAILY SNAPSHOTS ====================
+  public async getDailySnapshots(limit = 30, range = 'ALL', customDate?: string): Promise<DailyMarketSnapshot[]> {
+    await this.ensureDefaultDailySnapshots();
+    const rows = await prisma.dailySnapshot.findMany({ orderBy: { date: 'desc' } });
+    const list = rows.map(r => this.hydrateSnapshot(r));
 
+    if (customDate) return list.filter(s => s.date === customDate);
+
+    const isoDaysAgo = (days: number) =>
+      new Date(Date.now() - days * 24 * 3600 * 1000).toISOString().slice(0, 10);
+
+    if (range === 'TODAY') return list.filter(s => s.date === new Date().toISOString().slice(0, 10));
+    if (range === 'YESTERDAY') return list.filter(s => s.date === isoDaysAgo(1));
     if (range === '7D') {
-      const cutoff = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString().slice(0, 10);
+      const cutoff = isoDaysAgo(7);
       return list.filter(s => s.date >= cutoff);
     }
-
     if (range === '30D') {
-      const cutoff = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString().slice(0, 10);
+      const cutoff = isoDaysAgo(30);
       return list.filter(s => s.date >= cutoff);
     }
 
     return list.slice(0, limit);
   }
 
-  public getDailySnapshotByDate(dateStr: string): DailyMarketSnapshot | null {
-    this.ensureDefaultDailySnapshots();
-    const found = (this.data.daily_snapshots || []).find(s => s.date === dateStr);
-    return found || null;
+  public async getDailySnapshotByDate(dateStr: string): Promise<DailyMarketSnapshot | null> {
+    await this.ensureDefaultDailySnapshots();
+    const row = await prisma.dailySnapshot.findUnique({ where: { date: dateStr } });
+    return row ? this.hydrateSnapshot(row) : null;
   }
 
-  public saveDailySnapshot(snapshot: DailyMarketSnapshot): void {
-    if (!this.data.daily_snapshots) {
-      this.data.daily_snapshots = [];
-    }
-    const idx = this.data.daily_snapshots.findIndex(s => s.date === snapshot.date || s.id === snapshot.id);
-    if (idx >= 0) {
-      this.data.daily_snapshots[idx] = { ...this.data.daily_snapshots[idx], ...snapshot, timestamp: new Date().toISOString() };
+  public async saveDailySnapshot(snapshot: DailyMarketSnapshot): Promise<void> {
+    const existing = await prisma.dailySnapshot.findFirst({
+      where: { OR: [{ date: snapshot.date }, { id: snapshot.id }] },
+      select: { id: true },
+    });
+    const mutable = this.snapshotData(snapshot, new Date().toISOString());
+
+    if (existing) {
+      await prisma.dailySnapshot.update({ where: { id: existing.id }, data: mutable });
     } else {
-      this.data.daily_snapshots.unshift(snapshot);
-    }
-    this.scheduleSave();
-  }
-
-  public ensureDefaultDailySnapshots(): void {
-    if (!this.data.daily_snapshots || this.data.daily_snapshots.length === 0) {
-      this.data.daily_snapshots = [
-        {
-          id: 'snapshot_2026-09-20',
-          date: '2026-09-20',
-          timestamp: '2026-09-20T05:00:00.000Z',
-          title: 'Daily Market Snapshot: 20 September 2026',
-          market_biases: {
-            XAUUSD: { symbol: 'XAUUSD', bias: 'BULLISH', score: 72, price: 2742.50, change_24h_pct: 0.45, strength_label: 'Strong', major_catalyst: 'Fed easing cycle expectations & geopolitical reserve diversification', last_updated: '2026-09-20T05:00:00.000Z' },
-            BTC: { symbol: 'BTC', bias: 'NEUTRAL', score: 10, price: 64180.00, change_24h_pct: -0.15, strength_label: 'Neutral', major_catalyst: 'Consolidation above $63,500 support prior to macro weekly close', last_updated: '2026-09-20T05:00:00.000Z' },
-            US100: { symbol: 'US100', bias: 'BEARISH', score: -35, price: 19820.00, change_24h_pct: -0.52, strength_label: 'Weak', major_catalyst: 'Elevated tech valuation compression amid sticky yields', last_updated: '2026-09-20T05:00:00.000Z' },
-            US500: { symbol: 'US500', bias: 'NEUTRAL', score: -5, price: 5712.00, change_24h_pct: -0.08, strength_label: 'Neutral', major_catalyst: 'Rotation into defensive dividend sectors balancing tech pullbacks', last_updated: '2026-09-20T05:00:00.000Z' },
-            US30: { symbol: 'US30', bias: 'BULLISH', score: 40, price: 42150.00, change_24h_pct: 0.28, strength_label: 'Moderate', major_catalyst: 'Industrial and cyclical earnings resilience buoying value stocks', last_updated: '2026-09-20T05:00:00.000Z' },
-            USD: { symbol: 'USD', bias: 'BEARISH', score: -45, price: 100.85, change_24h_pct: -0.32, strength_label: 'Weak', major_catalyst: 'Yield curve steepening and softened labor market trajectory', last_updated: '2026-09-20T05:00:00.000Z' },
-            EUR: { symbol: 'EUR', bias: 'NEUTRAL', score: 5, price: 1.1165, change_24h_pct: 0.12, strength_label: 'Neutral', major_catalyst: 'ECB rate pause confirmation balancing sluggish German industrial PMI', last_updated: '2026-09-20T05:00:00.000Z' },
-            GBP: { symbol: 'GBP', bias: 'BULLISH', score: 55, price: 1.3310, change_24h_pct: 0.38, strength_label: 'Strong', major_catalyst: 'BoE hawkish dissent citing stubborn services inflation print', last_updated: '2026-09-20T05:00:00.000Z' },
-            JPY: { symbol: 'JPY', bias: 'BEARISH', score: -60, price: 143.80, change_24h_pct: -0.45, strength_label: 'Weak', major_catalyst: 'BoJ gradualism stance keeping short-end real carry attractive', last_updated: '2026-09-20T05:00:00.000Z' },
-            AUD: { symbol: 'AUD', bias: 'BULLISH', score: 50, price: 0.6815, change_24h_pct: 0.42, strength_label: 'Strong', major_catalyst: 'RBA persistent hawkish hold on sticky domestic core inflation', last_updated: '2026-09-20T05:00:00.000Z' },
-            NZD: { symbol: 'NZD', bias: 'NEUTRAL', score: -10, price: 0.6225, change_24h_pct: -0.05, strength_label: 'Neutral', major_catalyst: 'RBNZ aggressive dovish tilt weighing on cross-rate yield spread', last_updated: '2026-09-20T05:00:00.000Z' },
-            CAD: { symbol: 'CAD', bias: 'NEUTRAL', score: 15, price: 1.3565, change_24h_pct: 0.10, strength_label: 'Neutral', major_catalyst: 'Crude oil recovery neutralizing Bank of Canada easing path', last_updated: '2026-09-20T05:00:00.000Z' },
-            CHF: { symbol: 'CHF', bias: 'BULLISH', score: 35, price: 0.8490, change_24h_pct: 0.22, strength_label: 'Moderate', major_catalyst: 'European geopolitical hedge demand maintaining sovereign bid', last_updated: '2026-09-20T05:00:00.000Z' },
-          },
-          currency_strength: [
-            { currency: 'GBP', score: 7.4, rank: 1, direction: 'STRONG_BUY', change_vs_yesterday: 0.35, change_vs_7d: 0.85 },
-            { currency: 'AUD', score: 6.8, rank: 2, direction: 'BUY', change_vs_yesterday: 0.28, change_vs_7d: 0.65 },
-            { currency: 'CHF', score: 5.9, rank: 3, direction: 'BUY', change_vs_yesterday: 0.15, change_vs_7d: 0.40 },
-            { currency: 'CAD', score: 5.2, rank: 4, direction: 'NEUTRAL', change_vs_yesterday: 0.10, change_vs_7d: 0.20 },
-            { currency: 'EUR', score: 4.8, rank: 5, direction: 'NEUTRAL', change_vs_yesterday: -0.22, change_vs_7d: -0.45 },
-            { currency: 'USD', score: 4.4, rank: 6, direction: 'SELL', change_vs_yesterday: -0.32, change_vs_7d: -0.80 },
-            { currency: 'NZD', score: 4.1, rank: 7, direction: 'SELL', change_vs_yesterday: -0.18, change_vs_7d: -0.50 },
-            { currency: 'JPY', score: 3.2, rank: 8, direction: 'STRONG_SELL', change_vs_yesterday: -0.45, change_vs_7d: -1.25 },
-          ],
-          major_catalysts: [
-            { event_name: 'Federal Reserve Policy Shift Assessment', currency: 'USD', impact: 'CRITICAL', actual: 'Dovish Hold Consensus', market_reaction: 'DXY -0.32%, US 2Y Yield -6 bps, XAUUSD +$12.50' },
-            { event_name: 'BoE Monetary Policy Statement', currency: 'GBP', impact: 'HIGH', actual: 'Vote 8-1 Hold', market_reaction: 'GBPUSD +45 pips to 1.3310' },
-            { event_name: 'RBA Official Cash Rate Guidance', currency: 'AUD', impact: 'HIGH', actual: 'Hawkish Hold', market_reaction: 'AUDUSD +38 pips to 0.6815' },
-          ],
-          market_reaction_summary: 'Broad dollar weakness dominated foreign exchange sessions, propelling precious metals into renewed upside discovery while global equity benchmarks displayed distinct sector rotation from mega-cap tech into industrial yield plays.',
-          ai_summary: 'Institutional posture reflects synchronized capital reallocation away from the US Dollar as terminal rate repricing firms. Gold capitalizes directly on real yield moderation.',
-          ai_why: [
-            'US Dollar softening across majors as Treasury yield curve shifts downward.',
-            'Central bank policy divergence: BoE and RBA hawkish rhetoric contrasting with Fed easing trajectory.',
-            'Currency strength confirming GBP and AUD institutional leadership (Rank #1 and #2).',
-            'Sovereign reserve hedging providing strong bid floor for bullion on every minor dip.',
-          ],
-          ai_risk: [
-            'Upcoming US Core PCE inflation release could recalibrate easing probability if sticky.',
-            'Middle East energy transit flare-ups threatening unexpected spike in crude oil.',
-            'Extreme short JPY positioning susceptible to abrupt violent short-covering squeezes.',
-          ],
-          ai_context: [
-            'USD strength declined for the 3rd consecutive session from 5.2 to 4.4.',
-            'XAUUSD maintains robust negative correlation (-0.84) against DXY movements.',
-            'Yesterday market showed hesitation ahead of rate guidance before clearing higher today.',
-          ],
-          historical_insights: [
-            'USD strength fell across the last three consecutive sessions, from 5.2 to 4.4.',
-            'XAUUSD consistently moves opposite the dollar (+0.45% while DXY fell 0.32%).',
-            'GBP has led G8 strength above 7.0 for 48 consecutive hours.',
-          ],
-          created_at: '2026-09-20T05:00:00.000Z',
-        },
-        {
-          id: 'snapshot_2026-09-19',
-          date: '2026-09-19',
-          timestamp: '2026-09-19T21:00:00.000Z',
-          title: 'Daily Market Snapshot: 19 September 2026',
-          market_biases: {
-            XAUUSD: { symbol: 'XAUUSD', bias: 'BULLISH', score: 65, price: 2730.00, change_24h_pct: 0.38, strength_label: 'Moderate', major_catalyst: 'Bullion dip buying confirmed as bond yields stall', last_updated: '2026-09-19T21:00:00.000Z' },
-            BTC: { symbol: 'BTC', bias: 'NEUTRAL', score: 5, price: 64250.00, change_24h_pct: 0.10, strength_label: 'Neutral', major_catalyst: 'Weekend volume contraction holding tight trading corridor', last_updated: '2026-09-19T21:00:00.000Z' },
-            US100: { symbol: 'US100', bias: 'NEUTRAL', score: -10, price: 19910.00, change_24h_pct: -0.15, strength_label: 'Neutral', major_catalyst: 'Semiconductor consolidation after previous rally', last_updated: '2026-09-19T21:00:00.000Z' },
-            US500: { symbol: 'US500', bias: 'NEUTRAL', score: 0, price: 5716.00, change_24h_pct: 0.02, strength_label: 'Neutral', major_catalyst: 'Balanced market breadth heading into weekend close', last_updated: '2026-09-19T21:00:00.000Z' },
-            US30: { symbol: 'US30', bias: 'BULLISH', score: 30, price: 42030.00, change_24h_pct: 0.18, strength_label: 'Moderate', major_catalyst: 'Financials sector leading performance', last_updated: '2026-09-19T21:00:00.000Z' },
-            USD: { symbol: 'USD', bias: 'NEUTRAL', score: -15, price: 101.18, change_24h_pct: -0.10, strength_label: 'Neutral', major_catalyst: 'Post-CPI digestion and yield range trading', last_updated: '2026-09-19T21:00:00.000Z' },
-            EUR: { symbol: 'EUR', bias: 'NEUTRAL', score: -5, price: 1.1152, change_24h_pct: 0.05, strength_label: 'Neutral', major_catalyst: 'Eurozone consumer sentiment stable', last_updated: '2026-09-19T21:00:00.000Z' },
-            GBP: { symbol: 'GBP', bias: 'BULLISH', score: 45, price: 1.3260, change_24h_pct: 0.25, strength_label: 'Moderate', major_catalyst: 'UK retail sales outperforming forecasts', last_updated: '2026-09-19T21:00:00.000Z' },
-            JPY: { symbol: 'JPY', bias: 'BEARISH', score: -50, price: 143.15, change_24h_pct: -0.30, strength_label: 'Weak', major_catalyst: 'BoJ governor neutral remarks cooling near-term hike bets', last_updated: '2026-09-19T21:00:00.000Z' },
-            AUD: { symbol: 'AUD', bias: 'BULLISH', score: 40, price: 0.6785, change_24h_pct: 0.22, strength_label: 'Moderate', major_catalyst: 'Commodity price stabilizing in Asia-Pacific hours', last_updated: '2026-09-19T21:00:00.000Z' },
-            NZD: { symbol: 'NZD', bias: 'NEUTRAL', score: -5, price: 0.6230, change_24h_pct: 0.00, strength_label: 'Neutral', major_catalyst: 'NZ GDP revision priced in', last_updated: '2026-09-19T21:00:00.000Z' },
-            CAD: { symbol: 'CAD', bias: 'NEUTRAL', score: 10, price: 1.3578, change_24h_pct: 0.05, strength_label: 'Neutral', major_catalyst: 'Canadian retail trade tracking forecast', last_updated: '2026-09-19T21:00:00.000Z' },
-            CHF: { symbol: 'CHF', bias: 'BULLISH', score: 30, price: 0.8510, change_24h_pct: 0.15, strength_label: 'Moderate', major_catalyst: 'Consistent safe-haven cross buying', last_updated: '2026-09-19T21:00:00.000Z' },
-          },
-          currency_strength: [
-            { currency: 'GBP', score: 7.05, rank: 1, direction: 'STRONG_BUY', change_vs_yesterday: 0.20, change_vs_7d: 0.50 },
-            { currency: 'AUD', score: 6.52, rank: 2, direction: 'BUY', change_vs_yesterday: 0.15, change_vs_7d: 0.35 },
-            { currency: 'CHF', score: 5.75, rank: 3, direction: 'BUY', change_vs_yesterday: 0.10, change_vs_7d: 0.25 },
-            { currency: 'CAD', score: 5.10, rank: 4, direction: 'NEUTRAL', change_vs_yesterday: 0.05, change_vs_7d: 0.10 },
-            { currency: 'EUR', score: 5.02, rank: 5, direction: 'NEUTRAL', change_vs_yesterday: -0.10, change_vs_7d: -0.25 },
-            { currency: 'USD', score: 4.72, rank: 6, direction: 'NEUTRAL', change_vs_yesterday: -0.15, change_vs_7d: -0.50 },
-            { currency: 'NZD', score: 4.28, rank: 7, direction: 'SELL', change_vs_yesterday: -0.05, change_vs_7d: -0.30 },
-            { currency: 'JPY', score: 3.65, rank: 8, direction: 'SELL', change_vs_yesterday: -0.30, change_vs_7d: -0.80 },
-          ],
-          major_catalysts: [
-            { event_name: 'UK Retail Sales m/m', currency: 'GBP', impact: 'HIGH', actual: '+0.6% (Beat)', market_reaction: 'GBPUSD +28 pips' },
-            { event_name: 'US Existing Home Sales', currency: 'USD', impact: 'MEDIUM', actual: '3.86M', market_reaction: 'DXY unchanged' },
-          ],
-          market_reaction_summary: 'Markets drifted into consolidation ahead of central bank communication week, with currency pairs trading tight ranges and gold maintaining floor above $2,720/oz.',
-          ai_summary: 'Equilibrium regime observed with low cross-asset volatility. Pre-positioning evident in Sterling and Australian Dollar.',
-          ai_why: [
-            'UK economic activity upside surprises underpinning sterling demand.',
-            'Rangebound US yield environment keeping FX pairs disciplined within technical channels.',
-          ],
-          ai_risk: [
-            'Upcoming central bank rate decisions could break consolidation abruptly.',
-          ],
-          ai_context: [
-            'Platform tracking first 48 hours of live canonical event ingest with high deduplication accuracy.',
-          ],
-          historical_insights: [
-            'EUR and USD printed the lowest weekly volatility, under 25 pips per session.',
-            'XAUUSD membukukan rekor support struktural baru di $2,720.',
-          ],
-          created_at: '2026-09-19T21:00:00.000Z',
-        },
-      ];
-      this.scheduleSave();
+      await prisma.dailySnapshot.create({ data: { id: snapshot.id, ...mutable } });
     }
   }
 
-  public getMarketMemoryInsights(): MarketMemoryInsight[] {
-    const comparisons = this.getHistoricalCurrencyComparison();
+  public async ensureDefaultDailySnapshots(): Promise<void> {
+    const count = await prisma.dailySnapshot.count();
+    if (count > 0) return;
+    await prisma.dailySnapshot.createMany({
+      data: DEFAULT_DAILY_SNAPSHOTS.map(s => ({ id: s.id, ...this.snapshotData(s, s.timestamp) })),
+    });
+  }
+
+  private snapshotData(snapshot: DailyMarketSnapshot, timestamp: string) {
+    return {
+      date: snapshot.date,
+      timestamp,
+      title: snapshot.title,
+      market_biases: toJsonRequired(snapshot.market_biases, 'object'),
+      currency_strength: toJsonRequired(snapshot.currency_strength, 'array'),
+      major_catalysts: toJsonRequired(snapshot.major_catalysts, 'array'),
+      market_reaction_summary: snapshot.market_reaction_summary ?? '',
+      ai_summary: snapshot.ai_summary ?? '',
+      ai_why: toJsonRequired(snapshot.ai_why, 'array'),
+      ai_risk: toJsonRequired(snapshot.ai_risk, 'array'),
+      ai_context: toJsonRequired(snapshot.ai_context, 'array'),
+      historical_insights: toJsonRequired(snapshot.historical_insights, 'array'),
+      created_at: snapshot.created_at ?? timestamp,
+    };
+  }
+
+  private hydrateSnapshot(row: Record<string, any>): DailyMarketSnapshot {
+    return {
+      ...row,
+      market_biases: parseJson<DailyMarketSnapshot['market_biases']>(row.market_biases, {}),
+      currency_strength: parseJson<DailyMarketSnapshot['currency_strength']>(row.currency_strength, []),
+      major_catalysts: parseJson<DailyMarketSnapshot['major_catalysts']>(row.major_catalysts, []),
+      ai_why: parseJson<string[]>(row.ai_why, []),
+      ai_risk: parseJson<string[]>(row.ai_risk, []),
+      ai_context: parseJson<string[]>(row.ai_context, []),
+      historical_insights: parseJson<string[]>(row.historical_insights, []),
+    } as unknown as DailyMarketSnapshot;
+  }
+
+  // ==================== MARKET MEMORY ====================
+  public async getMarketMemoryInsights(): Promise<MarketMemoryInsight[]> {
+    const comparisons = await this.getHistoricalCurrencyComparison();
     const usd = comparisons.find(c => c.currency === 'USD');
     const eur = comparisons.find(c => c.currency === 'EUR');
     const gbp = comparisons.find(c => c.currency === 'GBP');
     const jpy = comparisons.find(c => c.currency === 'JPY');
-    const aud = comparisons.find(c => c.currency === 'AUD');
 
     const insights: MarketMemoryInsight[] = [];
+    const nowIso = () => new Date().toISOString();
+    const signed = (n: number) => `${n >= 0 ? '+' : ''}${n}`;
 
     if (usd) {
       if (usd.delta_yesterday < -0.15 || usd.delta_7d < -0.4) {
@@ -1218,11 +1119,11 @@ export class RelationalDatabase {
           id: 'mem_usd_weakening',
           type: 'CURRENCY',
           title: 'USD Persistent Weakening Across Recorded Sessions',
-          description: `USD strength is easing (${usd.delta_yesterday >= 0 ? '+' : ''}${usd.delta_yesterday} vs yesterday, ${usd.delta_7d >= 0 ? '+' : ''}${usd.delta_7d} vs 7 days ago), in line with loosening Treasury yields.`,
+          description: `USD strength is easing (${signed(usd.delta_yesterday)} vs yesterday, ${signed(usd.delta_7d)} vs 7 days ago), in line with loosening Treasury yields.`,
           evidence: `USD Score: ${usd.today_score.toFixed(2)} (kemarin: ${usd.yesterday_score.toFixed(2)}, 7H: ${usd.seven_day_score.toFixed(2)})`,
-          metric: `${usd.delta_7d >= 0 ? '+' : ''}${usd.delta_7d} 7D Delta`,
+          metric: `${signed(usd.delta_7d)} 7D Delta`,
           confidence: 94,
-          created_at: new Date().toISOString(),
+          created_at: nowIso(),
         });
       } else {
         insights.push({
@@ -1233,37 +1134,35 @@ export class RelationalDatabase {
           evidence: `Scores have held above 4.5 across the last three tracked sessions.`,
           metric: `${usd.today_score.toFixed(2)} / 10.0`,
           confidence: 91,
-          created_at: new Date().toISOString(),
+          created_at: nowIso(),
         });
       }
     }
 
     if (eur) {
-      const eur7dDelta = eur.delta_7d;
       insights.push({
         id: 'mem_eur_divergence',
         type: 'CURRENCY',
         title: 'EUR diverging from its 7-day average',
-        description: `EUR shifted ${eur7dDelta >= 0 ? '+' : ''}${eur7dDelta} points versus its 7-day average amid signals of a Eurozone manufacturing slowdown.`,
+        description: `EUR shifted ${signed(eur.delta_7d)} points versus its 7-day average amid signals of a Eurozone manufacturing slowdown.`,
         evidence: `EUR Today: ${eur.today_score.toFixed(2)} vs 7-Day: ${eur.seven_day_score.toFixed(2)}`,
-        metric: `${eur7dDelta >= 0 ? '+' : ''}${eur7dDelta} pts vs 7D`,
+        metric: `${signed(eur.delta_7d)} pts vs 7D`,
         confidence: 92,
-        created_at: new Date().toISOString(),
+        created_at: nowIso(),
       });
     }
 
-    // Correlation Memory: XAUUSD vs USD
-    const xauPrice = this.getMarketPrice('XAUUSD');
+    const xauPrice = await this.getMarketPrice('XAUUSD');
     const xauChg = xauPrice?.change_24h_pct ?? 0.45;
     insights.push({
       id: 'mem_xau_usd_inverse',
       type: 'CORRELATION',
       title: 'XAUUSD moves inversely to the dollar',
-      description: `Gold (XAUUSD) shows a strong negative correlation to the dollar: spot moved ${xauChg >= 0 ? '+' : ''}${xauChg.toFixed(2)}% while the DXY score sat in its pressured zone at ${usd?.today_score.toFixed(1) || '4.4'}/10.`,
+      description: `Gold (XAUUSD) shows a strong negative correlation to the dollar: spot moved ${signed(Number(xauChg.toFixed(2)))}% while the DXY score sat in its pressured zone at ${usd?.today_score.toFixed(1) || '4.4'}/10.`,
       evidence: `XAUUSD at $${xauPrice?.price.toLocaleString() || '2,742'} versus DXY 100.85 across the last three sessions.`,
       metric: `-0.86 Inverse Correlation`,
       confidence: 96,
-      created_at: new Date().toISOString(),
+      created_at: nowIso(),
     });
 
     if (gbp && gbp.today_score >= 6.5) {
@@ -1275,7 +1174,7 @@ export class RelationalDatabase {
         evidence: `GBP holds rank #1 ahead of EUR (${eur?.today_score.toFixed(2)}) and USD (${usd?.today_score.toFixed(2)}).`,
         metric: `#1 G8 Rank (${gbp.today_score.toFixed(2)})`,
         confidence: 95,
-        created_at: new Date().toISOString(),
+        created_at: nowIso(),
       });
     }
 
@@ -1288,7 +1187,7 @@ export class RelationalDatabase {
         evidence: `The JPY score fell ${jpy.delta_7d} points over the last 7 days.`,
         metric: `${jpy.today_score.toFixed(2)} / 10.0 (Weakest)`,
         confidence: 93,
-        created_at: new Date().toISOString(),
+        created_at: nowIso(),
       });
     }
 
@@ -1296,22 +1195,54 @@ export class RelationalDatabase {
   }
 
   // ==================== SYSTEM HEALTH ====================
-  public getDatabaseStats() {
+  public async getDatabaseStats() {
+    const [
+      users_count,
+      verification_tokens_count,
+      sources_count,
+      telegram_channels_count,
+      news_count,
+      events_count,
+      event_sources_count,
+      prices_count,
+      currency_strength_count,
+      currency_strength_history_count,
+      economic_events_count,
+      themes_count,
+      ai_analysis_count,
+      daily_snapshots_count,
+    ] = await prisma.$transaction([
+      prisma.user.count(),
+      prisma.verificationToken.count(),
+      prisma.source.count(),
+      prisma.telegramChannel.count(),
+      prisma.newsItem.count(),
+      prisma.marketEvent.count(),
+      prisma.eventSource.count(),
+      prisma.marketPrice.count(),
+      prisma.currencyStrength.count(),
+      prisma.currencyStrengthHistory.count(),
+      prisma.economicEvent.count(),
+      prisma.marketTheme.count(),
+      prisma.aIAnalysis.count(),
+      prisma.dailySnapshot.count(),
+    ]);
+
     return {
-      users_count: this.data.users.length,
-      verification_tokens_count: (this.data.verification_tokens || []).length,
-      sources_count: this.data.sources.length,
-      telegram_channels_count: this.data.telegram_channels.length,
-      news_count: this.data.news.length,
-      events_count: this.data.events.length,
-      event_sources_count: this.data.event_sources.length,
-      prices_count: this.data.market_prices.length,
-      currency_strength_count: this.data.currency_strength.length,
-      currency_strength_history_count: this.data.currency_strength_history.length,
-      economic_events_count: this.data.economic_events.length,
-      themes_count: this.data.market_themes.length,
-      ai_analysis_count: this.data.ai_analysis.length,
-      daily_snapshots_count: (this.data.daily_snapshots || []).length,
+      users_count,
+      verification_tokens_count,
+      sources_count,
+      telegram_channels_count,
+      news_count,
+      events_count,
+      event_sources_count,
+      prices_count,
+      currency_strength_count,
+      currency_strength_history_count,
+      economic_events_count,
+      themes_count,
+      ai_analysis_count,
+      daily_snapshots_count,
     };
   }
 }

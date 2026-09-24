@@ -127,13 +127,13 @@ export class CurrencyStrengthService {
 
         // Sort descending by raw delta / score
         results.sort((a, b) => (b.raw_delta ?? 0) - (a.raw_delta ?? 0));
-        results.forEach((r, idx) => {
+        results.forEach(async (r, idx) => {
           r.rank = idx + 1;
-          db.recordCurrencyStrengthHistory(r.currency, r.strength_score);
+          await db.recordCurrencyStrengthHistory(r.currency, r.strength_score);
         });
 
-        db.setCurrencyStrength(results);
-        db.updateSourceStatus('src_currency_strength', 'LIVE');
+        await db.setCurrencyStrength(results);
+        await db.updateSourceStatus('src_currency_strength', 'LIVE');
         sseBroker.broadcast('currency_strength', results);
         return results;
       }
@@ -142,12 +142,12 @@ export class CurrencyStrengthService {
     }
 
     // Secondary provider: calculate exact relative strength matrix from live market FX rates
-    const calculated = this.calculateStrengthFromMarketRates();
-    calculated.forEach(r => {
-      db.recordCurrencyStrengthHistory(r.currency, r.strength_score);
+    const calculated = await this.calculateStrengthFromMarketRates();
+    calculated.forEach(async r => {
+      await db.recordCurrencyStrengthHistory(r.currency, r.strength_score);
     });
-    db.setCurrencyStrength(calculated);
-    db.updateSourceStatus('src_currency_strength', 'RECENT');
+    await db.setCurrencyStrength(calculated);
+    await db.updateSourceStatus('src_currency_strength', 'RECENT');
     sseBroker.broadcast('currency_strength', calculated);
     return calculated;
   }
@@ -196,9 +196,9 @@ export class CurrencyStrengthService {
    * Computes authentic Currency Strength from live FX rates
    * Based on standard 8-currency relative index calculation
    */
-  private static calculateStrengthFromMarketRates(): CurrencyStrength[] {
+  static async calculateStrengthFromMarketRates(): Promise<CurrencyStrength[]> {
     const now = new Date().toISOString();
-    const prices = db.getAllMarketPrices();
+    const prices = await db.getAllMarketPrices();
 
     // Pair percentage changes from 24h market data
     const getChange = (sym: string): number => {

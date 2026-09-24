@@ -5,8 +5,8 @@ import { MarketDataService } from '../ingestion/marketData.js';
 export const marketRouter = Router();
 
 // GET all market prices
-marketRouter.get('/', (req, res) => {
-  const prices = db.getAllMarketPrices();
+marketRouter.get('/', async (req, res) => {
+  const prices = await db.getAllMarketPrices();
   res.json({
     prices,
     count: prices.length,
@@ -15,8 +15,8 @@ marketRouter.get('/', (req, res) => {
 });
 
 // GET all market prices (alias /prices)
-marketRouter.get('/prices', (req, res) => {
-  const prices = db.getAllMarketPrices();
+marketRouter.get('/prices', async (req, res) => {
+  const prices = await db.getAllMarketPrices();
   res.json({
     prices,
     count: prices.length,
@@ -68,16 +68,16 @@ marketRouter.get('/status', (req, res) => {
 });
 
 // GET single symbol detail
-marketRouter.get('/:symbol', (req, res) => {
+marketRouter.get('/:symbol', async (req, res) => {
   const symbol = req.params.symbol.toUpperCase();
-  const price = db.getMarketPrice(symbol);
+  const price = await db.getMarketPrice(symbol);
   if (!price) {
     res.status(404).json({ error: `Symbol ${symbol} not found in market registry.` });
     return;
   }
 
   // Find related events affecting this symbol
-  const allEvents = db.getAllEvents(20);
+  const allEvents = await db.getAllEvents(20);
   const relatedEvents = allEvents.filter(e =>
     e.affected_assets.includes(symbol) || e.affected_currencies.includes(symbol)
   );

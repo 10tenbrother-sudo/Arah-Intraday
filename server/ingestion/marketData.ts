@@ -382,7 +382,7 @@ export class MarketDataService {
     // Query non-delayed feeds for all tracked instruments in parallel
     const results = await Promise.all(
       TRACKED_SYMBOLS.map(async cfg => {
-        const existing = db.getMarketPrice(cfg.symbol);
+        const existing = await db.getMarketPrice(cfg.symbol);
         const tvQuote = tvMap.get(cfg.tvSymbol);
 
         // 1. Direct TradingView Streaming quote if available (e.g. BITSTAMP:BTCUSD, TVC:DXY, TVC:GOLD, FX pairs)
@@ -510,18 +510,18 @@ export class MarketDataService {
 
     // Save all to database and prepare broadcast
     for (const item of results) {
-      db.upsertMarketPrice(item);
+      await db.upsertMarketPrice(item);
       updatedPrices.push(item);
     }
 
     // Update global market feed source status
     const unavailableCount = updatedPrices.filter(p => p.status === 'UNAVAILABLE').length;
     if (unavailableCount === 0) {
-      db.updateSourceStatus('src_market_feed', 'LIVE');
+      await db.updateSourceStatus('src_market_feed', 'LIVE');
     } else if (unavailableCount < updatedPrices.length) {
-      db.updateSourceStatus('src_market_feed', 'RECENT');
+      await db.updateSourceStatus('src_market_feed', 'RECENT');
     } else {
-      db.updateSourceStatus('src_market_feed', 'ERROR', 'Market providers unreachable');
+      await db.updateSourceStatus('src_market_feed', 'ERROR', 'Market providers unreachable');
     }
 
     // Broadcast live prices over real-time SSE stream

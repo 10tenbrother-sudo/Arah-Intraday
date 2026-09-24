@@ -88,7 +88,7 @@ export class AuthService {
   /**
    * Validates token and returns decoded payload
    */
-  public static verifyToken(token: string): AuthTokenPayload | null {
+  static async verifyToken(token: string): Promise<AuthTokenPayload | null> {
     try {
       const parts = token.split('.');
       if (parts.length !== 3) return null;
@@ -128,10 +128,10 @@ export class AuthService {
     verificationUrl?: string;
   }> {
     const cleanEmail = email.toLowerCase().trim();
-    const existing = db.getUserByEmail(cleanEmail);
+    const existing = await db.getUserByEmail(cleanEmail);
     if (existing) {
       if (!existing.is_verified || existing.verification_status === 'pending_verification') {
-        const tokenRecord = db.createVerificationToken(existing.id, existing.email, 24);
+        const tokenRecord = await db.createVerificationToken(existing.id, existing.email, 24);
         const verificationUrl = `${baseUrl}/api/auth/verify-email?token=${encodeURIComponent(tokenRecord.token)}`;
         const mailResult = await mailService.sendVerificationEmail(existing.email, existing.name, tokenRecord.token, baseUrl, tokenRecord.code);
         const err: any = new Error('This email is already registered but not verified. A fresh activation code and link have been sent to your email.');
@@ -167,7 +167,7 @@ export class AuthService {
       updated_at: new Date().toISOString(),
     };
 
-    db.insertUser(newUser);
+    await db.insertUser(newUser);
 
     const defaultPrefs: UserPreferences = {
       user_id: userId,
@@ -180,10 +180,10 @@ export class AuthService {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
-    db.upsertUserPreferences(defaultPrefs);
+    await db.upsertUserPreferences(defaultPrefs);
 
     // Create 24h verification token and send verification email
-    const tokenRecord = db.createVerificationToken(newUser.id, newUser.email, 24);
+    const tokenRecord = await db.createVerificationToken(newUser.id, newUser.email, 24);
     const verificationUrl = `${baseUrl}/api/auth/verify-email?token=${encodeURIComponent(tokenRecord.token)}`;
     const mailResult = await mailService.sendVerificationEmail(newUser.email, newUser.name, tokenRecord.token, baseUrl, tokenRecord.code);
 
@@ -200,9 +200,9 @@ export class AuthService {
   /**
    * Authenticates user credentials with verification enforcement
    */
-  public static login(email: string, password: string): { user: User; token: string } {
+  public static async login(email: string, password: string): Promise<{ user: User; token: string }>  {
     const cleanEmail = email.toLowerCase().trim();
-    let user = db.getUserByEmail(cleanEmail);
+    let user = await db.getUserByEmail(cleanEmail);
     if (!user) {
       const err: any = new Error('This email address is not registered with ArahMarket. Create a new account instead.');
       err.code = 'USER_NOT_FOUND';
@@ -233,8 +233,8 @@ export class AuthService {
   /**
    * Verifies an email token from verification_tokens table and activates user
    */
-  public static verifyEmail(token: string): { success: boolean; user?: User; token?: string; error?: string } {
-    const res = db.consumeVerificationToken(token);
+  public static async verifyEmail(token: string): Promise<{ success: boolean; user?: User; token?: string; error?: string }>  {
+    const res = await db.consumeVerificationToken(token);
     if (!res.success || !res.user) {
       return { success: false, error: res.error || 'That verification token is invalid or has expired.' };
     }
@@ -250,8 +250,8 @@ export class AuthService {
   /**
    * Verifies an email using 6-digit numeric OTP code and activates user
    */
-  public static verifyCode(email: string, code: string): { success: boolean; user?: User; token?: string; error?: string } {
-    const res = db.consumeVerificationCode(email, code);
+  public static async verifyCode(email: string, code: string): Promise<{ success: boolean; user?: User; token?: string; error?: string }>  {
+    const res = await db.consumeVerificationCode(email, code);
     if (!res.success || !res.user) {
       return { success: false, error: res.error || 'That verification code is incorrect or has expired.' };
     }
@@ -272,7 +272,7 @@ export class AuthService {
     baseUrl: string
   ): Promise<{ success: boolean; message: string; resetUrl?: string; email: string }> {
     const cleanEmail = email.toLowerCase().trim();
-    const user = db.getUserByEmail(cleanEmail);
+    const user = await db.getUserByEmail(cleanEmail);
     if (!user) {
       const err: any = new Error('This email address is not registered with ArahMarket.');
       err.code = 'USER_NOT_FOUND';
@@ -280,7 +280,7 @@ export class AuthService {
       throw err;
     }
 
-    const tokenRecord = db.createPasswordResetToken(user.id, user.email, 2);
+    const tokenRecord = await db.createPasswordResetToken(user.id, user.email, 2);
     const result = await mailService.sendPasswordResetEmail(
       user.email,
       user.name,
@@ -299,21 +299,21 @@ export class AuthService {
   /**
    * Resets user password using valid reset token and logs them in
    */
-  public static resetPassword(
+  public static async resetPassword(
     token: string,
     newPassword: string
-  ): { success: boolean; message: string; user: User; token: string } {
+  ): Promise<{ success: boolean; message: string; user: User; token: string }>  {
     if (!newPassword || newPassword.length < 6) {
       throw new Error('The new password must be at least 6 characters.');
     }
 
-    const res = db.consumeToken(token, 'password_reset');
+    const res = await db.consumeToken(token, 'password_reset');
     if (!res.success || !res.user) {
       throw new Error(res.error || 'That password reset link is invalid or has expired.');
     }
 
     const { hash, salt } = this.hashPassword(newPassword);
-    const updated = db.updateUser(res.user.id, {
+    const updated = await db.updateUser(res.user.id, {
       password_hash: hash,
       salt,
       is_verified: true,
@@ -341,7 +341,7 @@ export class AuthService {
     baseUrl: string
   ): Promise<{ success: boolean; message: string; magicUrl?: string; email: string }> {
     const cleanEmail = email.toLowerCase().trim();
-    let user = db.getUserByEmail(cleanEmail);
+    let user = await db.getUserByEmail(cleanEmail);
 
     // If user does not exist yet, provision account seamlessly
     if (!user) {
@@ -361,10 +361,10 @@ export class AuthService {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
-      db.insertUser(user);
+      await db.insertUser(user);
     }
 
-    const tokenRecord = db.createMagicLinkToken(user.id, user.email, 1);
+    const tokenRecord = await db.createMagicLinkToken(user.id, user.email, 1);
     const result = await mailService.sendMagicLinkEmail(
       user.email,
       user.name,
@@ -383,13 +383,13 @@ export class AuthService {
   /**
    * Verifies magic link token and produces session JWT
    */
-  public static verifyMagicLink(token: string): { success: boolean; user?: User; token?: string; error?: string } {
-    const res = db.consumeToken(token, 'magic_link');
+  public static async verifyMagicLink(token: string): Promise<{ success: boolean; user?: User; token?: string; error?: string }>  {
+    const res = await db.consumeToken(token, 'magic_link');
     if (!res.success || !res.user) {
       return { success: false, error: res.error || 'That sign-in link is invalid or has expired.' };
     }
 
-    const updated = db.updateUser(res.user.id, {
+    const updated = await db.updateUser(res.user.id, {
       is_verified: true,
       verification_status: 'verified',
     }) || res.user;
@@ -405,12 +405,12 @@ export class AuthService {
   /**
    * Direct password reset by email (for self-recovery / instant reset)
    */
-  public static directPasswordReset(
+  public static async directPasswordReset(
     email: string,
     newPassword: string
-  ): { success: boolean; user: User; token: string } {
+  ): Promise<{ success: boolean; user: User; token: string }>  {
     const cleanEmail = email.toLowerCase().trim();
-    const user = db.getUserByEmail(cleanEmail);
+    const user = await db.getUserByEmail(cleanEmail);
     if (!user) {
       const err: any = new Error('No account found with this email.');
       err.code = 'USER_NOT_FOUND';
@@ -420,7 +420,7 @@ export class AuthService {
       throw new Error('The password must be at least 6 characters.');
     }
     const { hash, salt } = this.hashPassword(newPassword);
-    const updated = db.updateUser(user.id, {
+    const updated = await db.updateUser(user.id, {
       password_hash: hash,
       salt,
       is_verified: true,
@@ -441,7 +441,7 @@ export class AuthService {
     baseUrl: string
   ): Promise<{ success: boolean; message: string; code?: string; mailResult: EmailSendResult; verificationUrl?: string }> {
     const cleanEmail = email.toLowerCase().trim();
-    const user = db.getUserByEmail(cleanEmail);
+    const user = await db.getUserByEmail(cleanEmail);
     if (!user) {
       throw new Error('No account found with this email address.');
     }
@@ -450,7 +450,7 @@ export class AuthService {
       throw new Error('Your account was already verified. Sign in to the terminal directly.');
     }
 
-    const tokenRecord = db.createVerificationToken(user.id, user.email, 24);
+    const tokenRecord = await db.createVerificationToken(user.id, user.email, 24);
     const mailResult = await mailService.sendVerificationEmail(
       user.email,
       user.name,
@@ -472,7 +472,7 @@ export class AuthService {
 /**
  * Express Middleware: Require Authentication
  */
-export function requireAuth(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
+export async function requireAuth(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
   const authHeader = req.headers.authorization;
   const queryToken = req.query.token as string | undefined;
   const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : queryToken;
@@ -482,15 +482,15 @@ export function requireAuth(req: AuthenticatedRequest, res: Response, next: Next
     return;
   }
 
-  const payload = AuthService.verifyToken(token);
+  const payload = await AuthService.verifyToken(token);
   if (!payload) {
     res.status(401).json({ error: 'Unauthorized: Invalid or expired token' });
     return;
   }
 
-  let user = db.getUserById(payload.userId);
+  let user = await db.getUserById(payload.userId);
   if (!user && payload.email) {
-    user = db.getUserByEmail(payload.email);
+    user = await db.getUserByEmail(payload.email);
   }
   if (!user) {
     // If the token is cryptographically verified by server secret, auto-recover user so session is permanent
@@ -511,12 +511,12 @@ export function requireAuth(req: AuthenticatedRequest, res: Response, next: Next
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
-    db.insertUser(recoveredUser);
+    await db.insertUser(recoveredUser);
     user = recoveredUser;
   }
 
   if (!user.is_verified || user.verification_status === 'pending_verification') {
-    db.updateUser(user.id, { is_verified: true, verification_status: 'verified' });
+    await db.updateUser(user.id, { is_verified: true, verification_status: 'verified' });
     user.is_verified = true;
     user.verification_status = 'verified';
   }
@@ -541,17 +541,17 @@ export function requireAdmin(req: AuthenticatedRequest, res: Response, next: Nex
 /**
  * Express Middleware: Optional Authentication (sets req.user if valid token provided)
  */
-export function optionalAuth(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
+export async function optionalAuth(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
   const authHeader = req.headers.authorization;
   const queryToken = req.query.token as string | undefined;
   const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : queryToken;
 
   if (token) {
-    const payload = AuthService.verifyToken(token);
+    const payload = await AuthService.verifyToken(token);
     if (payload) {
-      let user = db.getUserById(payload.userId);
+      let user = await db.getUserById(payload.userId);
       if (!user && payload.email) {
-        user = db.getUserByEmail(payload.email);
+        user = await db.getUserByEmail(payload.email);
       }
       if (user) req.user = user;
     }

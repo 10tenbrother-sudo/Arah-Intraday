@@ -5,12 +5,12 @@ import { IntradayMarketMapEngine } from '../intelligence/intradayMarketMap.js';
 export const historyRouter = Router();
 
 // GET all snapshots or filtered by range/date
-historyRouter.get('/snapshots', (req, res) => {
+historyRouter.get('/snapshots', async (req, res) => {
   const limit = parseInt(req.query.limit as string) || 30;
   const range = (req.query.range as string) || 'ALL';
   const customDate = req.query.date as string | undefined;
 
-  const snapshots = db.getDailySnapshots(limit, range, customDate);
+  const snapshots = await db.getDailySnapshots(limit, range, customDate);
   res.json({
     snapshots,
     count: snapshots.length,
@@ -19,8 +19,8 @@ historyRouter.get('/snapshots', (req, res) => {
 });
 
 // GET all available snapshot dates (alias for convenience)
-historyRouter.get('/dates', (req, res) => {
-  const snapshots = db.getDailySnapshots(60, 'ALL');
+historyRouter.get('/dates', async (req, res) => {
+  const snapshots = await db.getDailySnapshots(60, 'ALL');
   const dates = snapshots.map(s => s.date);
   res.json({
     dates,
@@ -30,18 +30,18 @@ historyRouter.get('/dates', (req, res) => {
 });
 
 // GET complete historical day dossier via query param or sub-route
-historyRouter.get('/snapshot', (req, res) => {
+historyRouter.get('/snapshot', async (req, res) => {
   const dateStr = (req.query.date as string) || new Date().toISOString().slice(0, 10);
-  const snapshot = db.getDailySnapshotByDate(dateStr);
+  const snapshot = await db.getDailySnapshotByDate(dateStr);
 
-  const events = db.getAllEvents(100).filter(e => e.first_detected_at.startsWith(dateStr));
-  const economicEvents = db.getEconomicEvents(100).filter(e => e.date_time_utc.startsWith(dateStr));
-  const currencyHistory = db.getCurrencyStrengthHistoryByDate(dateStr);
+  const events = (await db.getAllEvents(100)).filter(e => e.first_detected_at.startsWith(dateStr));
+  const economicEvents = (await db.getEconomicEvents(100)).filter(e => e.date_time_utc.startsWith(dateStr));
+  const currencyHistory = await db.getCurrencyStrengthHistoryByDate(dateStr);
 
   if (!snapshot) {
-    const prices = db.getAllMarketPrices();
-    const strengths = db.getCurrencyStrength();
-    const intradayMap = IntradayMarketMapEngine.getIntradayMarketMap();
+    const prices = await db.getAllMarketPrices();
+    const strengths = await db.getCurrencyStrength();
+    const intradayMap = await IntradayMarketMapEngine.getIntradayMarketMap();
 
     const biases: Record<string, any> = {};
     intradayMap.forEach(item => {
@@ -103,20 +103,20 @@ historyRouter.get('/snapshot', (req, res) => {
 });
 
 // GET complete historical day dossier
-historyRouter.get('/snapshot/:date', (req, res) => {
+historyRouter.get('/snapshot/:date', async (req, res) => {
   const dateStr = req.params.date;
-  const snapshot = db.getDailySnapshotByDate(dateStr);
+  const snapshot = await db.getDailySnapshotByDate(dateStr);
 
   // Also query related events, economic releases, and currency strength for this date
-  const events = db.getAllEvents(100).filter(e => e.first_detected_at.startsWith(dateStr));
-  const economicEvents = db.getEconomicEvents(100).filter(e => e.date_time_utc.startsWith(dateStr));
-  const currencyHistory = db.getCurrencyStrengthHistoryByDate(dateStr);
+  const events = (await db.getAllEvents(100)).filter(e => e.first_detected_at.startsWith(dateStr));
+  const economicEvents = (await db.getEconomicEvents(100)).filter(e => e.date_time_utc.startsWith(dateStr));
+  const currencyHistory = await db.getCurrencyStrengthHistoryByDate(dateStr);
 
   if (!snapshot) {
     // If not snapshot yet for this date, construct a real-time on-the-fly view
-    const prices = db.getAllMarketPrices();
-    const strengths = db.getCurrencyStrength();
-    const intradayMap = IntradayMarketMapEngine.getIntradayMarketMap();
+    const prices = await db.getAllMarketPrices();
+    const strengths = await db.getCurrencyStrength();
+    const intradayMap = await IntradayMarketMapEngine.getIntradayMarketMap();
 
     const biases: Record<string, any> = {};
     intradayMap.forEach(item => {
@@ -186,8 +186,8 @@ historyRouter.get('/snapshot/:date', (req, res) => {
 });
 
 // GET Market Memory Insights (grounded historical memory)
-historyRouter.get('/insights', (req, res) => {
-  const insights = db.getMarketMemoryInsights();
+historyRouter.get('/insights', async (req, res) => {
+  const insights = await db.getMarketMemoryInsights();
   res.json({
     insights,
     count: insights.length,
@@ -196,8 +196,8 @@ historyRouter.get('/insights', (req, res) => {
 });
 
 // GET Currency comparison: Today vs Yesterday vs 3 Days vs 7 Days
-historyRouter.get('/currency-comparison', (req, res) => {
-  const comparisons = db.getHistoricalCurrencyComparison();
+historyRouter.get('/currency-comparison', async (req, res) => {
+  const comparisons = await db.getHistoricalCurrencyComparison();
   res.json({
     comparisons,
     count: comparisons.length,
@@ -207,13 +207,13 @@ historyRouter.get('/currency-comparison', (req, res) => {
 });
 
 // POST generate or refresh snapshot for today/given date
-historyRouter.post('/generate-snapshot', (req, res) => {
+historyRouter.post('/generate-snapshot', async (req, res) => {
   const dateStr = (req.body?.date as string) || new Date().toISOString().slice(0, 10);
-  const intradayMap = IntradayMarketMapEngine.getIntradayMarketMap();
-  const strengths = db.getCurrencyStrength();
-  const comparisons = db.getHistoricalCurrencyComparison();
+  const intradayMap = await IntradayMarketMapEngine.getIntradayMarketMap();
+  const strengths = await db.getCurrencyStrength();
+  const comparisons = await db.getHistoricalCurrencyComparison();
   const compMap = new Map(comparisons.map(c => [c.currency, c]));
-  const insights = db.getMarketMemoryInsights();
+  const insights = await db.getMarketMemoryInsights();
 
   const biases: Record<string, any> = {};
   intradayMap.forEach(item => {
@@ -235,7 +235,7 @@ historyRouter.post('/generate-snapshot', (req, res) => {
     timestamp: new Date().toISOString(),
     title: `Daily Market Snapshot: ${dateStr}`,
     market_biases: biases,
-    currency_strength: strengths.map((s, idx) => {
+    currency_strength: strengths.map(async (s, idx) => {
       const comp = compMap.get(s.currency);
       return {
         currency: s.currency,
@@ -271,7 +271,7 @@ historyRouter.post('/generate-snapshot', (req, res) => {
     created_at: new Date().toISOString(),
   };
 
-  db.saveDailySnapshot(snapshot as any);
+  await db.saveDailySnapshot(snapshot as any);
 
   res.json({
     success: true,

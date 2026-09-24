@@ -3,11 +3,11 @@
  * 
  * Mengintegrasikan 3 Pilar Intraday:
  * 1. FUNDAMENTAL (Katalis rilis makro, inflasi CPI, tensi bank sentral)
- * 2. INTERMARKET (Yields US02Y, US10Y, Spread US-DE/US-JP, DXY vs Session Open, Gold vs Real Yields)
+ * 2. INTERMARKET (US10Y yield, Spread US-DE/US-JP, DXY vs Session Open, Gold vs Real Yields)
  * 3. PRICE ACTION (Posisi harga terhadap range sesi, retest support/resisten, breakout)
  * 
  * Menghasilkan konfluensi yang fleksibel (tidak kaku):
- * - HIGH_CONVICTION (3/3 sepakat)
+ * - HIGH_CONVICTION (3/3 sepakat; descriptive label, not a measured edge)
  * - MODERATE (2/3 sepakat)
  * - CAUTION_TRAP (1/3 anomali / fakeout warning)
  * - NEUTRAL_CHOP (konsolidasi tanpa arah)
@@ -29,11 +29,11 @@ export class ArahMarketEngine {
   /**
    * Menghasilkan sintesis real-time terpadu untuk segmen Arah Market Hari Ini
    */
-  public static getArahMarketToday(): ArahMarketTodayData {
-    const prices = db.getAllMarketPrices();
-    const strengths = db.getCurrencyStrength();
-    const events = db.getAllEvents(30);
-    const macroCalendar = db.getEconomicEvents(30);
+  static async getArahMarketToday(): Promise<ArahMarketTodayData> {
+    const prices = await db.getAllMarketPrices();
+    const strengths = await db.getCurrencyStrength();
+    const events = await db.getAllEvents(30);
+    const macroCalendar = await db.getEconomicEvents(30);
 
     const priceMap = new Map<string, MarketPrice>();
     prices.forEach(p => {
@@ -83,46 +83,38 @@ export class ArahMarketEngine {
     const dxyBiasVsOpen: 'ABOVE_OPEN' | 'BELOW_OPEN' | 'AT_OPEN' =
       dxyChange > 0.05 ? 'ABOVE_OPEN' : dxyChange < -0.05 ? 'BELOW_OPEN' : 'AT_OPEN';
 
-    // Estimasi Yield Spreads & Differential
-    // US10Y - US02Y (Curve Slope: US02Y proksi bergerak sensitif terhadap ekspektasi The Fed)
-    const usCurveSlope = Number((0.14 - (dxyChange * 0.30)).toFixed(2));
-    const us02yEstimated = Number((us10yPrice - usCurveSlope).toFixed(2));
-    const us10yMinusUs02y = usCurveSlope;
+    // Session change of the US 10Y in basis points. The feed reports a percent
+    // change, so the yield moves by price * pct/100 percentage points, which is
+    // price * pct basis points. Downstream spreads used to fabricate a session
+    // delta; they now report this real number.
+    const us10yChangeBps = Number((us10yPrice * us10yChange).toFixed(1));
 
-    // US10Y vs Bund Jerman 10Y (Proksi Jerman ~ 2.45%)
+    // US10Y vs Bund Jerman 10Y (Proksi Jerman ~ 2.42%)
     const bund10yEstimated = 2.42;
     const usDeSpread = Number((us10yPrice - bund10yEstimated).toFixed(2));
 
-    // US10Y vs JGB Jepang 10Y (Proksi Jepang ~ 0.95%)
+    // US10Y vs JGB Jepang 10Y (Proksi Jepang ~ 0.98%)
     const jgb10yEstimated = 0.98;
     const usJpSpread = Number((us10yPrice - jgb10yEstimated).toFixed(2));
 
-    // US 10Y Real Yields (Nominal 10Y - Breakeven 2.25%)
+    // US 10Y minus an assumed 2.25% breakeven. No TIPS or 2Y feed exists, so
+    // this is a nominal-minus-assumed-breakeven proxy, not a traded real yield.
+    // A curve slope is not computable from the available instruments, so none
+    // is synthesised.
     const realYield10y = Number((us10yPrice - 2.25).toFixed(2));
 
+    // Captured once so the basket average below can be compared against it.
+    const usdScoreBaseline = strengthMap.get('USD')?.strength_score ?? 5.0;
+
     const intermarketSpreads: IntermarketSpreadItem[] = [
-      {
-        id: 'spread-us10y-us02y',
-        name: 'US Yield Curve Slope',
-        formulaLabel: 'US10Y - US02Y',
-        currentValue: us10yMinusUs02y,
-        unit: '%',
-        changeSessionBps: dxyChange > 0 ? +3.2 : -2.5,
-        trend: dxyChange > 0 ? 'WIDENING' : 'NARROWING',
-        targetPair: 'US500',
-        interpretation:
-          us10yMinusUs02y > 0
-            ? 'Normal yield curve (gradual disinflation, equity sentiment relatively stable).'
-            : 'Flat/inverted curve (short-term Fed liquidity tightening pressure still active).',
-      },
       {
         id: 'spread-us-de',
         name: 'Transatlantic Rate Differential',
         formulaLabel: 'US10Y - Bund 10Y',
         currentValue: usDeSpread,
         unit: '%',
-        changeSessionBps: us10yChange > 0 ? +4.5 : -3.0,
-        trend: us10yChange > 0 ? 'WIDENING' : 'NARROWING',
+        changeSessionBps: us10yChangeBps,
+        trend: us10yChange > 0 ? 'WIDENING' : us10yChange < 0 ? 'NARROWING' : 'STABLE',
         targetPair: 'EURUSD',
         interpretation:
           usDeSpread > 1.7
@@ -135,8 +127,8 @@ export class ArahMarketEngine {
         formulaLabel: 'US10Y - JGB 10Y',
         currentValue: usJpSpread,
         unit: '%',
-        changeSessionBps: us10yChange > 0 ? +5.1 : -4.2,
-        trend: us10yChange > 0 ? 'WIDENING' : 'NARROWING',
+        changeSessionBps: us10yChangeBps,
+        trend: us10yChange > 0 ? 'WIDENING' : us10yChange < 0 ? 'NARROWING' : 'STABLE',
         targetPair: 'USDJPY',
         interpretation:
           usJpSpread > 3.0
@@ -145,12 +137,12 @@ export class ArahMarketEngine {
       },
       {
         id: 'spread-real-yield',
-        name: 'US 10Y Real Yield (TIPS)',
-        formulaLabel: 'Nominal 10Y - Inflation Exp',
+        name: 'US 10Y Real Yield (nominal less assumed breakeven)',
+        formulaLabel: 'Nominal 10Y - Est. 2.25% Breakeven',
         currentValue: realYield10y,
         unit: '%',
-        changeSessionBps: us10yChange > 0 ? +2.8 : -1.9,
-        trend: us10yChange > 0 ? 'WIDENING' : 'NARROWING',
+        changeSessionBps: us10yChangeBps,
+        trend: us10yChange > 0 ? 'WIDENING' : us10yChange < 0 ? 'NARROWING' : 'STABLE',
         targetPair: 'XAUUSD',
         interpretation:
           realYield10y > 1.9
@@ -345,11 +337,20 @@ export class ArahMarketEngine {
       { pair: 'BTC', name: 'Bitcoin / US Dollar', tv: 'BITSTAMP:BTCUSD' },
     ];
 
+    // The strength feed is a 1-10 scale that tends to sit high, so an absolute
+    // cut such as "> 5.2" never fires and pins a bias permanently. Gold's
+    // fundamental read compares the dollar against the basket instead.
+    const csScores = strengths.map(s => s.strength_score);
+    const csAverage = csScores.length
+      ? Number((csScores.reduce((a, b) => a + b, 0) / csScores.length).toFixed(2))
+      : 5.0;
+    const usdVsBasket = Number((usdScoreBaseline - csAverage).toFixed(2));
+
     const pairs: IntradayPairConfluence[] = targetPairs.map(tp => {
       const pObj = priceMap.get(tp.pair);
       const curPrice = pObj?.price || 0;
       const chg = pObj?.change_24h_pct || 0;
-      const usdScore = strengthMap.get('USD')?.strength_score || 5.0;
+      const usdScore = usdScoreBaseline;
 
       // Cek apakah aset merupakan pasangan mata uang (Forex Pair)
       const isForexPair = ['EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD', 'USDCAD', 'USDCHF', 'NZDUSD'].includes(tp.pair);
@@ -433,8 +434,8 @@ export class ArahMarketEngine {
       let invalidation = 'Penutupan candle H1 di luar level acuan';
 
       if (tp.pair === 'XAUUSD') {
-        fundBias = usdScore > 5.2 ? 'BEARISH' : usdScore < 4.8 ? 'BULLISH' : 'NEUTRAL';
-        fundDriver = 'Fed policy rate expectations and geopolitical hedging premium';
+        fundBias = usdVsBasket > 1.0 ? 'BEARISH' : usdVsBasket < -1.0 ? 'BULLISH' : 'NEUTRAL';
+        fundDriver = 'Fed policy rate expectations and geopolitical hedging premium, read from the dollar versus the currency basket';
         fundScore = fundBias === 'BULLISH' ? 45 : fundBias === 'BEARISH' ? -40 : 0;
 
         interBias = realYield10y > 1.9 ? 'BEARISH' : realYield10y < 1.8 ? 'BULLISH' : (dxyBiasVsOpen === 'BELOW_OPEN' ? 'BULLISH' : 'BEARISH');
@@ -442,7 +443,7 @@ export class ArahMarketEngine {
         interScore = interBias === 'BULLISH' ? 40 : -40;
 
         paBias = chg > 0.2 ? 'BULLISH' : chg < -0.2 ? 'BEARISH' : 'NEUTRAL';
-        paStructure = chg > 0.3 ? 'SESSION_BREAKOUT' : chg < -0.3 ? 'RETEST_SUPPORT' : 'CHOP_RANGE';
+        paStructure = chg > 0.3 ? 'SESSION_BREAKOUT' : chg < -0.3 ? 'RETEST_RESISTANCE' : 'CHOP_RANGE';
         actionableZone = chg > 0 ? 'Pullback to the nearest session demand' : 'Test of the lower session support area';
         paScore = chg > 0.2 ? 35 : chg < -0.2 ? -35 : 0;
 
@@ -484,7 +485,7 @@ export class ArahMarketEngine {
         interScore = interBias === 'BULLISH' ? 35 : -35;
 
         paBias = chg > 0.15 ? 'BULLISH' : chg < -0.15 ? 'BEARISH' : 'NEUTRAL';
-        paStructure = chg > 0.25 ? 'SESSION_BREAKOUT' : chg < -0.25 ? 'RETEST_SUPPORT' : 'CHOP_RANGE';
+        paStructure = chg > 0.25 ? 'SESSION_BREAKOUT' : chg < -0.25 ? 'RETEST_RESISTANCE' : 'CHOP_RANGE';
         actionableZone = chg > 0 ? 'London session demand zone' : 'Supply zone at the upper Asia-London session boundary';
         paScore = chg > 0.15 ? 30 : chg < -0.15 ? -30 : 0;
 
@@ -502,7 +503,7 @@ export class ArahMarketEngine {
         interScore = interBias === 'BULLISH' ? 50 : -40;
 
         paBias = chg > 0.1 ? 'BULLISH' : chg < -0.1 ? 'BEARISH' : 'NEUTRAL';
-        paStructure = chg > 0.2 ? 'SESSION_BREAKOUT' : 'RETEST_RESISTANCE';
+        paStructure = chg > 0.2 ? 'SESSION_BREAKOUT' : chg < -0.2 ? 'RETEST_RESISTANCE' : 'CHOP_RANGE';
         actionableZone = 'Watch the price reaction near the round-number psychological level';
         paScore = chg > 0 ? 35 : -30;
 
@@ -520,7 +521,7 @@ export class ArahMarketEngine {
         interScore = interBias === 'BULLISH' ? 40 : -40;
 
         paBias = isUp ? 'BULLISH' : isDown ? 'BEARISH' : 'NEUTRAL';
-        paStructure = chg > 0.3 ? 'SESSION_BREAKOUT' : chg < -0.3 ? 'RETEST_SUPPORT' : 'CHOP_RANGE';
+        paStructure = chg > 0.3 ? 'SESSION_BREAKOUT' : chg < -0.3 ? 'RETEST_RESISTANCE' : 'CHOP_RANGE';
         actionableZone = isUp ? 'Breakout demand area at the New York session open' : 'Support kunci intraday Nasdaq';
         paScore = isUp ? 35 : isDown ? -35 : 0;
 
@@ -537,16 +538,20 @@ export class ArahMarketEngine {
       } else if (tp.pair === 'US30') {
         const isUp = chg > 0.1;
         const isDown = chg < -0.1;
-        fundBias = us10yMinusUs02y > 0 ? 'BULLISH' : 'NEUTRAL';
-        fundDriver = 'Industrial activity health, bank earnings, and Dow 30 cyclicals';
-        fundScore = isUp ? 40 : isDown ? -40 : 15;
+        // No 2Y or curve instrument is available, so Dow fundamentals cannot be
+        // read from a yield curve here. A broadly strong dollar pressures the
+        // multinational earnings of the index, which is a distinct input from
+        // both the spread pillar below and price action.
+        fundBias = dxyBiasVsOpen === 'ABOVE_OPEN' ? 'BEARISH' : dxyBiasVsOpen === 'BELOW_OPEN' ? 'BULLISH' : 'NEUTRAL';
+        fundDriver = 'Industrial activity health, bank earnings, and Dow 30 multinational earnings against the dollar backdrop';
+        fundScore = fundBias === 'BULLISH' ? 40 : fundBias === 'BEARISH' ? -40 : 15;
 
-        interBias = us10yMinusUs02y > 0 ? 'BULLISH' : 'BEARISH';
-        interSymptom = `Kurva imbal hasil US10Y-US02Y (${us10yMinusUs02y > 0 ? 'steepening' : 'inversi'}) memandu sektor finansial Dow`;
+        interBias = usDeSpread > 1.7 ? 'BEARISH' : 'BULLISH';
+        interSymptom = `Spread US-DE di ${usDeSpread}% memandu ekspektasi suku bunga sektor finansial Dow`;
         interScore = interBias === 'BULLISH' ? 35 : -35;
 
         paBias = isUp ? 'BULLISH' : isDown ? 'BEARISH' : 'NEUTRAL';
-        paStructure = chg > 0.2 ? 'SESSION_BREAKOUT' : chg < -0.2 ? 'RETEST_SUPPORT' : 'CHOP_RANGE';
+        paStructure = chg > 0.2 ? 'SESSION_BREAKOUT' : chg < -0.2 ? 'RETEST_RESISTANCE' : 'CHOP_RANGE';
         actionableZone = 'Dow 30 round-number psychological area and the London-NY session boundary';
         paScore = isUp ? 30 : isDown ? -30 : 0;
 
@@ -564,7 +569,7 @@ export class ArahMarketEngine {
         interScore = interBias === 'BULLISH' ? 35 : interBias === 'BEARISH' ? -35 : 0;
 
         paBias = isUp ? 'BULLISH' : isDown ? 'BEARISH' : 'NEUTRAL';
-        paStructure = chg > 0.25 ? 'SESSION_BREAKOUT' : chg < -0.25 ? 'RETEST_SUPPORT' : 'CHOP_RANGE';
+        paStructure = chg > 0.25 ? 'SESSION_BREAKOUT' : chg < -0.25 ? 'RETEST_RESISTANCE' : 'CHOP_RANGE';
         actionableZone = isUp ? 'Demand zone pembukaan Wall Street' : 'Retest support S&P 500';
         paScore = isUp ? 30 : isDown ? -30 : 0;
 
@@ -582,7 +587,7 @@ export class ArahMarketEngine {
         interScore = interBias === 'BULLISH' ? 35 : -35;
 
         paBias = chg > 0.15 ? 'BULLISH' : chg < -0.15 ? 'BEARISH' : 'NEUTRAL';
-        paStructure = chg > 0.2 ? 'SESSION_BREAKOUT' : chg < -0.2 ? 'RETEST_SUPPORT' : 'CHOP_RANGE';
+        paStructure = chg > 0.2 ? 'SESSION_BREAKOUT' : chg < -0.2 ? 'RETEST_RESISTANCE' : 'CHOP_RANGE';
         actionableZone = 'Upper/lower boundary of the Asia-Pacific session range';
         paScore = chg > 0.15 ? 30 : chg < -0.15 ? -30 : 0;
 
@@ -601,7 +606,7 @@ export class ArahMarketEngine {
         interScore = interBias === 'BULLISH' ? 35 : -35;
 
         paBias = chg > 0.1 ? 'BULLISH' : chg < -0.1 ? 'BEARISH' : 'NEUTRAL';
-        paStructure = chg > 0.2 ? 'SESSION_BREAKOUT' : chg < -0.2 ? 'RETEST_SUPPORT' : 'CHOP_RANGE';
+        paStructure = chg > 0.2 ? 'SESSION_BREAKOUT' : chg < -0.2 ? 'RETEST_RESISTANCE' : 'CHOP_RANGE';
         actionableZone = 'Reaction zone around joint US-Canada macro releases (New York session)';
         paScore = chg > 0.1 ? 30 : chg < -0.1 ? -30 : 0;
 
@@ -620,7 +625,7 @@ export class ArahMarketEngine {
         interScore = interBias === 'BULLISH' ? 40 : interBias === 'BEARISH' ? -40 : 0;
 
         paBias = isUp ? 'BULLISH' : isDown ? 'BEARISH' : 'NEUTRAL';
-        paStructure = chg > 1.0 ? 'SESSION_BREAKOUT' : chg < -1.0 ? 'RETEST_SUPPORT' : 'CHOP_RANGE';
+        paStructure = chg > 1.0 ? 'SESSION_BREAKOUT' : chg < -1.0 ? 'RETEST_RESISTANCE' : 'CHOP_RANGE';
         actionableZone = 'Round-number psychological levels in thousands of dollars and derivatives leverage liquidity';
         paScore = isUp ? 35 : isDown ? -35 : 0;
 
@@ -640,7 +645,7 @@ export class ArahMarketEngine {
         interScore = interBias === 'BULLISH' ? 25 : -25;
 
         paBias = isUp ? 'BULLISH' : isDown ? 'BEARISH' : 'NEUTRAL';
-        paStructure = isUp ? 'SESSION_BREAKOUT' : isDown ? 'RETEST_SUPPORT' : 'CHOP_RANGE';
+        paStructure = isUp ? 'SESSION_BREAKOUT' : isDown ? 'RETEST_RESISTANCE' : 'CHOP_RANGE';
         actionableZone = isUp ? 'Area pullback demand' : 'Area retracement supply';
         paScore = isUp ? 25 : isDown ? -25 : 0;
 
@@ -648,14 +653,14 @@ export class ArahMarketEngine {
         invalidation = 'Price reversal through the session open level';
       }
 
-      // Hitung Confluence Status & Conviction Score
+      // Hitung Confluence Status & Conviction Score.
+      // NOTE: the currency-strength pillar is deliberately NOT voted here. For an
+      // FX pair, `fundBias` is already a function of the same two strength scores
+      // (base minus quote), so voting both counted one signal twice and inflated
+      // "4 pillars" into 3 real ones. CS still acts as a veto via `hasCsDivergence`.
       const biases = [fundBias, interBias, paBias];
-      if (currencyStrengthConfluence && currencyStrengthConfluence.bias !== 'NEUTRAL') {
-        biases.push(currencyStrengthConfluence.bias);
-      }
       const bullishCount = biases.filter(b => b === 'BULLISH').length;
       const bearishCount = biases.filter(b => b === 'BEARISH').length;
-      const totalPillars = biases.length; // 4 untuk Forex dengan bias jelas, 3 untuk lainnya
 
       let directionalBias: IntradayPairConfluence['directionalBias'] = 'NEUTRAL';
       let confluenceStatus: IntradayPairConfluence['confluenceStatus'] = 'NEUTRAL_CHOP';
@@ -663,22 +668,26 @@ export class ArahMarketEngine {
 
       const hasCsDivergence = currencyStrengthConfluence?.alignment === 'DIVERGENCE';
 
-      if (bullishCount === totalPillars) {
+      // Status labels describe how neatly the three independent pillars agree.
+      // They are descriptive, not predictive: a 2026-07..09 backtest over ~106k
+      // forward samples found HIGH_CONVICTION hit 45.0% at +24h against a 51.7%
+      // "always long" benchmark (see AGENTS.md). Do not present these as edge.
+      if (bullishCount === 3) {
         directionalBias = 'STRONG_BULLISH';
         confluenceStatus = 'HIGH_CONVICTION';
-        convictionScore = totalPillars === 4 ? 96 : 92;
-      } else if (bearishCount === totalPillars) {
+        convictionScore = 92;
+      } else if (bearishCount === 3) {
         directionalBias = 'STRONG_BEARISH';
         confluenceStatus = 'HIGH_CONVICTION';
-        convictionScore = totalPillars === 4 ? 96 : 92;
-      } else if (bullishCount >= (totalPillars === 4 ? 3 : 2) && !hasCsDivergence) {
+        convictionScore = 92;
+      } else if (bullishCount === 2 && !hasCsDivergence) {
         directionalBias = 'BULLISH';
-        confluenceStatus = bullishCount === 3 && totalPillars === 4 ? 'HIGH_CONVICTION' : 'MODERATE';
-        convictionScore = bullishCount === 3 && totalPillars === 4 ? 85 : 75;
-      } else if (bearishCount >= (totalPillars === 4 ? 3 : 2) && !hasCsDivergence) {
+        confluenceStatus = 'MODERATE';
+        convictionScore = 75;
+      } else if (bearishCount === 2 && !hasCsDivergence) {
         directionalBias = 'BEARISH';
-        confluenceStatus = bearishCount === 3 && totalPillars === 4 ? 'HIGH_CONVICTION' : 'MODERATE';
-        convictionScore = bearishCount === 3 && totalPillars === 4 ? 85 : 75;
+        confluenceStatus = 'MODERATE';
+        convictionScore = 75;
       } else if (hasCsDivergence || (paBias !== 'NEUTRAL' && (fundBias !== paBias && interBias !== paBias))) {
         // Price action melawan fundamental/intermarket atau melawan Currency Strength
         directionalBias = paBias === 'BULLISH' ? 'BULLISH' : 'BEARISH';
@@ -693,6 +702,12 @@ export class ArahMarketEngine {
 
       const csWarning = hasCsDivergence
         ? `Waspada Divergensi CS: Aksi harga tidak didukung oleh selisih kekuatan mata uang (${currencyStrengthConfluence?.advantageLabel}). Potensi Fakeout!`
+        : undefined;
+
+      // Descriptive-not-predictive disclosure, surfaced in the UI so a neat 3/3
+      // alignment is not read as a validated signal.
+      const alignmentNote = confluenceStatus === 'HIGH_CONVICTION'
+        ? '3/3 alignment. This describes how neatly the pillars agree right now, not a measured edge: backtested over 2026-07..09 the 3/3 bucket hit 45% at +24h versus 51.7% for simply staying long. Treat it as context, not a trigger.'
         : undefined;
 
       return {
@@ -723,7 +738,7 @@ export class ArahMarketEngine {
         intradayPlan: {
           recommendedAction,
           invalidationTrigger: invalidation,
-          warningNote: csWarning || (confluenceStatus === 'CAUTION_TRAP' ? 'Watch for a liquidity trap; the price move is not backed by macro or intermarket pillars.' : undefined),
+          warningNote: csWarning || (confluenceStatus === 'CAUTION_TRAP' ? 'Watch for a liquidity trap; the price move is not backed by macro or intermarket pillars.' : alignmentNote),
         },
         tvSymbol: tp.tv,
       };

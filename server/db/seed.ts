@@ -20,8 +20,8 @@ export function hashPassword(password: string, salt?: string): { hash: string; s
   return { hash, salt: s };
 }
 
-export function seedDatabase(): void {
-  const stats = db.getDatabaseStats();
+export async function seedDatabase(): Promise<void> {
+  const stats = await db.getDatabaseStats();
 
   // 1. Seed Admin & Demo User if not present
   if (stats.users_count === 0) {
@@ -39,7 +39,7 @@ export function seedDatabase(): void {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
-    db.insertUser(adminUser);
+    await db.insertUser(adminUser);
 
     const traderPass = hashPassword('Trader123!');
     const traderUser: User = {
@@ -55,9 +55,9 @@ export function seedDatabase(): void {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
-    db.insertUser(traderUser);
+    await db.insertUser(traderUser);
 
-    db.upsertUserPreferences({
+    await db.upsertUserPreferences({
       user_id: traderUser.id,
       timezone: 'UTC',
       language: 'en',
@@ -69,7 +69,7 @@ export function seedDatabase(): void {
       updated_at: new Date().toISOString(),
     });
 
-    db.addToWatchlist({
+    await db.addToWatchlist({
       id: 'wl_1',
       user_id: traderUser.id,
       symbol: 'XAUUSD',
@@ -77,7 +77,7 @@ export function seedDatabase(): void {
       notes: 'Key safe-haven & inflation hedge',
       added_at: new Date().toISOString(),
     });
-    db.addToWatchlist({
+    await db.addToWatchlist({
       id: 'wl_2',
       user_id: traderUser.id,
       symbol: 'BTC',
@@ -85,7 +85,7 @@ export function seedDatabase(): void {
       notes: 'High beta liquidity gauge',
       added_at: new Date().toISOString(),
     });
-    db.addToWatchlist({
+    await db.addToWatchlist({
       id: 'wl_3',
       user_id: traderUser.id,
       symbol: 'US100',
@@ -96,10 +96,10 @@ export function seedDatabase(): void {
   }
 
   // Ensure danwil028@gmail.com has ADMIN authority
-  const danwil = db.getUserByEmail('danwil028@gmail.com');
+  const danwil = await db.getUserByEmail('danwil028@gmail.com');
   if (danwil) {
     if (danwil.role !== 'ADMIN' || !danwil.is_verified || danwil.plan !== 'INSTITUTIONAL') {
-      db.updateUser(danwil.id, {
+      await db.updateUser(danwil.id, {
         role: 'ADMIN',
         plan: 'INSTITUTIONAL',
         is_verified: true,
@@ -109,7 +109,7 @@ export function seedDatabase(): void {
     }
   } else {
     const adminPass = hashPassword('Trader123!');
-    db.insertUser({
+    await db.insertUser({
       id: 'usr_admin_danwil',
       email: 'danwil028@gmail.com',
       password_hash: adminPass.hash,
@@ -126,10 +126,10 @@ export function seedDatabase(): void {
   }
 
   // Ensure wildanmn1933@gmail.com has ADMIN authority
-  const wildanmn = db.getUserByEmail('wildanmn1933@gmail.com');
+  const wildanmn = await db.getUserByEmail('wildanmn1933@gmail.com');
   if (wildanmn) {
     if (wildanmn.role !== 'ADMIN' || !wildanmn.is_verified || wildanmn.plan !== 'INSTITUTIONAL') {
-      db.updateUser(wildanmn.id, {
+      await db.updateUser(wildanmn.id, {
         role: 'ADMIN',
         plan: 'INSTITUTIONAL',
         is_verified: true,
@@ -139,7 +139,7 @@ export function seedDatabase(): void {
     }
   } else {
     const adminPass = hashPassword('Admin123!@#');
-    db.insertUser({
+    await db.insertUser({
       id: 'usr_admin_wildanmn',
       email: 'wildanmn1933@gmail.com',
       password_hash: adminPass.hash,
@@ -266,7 +266,7 @@ export function seedDatabase(): void {
     ];
 
     for (const s of sources) {
-      db.upsertSource(s);
+      await db.upsertSource(s);
     }
   }
 
@@ -345,10 +345,10 @@ export function seedDatabase(): void {
   ];
 
   for (const c of coreTelegramChannels) {
-    const existing = db.getTelegramChannel(c.handle);
+    const existing = await db.getTelegramChannel(c.handle);
     if (!existing) {
-      db.upsertTelegramChannel(c);
-      db.upsertSource({
+      await db.upsertTelegramChannel(c);
+      await db.upsertSource({
         id: c.source_id,
         name: c.title,
         type: 'TELEGRAM',
@@ -367,9 +367,9 @@ export function seedDatabase(): void {
   }
 
   // Deactivate obsolete / dead channels
-  const deadChannel = db.getTelegramChannel('@SM_News_24');
+  const deadChannel = await db.getTelegramChannel('@SM_News_24');
   if (deadChannel && deadChannel.is_enabled) {
-    db.upsertTelegramChannel({ ...deadChannel, is_enabled: false, status: 'ERROR' });
+    await db.upsertTelegramChannel({ ...deadChannel, is_enabled: false, status: 'ERROR' });
   }
 
   // 4. Market Prices are populated directly via real-time market data service (MarketDataService.updateMarketPrices())
@@ -458,7 +458,7 @@ export function seedDatabase(): void {
         status: 'LIVE',
       },
     ];
-    db.setCurrencyStrength(csList);
+    await db.setCurrencyStrength(csList);
   }
 
   // 6. Macroeconomic Releases & Economic Calendar are populated directly via real-time macro data service (MacroDataService.fetchEconomicCalendar())
@@ -496,9 +496,9 @@ export function seedDatabase(): void {
     ];
 
     for (const t of themes) {
-      db.upsertMarketTheme(t);
+      await db.upsertMarketTheme(t);
     }
   }
 
-  console.log('[DB] Seed completed successfully. Current stats:', db.getDatabaseStats());
+  console.log('[DB] Seed completed successfully. Current stats:', await db.getDatabaseStats());
 }

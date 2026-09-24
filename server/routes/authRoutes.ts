@@ -59,14 +59,14 @@ authRouter.post('/register', async (req, res) => {
   }
 });
 
-authRouter.post('/login', (req, res) => {
+authRouter.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
       res.status(400).json({ error: 'Email address and password are required.' });
       return;
     }
-    const result = AuthService.login(email, password);
+    const result = await AuthService.login(email, password);
     res.json({
       user: {
         id: result.user.id,
@@ -86,12 +86,12 @@ authRouter.post('/login', (req, res) => {
     const baseUrl = getBaseUrl(req);
 
     if (err.code === 'EMAIL_NOT_VERIFIED') {
-      const user = db.getUserByEmail(err.email || cleanEmail);
+      const user = await db.getUserByEmail(err.email || cleanEmail);
       let verificationUrl: string | undefined;
       if (user) {
-        let tokenRecord = db.getLatestPendingVerificationToken(user.id);
+        let tokenRecord = await db.getLatestPendingVerificationToken(user.id);
         if (!tokenRecord) {
-          tokenRecord = db.createVerificationToken(user.id, user.email, 24);
+          tokenRecord = await db.createVerificationToken(user.id, user.email, 24);
         }
         verificationUrl = `${baseUrl}/api/auth/verify-email?token=${encodeURIComponent(tokenRecord.token)}`;
       }
@@ -104,7 +104,7 @@ authRouter.post('/login', (req, res) => {
       return;
     }
 
-    const existingUser = cleanEmail ? db.getUserByEmail(cleanEmail) : null;
+    const existingUser = cleanEmail ? await db.getUserByEmail(cleanEmail) : null;
     res.status(401).json({
       error: err.message || 'Authentication failed. Check your email and password.',
       code: err.code || (existingUser ? 'INVALID_PASSWORD' : 'USER_NOT_FOUND'),
@@ -122,7 +122,7 @@ authRouter.post('/firebase-login', async (req, res) => {
       return;
     }
     const cleanEmail = email.toLowerCase().trim();
-    let user = db.getUserByEmail(cleanEmail);
+    let user = await db.getUserByEmail(cleanEmail);
     if (!user) {
       user = {
         id: uid,
@@ -138,9 +138,9 @@ authRouter.post('/firebase-login', async (req, res) => {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
-      db.insertUser(user);
+      await db.insertUser(user);
     } else {
-      user = db.updateUser(user.id, {
+      user = await db.updateUser(user.id, {
         is_verified: true,
         verification_status: 'verified',
         updated_at: new Date().toISOString(),
@@ -179,7 +179,7 @@ authRouter.post('/firebase-login', async (req, res) => {
  * If opened in browser (Accept: text/html), serves a stylized redirect card.
  * If requested via API/Fetch, responds with JSON.
  */
-authRouter.get('/verify-email', (req, res) => {
+authRouter.get('/verify-email', async (req, res) => {
   const token = req.query.token as string | undefined;
 
   if (!token) {
@@ -191,7 +191,7 @@ authRouter.get('/verify-email', (req, res) => {
     return;
   }
 
-  const result = AuthService.verifyEmail(token);
+  const result = await AuthService.verifyEmail(token);
 
   if (!result.success || !result.user || !result.token) {
     const errorMsg = result.error || 'That verification token is invalid or has expired.';
@@ -226,14 +226,14 @@ authRouter.get('/verify-email', (req, res) => {
 /**
  * Verifies email via POST (programmatic verification from UI)
  */
-authRouter.post('/verify-email', (req, res) => {
+authRouter.post('/verify-email', async (req, res) => {
   const { token } = req.body;
   if (!token) {
     res.status(400).json({ error: 'A verification token is required.' });
     return;
   }
 
-  const result = AuthService.verifyEmail(token);
+  const result = await AuthService.verifyEmail(token);
   if (!result.success || !result.user || !result.token) {
     res.status(400).json({ error: result.error || 'That token is invalid or has expired.' });
     return;
@@ -257,14 +257,14 @@ authRouter.post('/verify-email', (req, res) => {
 /**
  * Checks verification status by email (for auto-polling in UI)
  */
-authRouter.get('/check-status', (req, res) => {
+authRouter.get('/check-status', async (req, res) => {
   const email = ((req.query.email as string) || '').toLowerCase().trim();
   if (!email) {
     res.status(400).json({ error: 'Parameter email wajib disertakan.' });
     return;
   }
 
-  const user = db.getUserByEmail(email);
+  const user = await db.getUserByEmail(email);
   if (!user) {
     res.status(404).json({ error: 'User not found.' });
     return;
@@ -294,14 +294,14 @@ authRouter.get('/check-status', (req, res) => {
 /**
  * Verifies email via 6-digit OTP code (typed directly in UI)
  */
-authRouter.post('/verify-code', (req, res) => {
+authRouter.post('/verify-code', async (req, res) => {
   const { email, code } = req.body;
   if (!email || !code) {
     res.status(400).json({ error: 'Email address and the 6-digit verification code are required.' });
     return;
   }
 
-  const result = AuthService.verifyCode(email, code);
+  const result = await AuthService.verifyCode(email, code);
   if (!result.success || !result.user || !result.token) {
     res.status(400).json({ error: result.error || 'That verification code is incorrect or has expired.' });
     return;
@@ -349,10 +349,10 @@ authRouter.post('/resend-verification', async (req, res) => {
   }
 });
 
-authRouter.get('/me', requireAuth, (req: AuthenticatedRequest, res: Response) => {
+authRouter.get('/me', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   const user = req.user!;
-  const preferences = db.getUserPreferences(user.id);
-  const watchlist = db.getUserWatchlist(user.id);
+  const preferences = await db.getUserPreferences(user.id);
+  const watchlist = await db.getUserWatchlist(user.id);
 
   res.json({
     user: {
@@ -372,17 +372,17 @@ authRouter.get('/me', requireAuth, (req: AuthenticatedRequest, res: Response) =>
   });
 });
 
-authRouter.patch('/profile', requireAuth, (req: AuthenticatedRequest, res: Response) => {
+authRouter.patch('/profile', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   const user = req.user!;
   const { name, avatar_url } = req.body;
-  const updated = db.updateUser(user.id, { name, avatar_url });
+  const updated = await db.updateUser(user.id, { name, avatar_url });
   res.json({ user: updated });
 });
 
-authRouter.put('/preferences', requireAuth, (req: AuthenticatedRequest, res: Response) => {
+authRouter.put('/preferences', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   const user = req.user!;
   const { timezone, language, theme, default_market_view, density, audio_alerts } = req.body;
-  const prefs = db.upsertUserPreferences({
+  const prefs = await db.upsertUserPreferences({
     user_id: user.id,
     timezone: timezone || 'UTC',
     language: language || 'en',
@@ -417,12 +417,12 @@ authRouter.post('/forgot-password', async (req, res) => {
 /**
  * Reset Password using Token or Direct Recovery
  */
-authRouter.post('/reset-password', (req, res) => {
+authRouter.post('/reset-password', async (req, res) => {
   try {
     const { token, newPassword, email, directReset } = req.body;
 
     if (directReset && email && newPassword) {
-      const result = AuthService.directPasswordReset(email, newPassword);
+      const result = await AuthService.directPasswordReset(email, newPassword);
       res.json({
         success: true,
         message: 'Password updated. You have been signed in automatically.',
@@ -437,7 +437,7 @@ authRouter.post('/reset-password', (req, res) => {
       return;
     }
 
-    const result = AuthService.resetPassword(token, newPassword);
+    const result = await AuthService.resetPassword(token, newPassword);
     res.json(result);
   } catch (err: any) {
     res.status(400).json({ error: err.message });
@@ -447,19 +447,19 @@ authRouter.post('/reset-password', (req, res) => {
 /**
  * Password Reset Legacy/Compatibility Endpoint
  */
-authRouter.post('/password-reset', (req, res) => {
+authRouter.post('/password-reset', async (req, res) => {
   try {
     const { token, newPassword, password, email } = req.body;
     const targetPassword = newPassword || password;
 
     if (token && targetPassword) {
-      const result = AuthService.resetPassword(token, targetPassword);
+      const result = await AuthService.resetPassword(token, targetPassword);
       res.json(result);
       return;
     }
 
     if (email && targetPassword) {
-      const result = AuthService.directPasswordReset(email, targetPassword);
+      const result = await AuthService.directPasswordReset(email, targetPassword);
       res.json({
         success: true,
         message: 'Password updated.',
@@ -496,7 +496,7 @@ authRouter.post('/magic-link', async (req, res) => {
 /**
  * Direct Magic Link verification via browser GET
  */
-authRouter.get('/magic-link', (req, res) => {
+authRouter.get('/magic-link', async (req, res) => {
   const token = req.query.token as string | undefined;
   if (!token) {
     if (req.accepts('html')) {
@@ -507,7 +507,7 @@ authRouter.get('/magic-link', (req, res) => {
     return;
   }
 
-  const result = AuthService.verifyMagicLink(token);
+  const result = await AuthService.verifyMagicLink(token);
   if (!result.success || !result.user || !result.token) {
     const errorMsg = result.error || 'That sign-in link is invalid or has expired.';
     if (req.accepts('html')) {
@@ -541,13 +541,13 @@ authRouter.get('/magic-link', (req, res) => {
 /**
  * Magic Link verification via programmatic POST
  */
-authRouter.post('/magic-link-verify', (req, res) => {
+authRouter.post('/magic-link-verify', async (req, res) => {
   const { token } = req.body;
   if (!token) {
     res.status(400).json({ error: 'Token wajib disertakan.' });
     return;
   }
-  const result = AuthService.verifyMagicLink(token);
+  const result = await AuthService.verifyMagicLink(token);
   if (!result.success || !result.user || !result.token) {
     res.status(400).json({ error: result.error || 'That sign-in link is invalid or has expired.' });
     return;
@@ -560,9 +560,9 @@ authRouter.post('/magic-link-verify', (req, res) => {
   });
 });
 
-authRouter.get('/accounts', (req, res) => {
+authRouter.get('/accounts', async (req, res) => {
   try {
-    const users = db.getAllUsers().map(u => ({
+    const users = (await db.getAllUsers()).map(u => ({
       email: u.email,
       name: u.name,
       role: u.role,
@@ -578,11 +578,11 @@ authRouter.get('/accounts', (req, res) => {
 /**
  * Emergency Quick Login / Demo Trader Login
  */
-authRouter.post('/quick-login', (req, res) => {
+authRouter.post('/quick-login', async (req, res) => {
   try {
     const { email } = req.body;
     const cleanEmail = (email || 'danwil028@gmail.com').toLowerCase().trim();
-    let user = db.getUserByEmail(cleanEmail);
+    let user = await db.getUserByEmail(cleanEmail);
     const isAdminAccount = cleanEmail === 'danwil028@gmail.com' || cleanEmail === 'wildanmn1933@gmail.com' || cleanEmail === 'admin@marketintel.pro';
 
     if (!user) {
@@ -602,7 +602,7 @@ authRouter.post('/quick-login', (req, res) => {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
-      db.insertUser(user);
+      await db.insertUser(user);
     } else {
       const updates: any = {};
       if (!user.is_verified) {
@@ -614,7 +614,7 @@ authRouter.post('/quick-login', (req, res) => {
         updates.plan = 'INSTITUTIONAL';
       }
       if (Object.keys(updates).length > 0) {
-        user = db.updateUser(user.id, updates) || user;
+        user = await db.updateUser(user.id, updates) || user;
       }
     }
 

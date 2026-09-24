@@ -86,23 +86,23 @@ export const ArahMarketView: React.FC<ArahMarketViewProps> = React.memo(({
     switch (status) {
       case 'HIGH_CONVICTION':
         return {
-          label: '3/3 HIGH CONVICTION',
+          label: '3/3 ALIGNED',
           badgeClass: 'badge-bullish',
         };
       case 'MODERATE':
         return {
-          label: '2/3 MODERATE',
+          label: '2/3 PARTIAL',
           badgeClass: 'badge-neutral',
         };
       case 'CAUTION_TRAP':
         return {
-          label: '1/3 TRAP RISK',
+          label: '1/3 DIVERGENT',
           badgeClass: 'badge-bearish',
         };
       case 'NEUTRAL_CHOP':
       default:
         return {
-          label: 'CHOPPY FLOW',
+          label: 'MIXED / NO EDGE',
           badgeClass: 'badge-neutral',
         };
     }
@@ -293,10 +293,10 @@ export const ArahMarketView: React.FC<ArahMarketViewProps> = React.memo(({
                 {filter === 'ALL'
                   ? `ALL (${pairs.length})`
                   : filter === 'HIGH_CONVICTION'
-                  ? '3/3 HIGH CONVICTION'
+                  ? '3/3 ALIGNED'
                   : filter === 'MODERATE'
-                  ? '2/3 MODERATE'
-                  : 'CAUTION / TRAP'}
+                  ? '2/3 PARTIAL'
+                  : 'DIVERGENT / MIXED'}
               </button>
             ))}
           </div>
@@ -450,6 +450,19 @@ export const ArahMarketView: React.FC<ArahMarketViewProps> = React.memo(({
                         {p.intradayPlan.recommendedAction.replace(/_/g, ' ')}
                       </span>
                     </div>
+
+                    <div className="mb-2 p-2 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)]">
+                      <span className="text-[9.5px] text-[var(--text-muted)] block">INVALIDATION</span>
+                      <span className="text-[10.5px] text-[var(--text-secondary)] font-sans leading-snug block">
+                        {p.intradayPlan.invalidationTrigger}
+                      </span>
+                    </div>
+
+                    {p.intradayPlan.warningNote && (
+                      <div className="mb-2 p-2 rounded border border-[var(--warning-border)] bg-[var(--warning-bg)] text-[10px] text-[var(--warning-strong)] font-sans leading-snug">
+                        {p.intradayPlan.warningNote}
+                      </div>
+                    )}
 
                     <button
                       onClick={() => onOpenChart(p.tvSymbol || p.pair)}

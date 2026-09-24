@@ -10,9 +10,9 @@ import { EntitlementService } from '../auth/entitlementService.js';
 export const intelligenceRouter = Router();
 
 // GET Segment: ARAH MARKET HARI INI (Intraday Triple-Confluence Synthesis)
-intelligenceRouter.get('/arah-market', (req, res) => {
+intelligenceRouter.get('/arah-market', async (req, res) => {
   try {
-    const data = ArahMarketEngine.getArahMarketToday();
+    const data = await ArahMarketEngine.getArahMarketToday();
     res.json({
       success: true,
       data,
@@ -24,8 +24,8 @@ intelligenceRouter.get('/arah-market', (req, res) => {
 });
 
 // GET Today's Intraday Market Map (for 13 core assets)
-intelligenceRouter.get('/intraday-map', (req, res) => {
-  const map = IntradayMarketMapEngine.getIntradayMarketMap();
+intelligenceRouter.get('/intraday-map', async (req, res) => {
+  const map = await IntradayMarketMapEngine.getIntradayMarketMap();
   res.json({
     market_map: map,
     count: map.length,
@@ -34,8 +34,8 @@ intelligenceRouter.get('/intraday-map', (req, res) => {
 });
 
 // GET active market themes
-intelligenceRouter.get('/themes', (req, res) => {
-  const rawThemes = db.getMarketThemes();
+intelligenceRouter.get('/themes', async (req, res) => {
+  const rawThemes = await db.getMarketThemes();
   const themes = rawThemes.map(t => ({
     ...t,
     driver: (t as any).driver || 'Macro Catalyst',
@@ -64,8 +64,8 @@ intelligenceRouter.get('/central-bank-speeches', (req, res) => {
 
 // GET 8-Currency Macro Context (USD, EUR, GBP, JPY, AUD, NZD, CAD, CHF)
 // Inflation + Employment + Growth + PMI + Interest Rate + Tone + Strength -> STRONG / WEAK / MIXED
-intelligenceRouter.get('/macro-context', (req, res) => {
-  const contexts = MacroIntelligenceEngine.getCurrencyMacroContext();
+intelligenceRouter.get('/macro-context', async (req, res) => {
+  const contexts = await MacroIntelligenceEngine.getCurrencyMacroContext();
   res.json({
     contexts,
     count: contexts.length,
@@ -75,8 +75,8 @@ intelligenceRouter.get('/macro-context', (req, res) => {
 
 // GET Unified Multimodal Market Context
 // Merging NEWS + MACRO + CENTRAL BANK + CURRENCY STRENGTH + MARKET DATA
-intelligenceRouter.get('/unified-context', (req, res) => {
-  const unified = MacroIntelligenceEngine.getUnifiedMarketContext();
+intelligenceRouter.get('/unified-context', async (req, res) => {
+  const unified = await MacroIntelligenceEngine.getUnifiedMarketContext();
   res.json({
     context: unified,
     timestamp: new Date().toISOString(),
@@ -84,10 +84,10 @@ intelligenceRouter.get('/unified-context', (req, res) => {
 });
 
 // GET market impacts
-intelligenceRouter.get('/impact', (req, res) => {
-  const events = db.getAllEvents(20);
-  const prices = db.getAllMarketPrices();
-  const strength = db.getCurrencyStrength();
+intelligenceRouter.get('/impact', async (req, res) => {
+  const events = await db.getAllEvents(20);
+  const prices = await db.getAllMarketPrices();
+  const strength = await db.getCurrencyStrength();
 
   // Aggregate high-impact cross correlations
   const highImpactEvents = events.filter(e => e.impact_level === 'CRITICAL' || e.impact_level === 'HIGH');
@@ -148,7 +148,7 @@ intelligenceRouter.get('/relationships', (req, res) => {
 
 // GET latest AI market overview
 intelligenceRouter.get('/ai', async (req, res) => {
-  let overview = db.getLatestMarketOverviewAnalysis();
+  let overview = await db.getLatestMarketOverviewAnalysis();
   if (!overview) {
     try {
       overview = await generateMacroMarketOverview();

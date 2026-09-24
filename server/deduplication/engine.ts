@@ -332,10 +332,10 @@ export class DeduplicationEngine {
    * Attaches an incoming news item to an existing event as an additional source,
    * maintaining ONE SOURCE OF TRUTH.
    */
-  public static linkNewsToEvent(news: NewsItem, event: MarketEvent, matchReason: string, score: number): void {
+  static async linkNewsToEvent(news: NewsItem, event: MarketEvent, matchReason: string, score: number): Promise<void> {
     news.event_id = event.id;
     news.status = 'EVENT_LINKED';
-    db.updateNewsItem(news.id, { event_id: event.id, status: 'EVENT_LINKED' });
+    await db.updateNewsItem(news.id, { event_id: event.id, status: 'EVENT_LINKED' });
 
     const sourceRecord: EventSource = {
       id: `es_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
@@ -351,7 +351,7 @@ export class DeduplicationEngine {
       similarity_score: score,
       created_at: new Date().toISOString(),
     };
-    db.addEventSource(sourceRecord);
+    await db.addEventSource(sourceRecord);
 
     // Update parent event source count and source names
     const existingNames = new Set(event.source_names);
@@ -361,7 +361,7 @@ export class DeduplicationEngine {
     const mergedAssets = new Set([...event.affected_assets, ...news.affected_assets]);
     const mergedCurrs = new Set([...event.affected_currencies, ...news.affected_currencies]);
 
-    db.updateEvent(event.id, {
+    await db.updateEvent(event.id, {
       source_count: event.source_count + 1,
       source_names: Array.from(existingNames),
       affected_assets: Array.from(mergedAssets),
