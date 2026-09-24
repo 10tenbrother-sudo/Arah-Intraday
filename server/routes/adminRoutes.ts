@@ -506,7 +506,7 @@ adminRouter.delete('/users/:id', async (req: AuthenticatedRequest, res: Response
 
   res.json({
     success: true,
-    message: `Akun user ${email} berhasil dihapus permanen beserta seluruh preferensi & watchlist-nya.`,
+    message: `Account ${email} was permanently deleted along with its preferences and watchlist.`,
     deleted_id: id,
   });
 });

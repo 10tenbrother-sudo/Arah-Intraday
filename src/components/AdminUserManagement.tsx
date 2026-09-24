@@ -974,7 +974,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
                 <div className="p-3.5 rounded-lg bg-[var(--bullish-bg)] border border-[var(--bullish-border)] space-y-2">
                   <div className="text-[var(--bullish)] font-semibold flex items-center gap-1.5">
                     <CheckCircle2 className="w-4 h-4 text-[var(--bullish)]" />
-                    <span>Password Baru Berhasil Disimpan:</span>
+                    <span>New password saved:</span>
                   </div>
                   <div className="flex items-center justify-between bg-[var(--bg-canvas)] p-2 rounded border border-[var(--bullish-border)]">
                     <span className="text-sm font-mono font-bold text-[var(--bullish)] select-all">

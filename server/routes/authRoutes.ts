@@ -574,7 +574,7 @@ authRouter.get('/accounts', requireAdmin, async (_req, res) => {
  */
 authRouter.post('/quick-login', credentialLimiter, (_req, res) => {
   res.status(410).json({
-    error: 'Endpoint ini sudah dinonaktifkan. Silakan masuk memakai email dan password, atau Google Sign-In.',
+    error: 'This endpoint is disabled. Sign in with your email and password, or use Google Sign-In.',
     code: 'ENDPOINT_REMOVED',
   });
 });

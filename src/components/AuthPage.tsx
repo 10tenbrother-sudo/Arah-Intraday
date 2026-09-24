@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Layers,
   Lock,
   Mail,
   User as UserIcon,
@@ -482,14 +481,19 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 
         <div
           onClick={() => onNavigate('/')}
-          className="flex items-center gap-2 cursor-pointer"
+          className="flex items-center gap-2.5 cursor-pointer"
         >
-          <div className="w-6 h-6 rounded bg-[var(--accent)] flex items-center justify-center text-white font-bold text-xs">
-            <Layers className="w-3.5 h-3.5 stroke-[2.5]" />
+          <div className="w-6 h-6 rounded flex items-center justify-center font-mono font-bold text-xs bg-[var(--accent)] text-white">
+            AM
           </div>
-          <span className="font-mono text-xs font-bold tracking-wider text-[var(--text-primary)]">
-            ARAHMARKET <span className="text-[var(--accent)]">TERMINAL</span>
-          </span>
+          <div className="leading-tight text-left">
+            <div className="font-display font-semibold text-[13px] tracking-tight text-[var(--text-primary)]">
+              Arah Market
+            </div>
+            <div className="metadata-label text-[9px] text-[var(--text-muted)]">
+              Terminal
+            </div>
+          </div>
         </div>
 
         <div className="hidden sm:flex items-center">
@@ -510,7 +514,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
               <div className="w-12 h-12 rounded-md bg-[var(--accent-subtle)]/80 border border-[var(--accent)]/80 flex items-center justify-center mx-auto text-[var(--accent)] shadow-inner">
                 <RefreshCw className="w-6 h-6 animate-spin" />
               </div>
-              <h2 className="text-lg font-bold text-[var(--text-primary)]">Validating access link...</h2>
+              <h2 className="section-title text-lg text-[var(--text-primary)]">Validating access link...</h2>
               <p className="text-xs text-[var(--text-secondary)] font-sans">
                 Please wait while the system confirms your account authentication token.
               </p>
@@ -571,7 +575,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                     <Clock className="w-2.5 h-2.5 text-white stroke-[3]" />
                   </span>
                 </div>
-                <h1 className="text-xl font-bold font-mono tracking-tight text-[var(--text-primary)]">
+                <h1 className="headline-h2 text-[var(--text-primary)]">
                   Activate your email
                 </h1>
                 <p className="text-xs text-[var(--text-secondary)] font-sans leading-relaxed">
@@ -590,7 +594,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                     Activate with a 6-digit email code
                   </span>
                   <span className="text-[10px] font-mono text-[var(--accent)]/80 bg-[var(--accent-subtle)] px-2 py-0.5 rounded border border-[var(--accent)]">
-                    Bebas Hambatan
+                    Frictionless
                   </span>
                 </div>
 
@@ -656,7 +660,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                 <div className="w-11 h-11 rounded-md bg-[var(--accent-subtle)] border border-[var(--accent)]/80 flex items-center justify-center mx-auto text-[var(--accent)] mb-3 shadow-inner">
                   <KeyRound className="w-5 h-5" />
                 </div>
-                <h1 className="text-xl font-bold font-mono tracking-tight text-[var(--text-primary)]">
+                <h1 className="headline-h2 text-[var(--text-primary)]">
                   Forgot password
                 </h1>
                 <p className="text-xs text-[var(--text-secondary)] font-sans leading-relaxed">
@@ -762,7 +766,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                 <div className="w-11 h-11 rounded-md bg-[var(--accent-subtle)] border border-[var(--accent)]/80 flex items-center justify-center mx-auto text-[var(--accent)] mb-3 shadow-inner">
                   <Lock className="w-5 h-5" />
                 </div>
-                <h1 className="text-xl font-bold font-mono tracking-tight text-[var(--text-primary)]">
+                <h1 className="headline-h2 text-[var(--text-primary)]">
                   Create new password
                 </h1>
                 <p className="text-xs text-[var(--text-secondary)] font-sans leading-relaxed">
@@ -866,7 +870,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                 <div className="w-11 h-11 rounded-md bg-[var(--accent-subtle)] border border-[var(--accent)]/80 flex items-center justify-center mx-auto text-[var(--accent)] mb-3 shadow-inner">
                   <Lock className="w-5 h-5" />
                 </div>
-                <h1 className="text-xl font-bold font-mono tracking-tight text-[var(--text-primary)]">
+                <h1 className="headline-h2 text-[var(--text-primary)]">
                   {isRegister ? 'Create a trader account' : 'Terminal authentication'}
                 </h1>
                 <p className="text-xs text-[var(--text-secondary)] font-sans leading-relaxed">
@@ -1171,7 +1175,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 
       {/* Bottom Disclaimer */}
       <footer className="py-4 text-center text-[10px] text-[var(--text-muted)] font-mono border-t border-[var(--border-subtle)]">
-        ARAHMARKET INTELLIGENCE TERMINAL • SECURE ENCRYPTED VERIFICATION GATEWAY
+        ARAH MARKET • MACRO & FX INTELLIGENCE TERMINAL
       </footer>
     </div>
   );

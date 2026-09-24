@@ -573,7 +573,7 @@ The ArahMarket team
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Tautan Masuk ArahMarket</title>
+  <title>Sign in to ArahMarket</title>
   <style>
     body { margin: 0; padding: 0; background-color: #020617; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #f8fafc; }
     .wrapper { max-width: 560px; margin: 40px auto; background-color: #0f172a; border: 1px solid #1e293b; border-radius: 16px; overflow: hidden; }

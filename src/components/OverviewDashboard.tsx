@@ -249,8 +249,13 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
       {/* 2. 4-COLUMN STRUCTURAL KPI TELEMETRY GRID               */}
       {/* ======================================================== */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {/* KPI 1: Market Regime */}
-        <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3.5 flex flex-col justify-between gap-2">
+        {/* KPI 1: Market Regime — derived from per-asset bias; the detail lives in the Bias view */}
+        <button
+          type="button"
+          onClick={() => onNavigateTab('arah_market')}
+          title="Derived from per-asset bias across core assets — open Market Bias for the full read"
+          className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3.5 flex flex-col justify-between gap-2 text-left transition hover:border-[var(--border-strong)] cursor-pointer"
+        >
           <div className="flex items-center justify-between">
             <span className="metadata-label text-[10px] text-[var(--text-muted)]">
               Regime
@@ -270,10 +275,11 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
           <div className="text-[15px] font-semibold text-[var(--text-primary)]">
             {kpiStats.overallRegime}
           </div>
-          <div className="text-[11px] text-[var(--text-muted)]">
-            Distribution across 13 core tracking assets
+          <div className="text-[11px] text-[var(--text-muted)] flex items-center gap-1">
+            <span>Distribution across 13 core tracking assets</span>
+            <ChevronRight className="w-3 h-3 shrink-0" />
           </div>
-        </div>
+        </button>
 
         {/* KPI 2: Currency Divergence */}
         <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3.5 flex flex-col justify-between gap-2">
