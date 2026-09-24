@@ -594,10 +594,10 @@ function renderVerificationResultHtml(success: boolean, message: string, token?:
 
   return `
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>${success ? 'Email Terverifikasi' : 'Verification failed'} • ArahMarket</title>
+  <title>${success ? 'Email verified' : 'Verification failed'} • ArahMarket</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {

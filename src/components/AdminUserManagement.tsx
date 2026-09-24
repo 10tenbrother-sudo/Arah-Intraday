@@ -434,8 +434,8 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
             className="bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-lg px-2.5 py-1.5 text-xs text-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent)]"
           >
             <option value="ALL">All verification</option>
-            <option value="true">Verified Saja</option>
-            <option value="false">Unverified Saja</option>
+            <option value="true">Verified only</option>
+            <option value="false">Unverified only</option>
           </select>
 
           {/* Refresh button */}
