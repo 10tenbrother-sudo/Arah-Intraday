@@ -118,7 +118,7 @@ export const AdminSmtpTester: React.FC<AdminSmtpTesterProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-base font-bold font-mono tracking-tight text-[var(--text-primary)]">
-                Verifikasi & Tes Koneksi SMTP Server
+                SMTP server verification and connection test
               </h2>
               {config && (
                 <span
@@ -236,7 +236,7 @@ export const AdminSmtpTester: React.FC<AdminSmtpTesterProps> = ({
             )}
           </div>
           <div className="text-[var(--text-primary)] font-bold truncate">
-            {config?.userMasked || <span className="text-[var(--text-muted)] font-normal">Belum ditentukan</span>}
+            {config?.userMasked || <span className="text-[var(--text-muted)] font-normal">Not set</span>}
           </div>
           <div className="text-[10px] text-[var(--text-secondary)] truncate">
             {config?.hasUser ? 'Email account credentials configured' : 'SMTP_USER variable is empty'}
@@ -258,9 +258,9 @@ export const AdminSmtpTester: React.FC<AdminSmtpTesterProps> = ({
           </div>
           <div className="text-[var(--text-primary)] font-bold">
             {config?.hasPass ? (
-              <span className="text-[var(--bullish)]">●●●●●●●● Terisi</span>
+              <span className="text-[var(--bullish)]">●●●●●●●● Set</span>
             ) : (
-              <span className="text-[var(--bearish)]">Belum Terisi</span>
+              <span className="text-[var(--bearish)]">Not set</span>
             )}
           </div>
           <div className="text-[10px] text-[var(--text-secondary)]">
@@ -304,7 +304,7 @@ export const AdminSmtpTester: React.FC<AdminSmtpTesterProps> = ({
         <div className="flex items-center justify-between">
           <h3 className="text-xs font-mono font-bold text-[var(--text-primary)] uppercase tracking-wider flex items-center gap-2">
             <Send className="w-4 h-4 text-[var(--accent)]" />
-            <span>Eksekusi Uji Koneksi & Verifikasi Pengiriman</span>
+            <span>Run connection test and verify delivery</span>
           </h3>
           {lastSent && (
             <div className="text-[11px] font-mono text-[var(--text-muted)] hidden sm:flex items-center gap-1.5">
@@ -353,12 +353,12 @@ export const AdminSmtpTester: React.FC<AdminSmtpTesterProps> = ({
                 {testing ? (
                   <>
                     <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    <span>Menguji Koneksi...</span>
+                    <span>Testing connection...</span>
                   </>
                 ) : (
                   <>
                     <Send className="w-3.5 h-3.5" />
-                    <span>Uji Koneksi SMTP</span>
+                    <span>Test SMTP connection</span>
                   </>
                 )}
               </button>

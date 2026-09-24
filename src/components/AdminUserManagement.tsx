@@ -200,8 +200,8 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
       const res = await api.createAdminUser(createForm);
       if (res.success) {
         showToast(
-          `User ${res.user.email} berhasil didaftarkan.` +
-          (res.initial_password ? ` Password sementara: ${res.initial_password}` : '')
+          `User ${res.user.email} created.` +
+          (res.initial_password ? ` Temporary password: ${res.initial_password}` : '')
         );
         setShowCreateModal(false);
         setCreateForm({
@@ -410,7 +410,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
             onChange={e => setRoleFilter(e.target.value as any)}
             className="bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-lg px-2.5 py-1.5 text-xs text-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent)]"
           >
-            <option value="ALL">Semua Role</option>
+            <option value="ALL">All roles</option>
             <option value="ADMIN">ADMIN</option>
             <option value="USER">USER</option>
           </select>
@@ -421,7 +421,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
             onChange={e => setPlanFilter(e.target.value as any)}
             className="bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-lg px-2.5 py-1.5 text-xs text-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent)]"
           >
-            <option value="ALL">Semua Tier</option>
+            <option value="ALL">All tiers</option>
             <option value="FREE">FREE</option>
             <option value="PRO">PRO</option>
             <option value="INSTITUTIONAL">INSTITUTIONAL</option>
@@ -433,7 +433,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
             onChange={e => setVerifiedFilter(e.target.value as any)}
             className="bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-lg px-2.5 py-1.5 text-xs text-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent)]"
           >
-            <option value="ALL">Semua Verifikasi</option>
+            <option value="ALL">All verification</option>
             <option value="true">Verified Saja</option>
             <option value="false">Unverified Saja</option>
           </select>
@@ -456,7 +456,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
             id="admin-test-smtp-button"
           >
             <Mail className="w-3.5 h-3.5 text-[var(--accent)]" />
-            <span>Tes SMTP</span>
+            <span>SMTP test</span>
           </button>
 
           {/* Add User Button */}
@@ -479,8 +479,8 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
                 <th className="p-3 font-semibold">User & Identitas</th>
                 <th className="p-3 font-semibold">Role Authority</th>
                 <th className="p-3 font-semibold">Subscription Tier</th>
-                <th className="p-3 font-semibold">Status Akun</th>
-                <th className="p-3 font-semibold">Email Verifikasi</th>
+                <th className="p-3 font-semibold">Account status</th>
+                <th className="p-3 font-semibold">Verification email</th>
                 <th className="p-3 font-semibold text-right">Manage access</th>
               </tr>
             </thead>
@@ -589,7 +589,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
                               className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[var(--warning-bg)] text-[var(--warning)] border border-[var(--warning-border)] text-[10px] hover:bg-[var(--warning-bg)] transition cursor-pointer"
                             >
                               <AlertTriangle className="w-3 h-3 text-[var(--warning)]" />
-                              <span>Verifikasi Sekarang</span>
+                              <span>Verify now</span>
                             </button>
                           )}
                         </div>
@@ -691,7 +691,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
 
               <div>
                 <label className="block text-[var(--text-secondary)] mb-1">
-                  Password (Opsional - otomatis dibuat bila kosong)
+                  Password (optional — generated when left blank)
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -763,7 +763,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
                   className="px-4 py-1.5 bg-[var(--accent)] hover:bg-[var(--accent)] text-white font-semibold rounded flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50"
                 >
                   {loading && <RefreshCw className="w-3 h-3 animate-spin" />}
-                  <span>Buat Akun</span>
+                  <span>Create account</span>
                 </button>
               </div>
             </form>
@@ -902,7 +902,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
                 <h3 className="text-sm font-mono font-bold text-[var(--text-primary)] uppercase tracking-wider">
                   HAPUS AKUN USER
                 </h3>
-                <p className="text-[11px] font-mono text-[var(--bearish)]">Tindakan ini tidak dapat dibatalkan</p>
+                <p className="text-[11px] font-mono text-[var(--bearish)]">This action cannot be undone</p>
               </div>
             </div>
 
@@ -966,7 +966,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
 
             <div className="font-mono text-xs space-y-3">
               <div className="p-2.5 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
-                <span className="text-[var(--text-secondary)]">Target Akun: </span>
+                <span className="text-[var(--text-secondary)]">Target account: </span>
                 <span className="text-[var(--text-primary)] font-bold">{passwordResetUser.email}</span>
               </div>
 
