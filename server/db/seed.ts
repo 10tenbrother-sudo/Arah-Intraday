@@ -25,10 +25,17 @@ export async function seedDatabase(): Promise<void> {
 
   // 1. Seed Admin & Demo User if not present
   if (stats.users_count === 0) {
-    const adminPass = hashPassword('Admin123!@#');
+    // The bootstrap admin password must come from the environment. A password
+    // baked into the repository is public, so without ADMIN_INITIAL_PASSWORD we
+    // create a random one and print it once instead of shipping a known secret.
+    const configuredAdminPassword = process.env.ADMIN_INITIAL_PASSWORD;
+    const generatedPassword = !configuredAdminPassword;
+    const adminPassword = configuredAdminPassword || crypto.randomBytes(18).toString('base64url');
+    const adminPass = hashPassword(adminPassword);
+
     const adminUser: User = {
       id: 'usr_admin_001',
-      email: 'admin@marketintel.pro',
+      email: process.env.ADMIN_EMAIL || 'admin@marketintel.pro',
       password_hash: adminPass.hash,
       salt: adminPass.salt,
       name: 'Chief Market Officer',
@@ -40,6 +47,14 @@ export async function seedDatabase(): Promise<void> {
       updated_at: new Date().toISOString(),
     };
     await db.insertUser(adminUser);
+
+    if (generatedPassword) {
+      console.warn(
+        `[Seed] Bootstrap admin created: ${adminUser.email}\n` +
+        `[Seed] Generated password (shown once): ${adminPassword}\n` +
+        `[Seed] Set ADMIN_INITIAL_PASSWORD to control this value.`
+      );
+    }
 
     const traderPass = hashPassword('Trader123!');
     const traderUser: User = {
@@ -95,64 +110,33 @@ export async function seedDatabase(): Promise<void> {
     });
   }
 
-  // Ensure danwil028@gmail.com has ADMIN authority
-  const danwil = await db.getUserByEmail('danwil028@gmail.com');
-  if (danwil) {
-    if (danwil.role !== 'ADMIN' || !danwil.is_verified || danwil.plan !== 'INSTITUTIONAL') {
-      await db.updateUser(danwil.id, {
-        role: 'ADMIN',
-        plan: 'INSTITUTIONAL',
-        is_verified: true,
-        verification_status: 'verified',
-        subscription_status: 'active',
-      });
-    }
-  } else {
-    const adminPass = hashPassword('Trader123!');
-    await db.insertUser({
-      id: 'usr_admin_danwil',
-      email: 'danwil028@gmail.com',
-      password_hash: adminPass.hash,
-      salt: adminPass.salt,
-      name: 'Danwil Administrator',
-      role: 'ADMIN',
-      is_verified: true,
-      verification_status: 'verified',
-      plan: 'INSTITUTIONAL',
-      subscription_status: 'active',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    });
-  }
+  // Grant ADMIN authority only to addresses listed in ADMIN_EMAILS. Previously
+  // three hardcoded addresses were promoted on every boot, and a missing account
+  // was created with a known password — anyone able to register one of those
+  // addresses could claim admin. Bootstrap is now opt-in and credential-free:
+  // an existing account is promoted, never created.
+  const adminEmails = (process.env.ADMIN_EMAILS || '')
+    .split(',')
+    .map(e => e.trim().toLowerCase())
+    .filter(Boolean);
 
-  // Ensure wildanmn1933@gmail.com has ADMIN authority
-  const wildanmn = await db.getUserByEmail('wildanmn1933@gmail.com');
-  if (wildanmn) {
-    if (wildanmn.role !== 'ADMIN' || !wildanmn.is_verified || wildanmn.plan !== 'INSTITUTIONAL') {
-      await db.updateUser(wildanmn.id, {
+  for (const adminEmail of adminEmails) {
+    const existing = await db.getUserByEmail(adminEmail);
+    if (!existing) {
+      console.warn(
+        `[Seed] ADMIN_EMAILS lists ${adminEmail} but no such account exists. ` +
+        'Register it first, then restart to promote it.'
+      );
+      continue;
+    }
+    if (existing.role !== 'ADMIN') {
+      await db.updateUser(existing.id, {
         role: 'ADMIN',
         plan: 'INSTITUTIONAL',
-        is_verified: true,
-        verification_status: 'verified',
         subscription_status: 'active',
       });
+      console.log(`[Seed] Promoted ${adminEmail} to ADMIN.`);
     }
-  } else {
-    const adminPass = hashPassword('Admin123!@#');
-    await db.insertUser({
-      id: 'usr_admin_wildanmn',
-      email: 'wildanmn1933@gmail.com',
-      password_hash: adminPass.hash,
-      salt: adminPass.salt,
-      name: 'Wildan Administrator',
-      role: 'ADMIN',
-      is_verified: true,
-      verification_status: 'verified',
-      plan: 'INSTITUTIONAL',
-      subscription_status: 'active',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    });
   }
 
   // 2. Seed Sources

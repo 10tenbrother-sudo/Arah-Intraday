@@ -17,14 +17,22 @@ const PBKDF2_DIGEST = 'sha512';
 function resolveSecret(): string {
   const fromEnv = process.env.APP_SECRET;
   if (fromEnv && fromEnv.length >= 32) return fromEnv;
+
   if (process.env.NODE_ENV === 'production') {
     throw new Error(
       '[FATAL] APP_SECRET tidak diset (atau kurang dari 32 karakter). ' +
       'Set di environment variable sebelum menjalankan production.'
     );
   }
-  console.warn('[Auth] APP_SECRET belum diset — memakai secret sementara khusus development.');
-  return 'dev-only-insecure-secret-do-not-use-in-production';
+
+  // A fixed development fallback would let anyone forge a token for this
+  // instance, since the constant is published in the repository. Mint a random
+  // one instead: sessions stop surviving a restart, which is the safe trade.
+  console.warn(
+    '[Auth] APP_SECRET belum diset — memakai secret acak per-proses. ' +
+    'Sesi akan hangus setiap server restart. Set APP_SECRET untuk sesi persisten.'
+  );
+  return crypto.randomBytes(48).toString('hex');
 }
 
 const JWT_SECRET = resolveSecret();
@@ -34,6 +42,19 @@ export interface AuthTokenPayload {
   email: string;
   role: UserRole;
   exp: number;
+}
+
+/** User shape that is safe to send to a client: no credential material. */
+export function toPublicUser(user: User) {
+  const {
+    password_hash: _passwordHash,
+    salt: _salt,
+    last_order_id: _lastOrderId,
+    payment_method: _paymentMethod,
+    billing_cycle: _billingCycle,
+    ...safe
+  } = user;
+  return safe;
 }
 
 export interface AuthenticatedRequest extends Request {
@@ -150,18 +171,20 @@ export class AuthService {
 
     const { hash, salt } = this.hashPassword(password);
     const userId = `usr_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
-    const isAdminAccount = cleanEmail === 'danwil028@gmail.com' || cleanEmail === 'wildanmn1933@gmail.com' || cleanEmail === 'admin@marketintel.pro';
 
+    // Registration never grants elevated privileges: the email address is
+    // self-asserted and unverified at this point. Admin rights are assigned
+    // through the admin API only.
     const newUser: User = {
       id: userId,
       email: cleanEmail,
       password_hash: hash,
       salt,
       name: name.trim() || cleanEmail.split('@')[0] || 'Trader',
-      role: isAdminAccount ? 'ADMIN' : 'USER',
+      role: 'USER',
       is_verified: false,
       verification_status: 'pending_verification',
-      plan: isAdminAccount ? 'INSTITUTIONAL' : 'FREE',
+      plan: 'FREE',
       subscription_status: 'active',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -403,37 +426,6 @@ export class AuthService {
   }
 
   /**
-   * Direct password reset by email (for self-recovery / instant reset)
-   */
-  public static async directPasswordReset(
-    email: string,
-    newPassword: string
-  ): Promise<{ success: boolean; user: User; token: string }>  {
-    const cleanEmail = email.toLowerCase().trim();
-    const user = await db.getUserByEmail(cleanEmail);
-    if (!user) {
-      const err: any = new Error('No account found with this email.');
-      err.code = 'USER_NOT_FOUND';
-      throw err;
-    }
-    if (!newPassword || newPassword.length < 6) {
-      throw new Error('The password must be at least 6 characters.');
-    }
-    const { hash, salt } = this.hashPassword(newPassword);
-    const updated = await db.updateUser(user.id, {
-      password_hash: hash,
-      salt,
-      is_verified: true,
-      verification_status: 'verified',
-    });
-    if (!updated) {
-      throw new Error('Could not update the password.');
-    }
-    const token = this.generateToken(updated);
-    return { success: true, user: updated, token };
-  }
-
-  /**
    * Resends verification email for unverified user
    */
   public static async resendVerification(
@@ -488,31 +480,16 @@ export async function requireAuth(req: AuthenticatedRequest, res: Response, next
     return;
   }
 
-  let user = await db.getUserById(payload.userId);
-  if (!user && payload.email) {
-    user = await db.getUserByEmail(payload.email);
-  }
+  // Resolve the caller strictly from stored records. Never trust role, email or
+  // plan from the token body, and never create an account from a token — doing
+  // so let a forged payload mint its own admin user.
+  const user =
+    (await db.getUserById(payload.userId)) ||
+    (payload.email ? await db.getUserByEmail(payload.email) : null);
+
   if (!user) {
-    // If the token is cryptographically verified by server secret, auto-recover user so session is permanent
-    const cleanEmail = payload.email.toLowerCase().trim();
-    const isAdminAccount = payload.role === 'ADMIN' || cleanEmail === 'danwil028@gmail.com' || cleanEmail === 'wildanmn1933@gmail.com' || cleanEmail === 'admin@marketintel.pro';
-    const defaultPass = AuthService.hashPassword('Trader123!');
-    const recoveredUser: User = {
-      id: payload.userId,
-      email: cleanEmail,
-      password_hash: defaultPass.hash,
-      salt: defaultPass.salt,
-      name: cleanEmail.split('@')[0],
-      role: isAdminAccount ? 'ADMIN' : 'USER',
-      is_verified: true,
-      verification_status: 'verified',
-      plan: isAdminAccount ? 'INSTITUTIONAL' : 'FREE',
-      subscription_status: 'active',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-    await db.insertUser(recoveredUser);
-    user = recoveredUser;
+    res.status(401).json({ error: 'Unauthorized: Account no longer exists' });
+    return;
   }
 
   if (!user.is_verified || user.verification_status === 'pending_verification') {

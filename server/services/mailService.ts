@@ -24,7 +24,7 @@ export interface SentEmailLog {
   sentAt: string;
 }
 
-class MailService {
+export class MailService {
   private transporter: Transporter | null = null;
   private isConfiguredState = false;
   private lastSentEmail: SentEmailLog | null = null;
@@ -86,6 +86,19 @@ class MailService {
 
   public isConfigured(): boolean {
     return this.isConfiguredState && this.transporter !== null;
+  }
+
+  /**
+   * Whether verification/reset links may be echoed back in an API response.
+   *
+   * Off by default and always off in production: a caller who supplies an email
+   * address must never receive that account's token. For local development
+   * without SMTP, set AUTH_DEV_LINK_ECHO=true to surface links so the flow can
+   * be exercised end to end.
+   */
+  public static linksVisibleToCaller(): boolean {
+    if (process.env.NODE_ENV === 'production') return false;
+    return process.env.AUTH_DEV_LINK_ECHO === 'true';
   }
 
   public reinitTransporter(): void {
