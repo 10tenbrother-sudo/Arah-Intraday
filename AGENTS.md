@@ -249,3 +249,29 @@ matters: a pasted URL once produced a row keyed
 `@https://t.me/SM_News_24h`, which never scraped and re-logged a redirect
 warning every cycle, filling half the server log. Both scrapers now run stored
 handles through `extractHandle` and skip rows that are not valid handles.
+
+## API surface (verified 2026-09-24)
+
+`src/lib/api.ts` is the only client HTTP wrapper (`API_BASE = '/api'`). All 64
+endpoints it calls resolve to a registered route — there are no dead calls, so
+do not "fix" a suspected missing endpoint without re-running the diff.
+
+Unmatched `/api/*` paths return JSON 404 (see `server.ts`), placed before the
+SPA middleware. Previously the catch-all served `index.html` with HTTP 200 for
+any unknown path, so a removed or typo'd route read as a successful call with
+an HTML body clients could silently parse into an empty state.
+
+Route names differ from tab names: `routeToTab` maps `/intelligence` to the
+"AI Analysis" tab and `/news` to "News Wire", while `/settings` opens the admin
+panel. Navigating to a path outside `PUBLIC_ROUTES`/`PRIVATE_ROUTES` silently
+falls back to the Overview tab rather than erroring, so a blank-looking page is
+often just a wrong URL.
+
+## Market overview synthesis is cached, not live
+
+`MARKET_OVERVIEW` rows are written only by `POST /api/intelligence/ai/refresh`
+(entitled tiers) and never expire. Only one row existed as of 2026-09-24, hours
+old, quoting stale prices. `AIIntelligenceView` now prints an `AS OF <time>
+WIB` stamp from `created_at`; keep that stamp whenever this card is reworked, or
+stale figures will look current. Do not regenerate the row on every page load —
+it is a deliberate quota guard while Gemini quota is exhausted.
