@@ -51,7 +51,12 @@ export const ExecutiveMarketBrief: React.FC<ExecutiveMarketBriefProps> = ({
         : 'badge-bullish'
       : 'badge-warning';
 
-    const regimeRead = globalRegime ? regimeTitle.toLowerCase() : 'undetermined';
+    // The dossier title already ends in "REGIME" for some regimes, so stripping
+    // it here keeps "balanced / rotational regime" from reading as
+    // "balanced / rotational regime regime".
+    const regimeRead = globalRegime
+      ? regimeTitle.replace(/\s*regime\s*$/i, '').toLowerCase() || 'undetermined'
+      : 'undetermined';
     const summaryText = `Markets are trading in a ${regimeRead} regime. Wall Street is led by the US100 ${us100Change >= 0 ? 'higher' : 'lower'} at ${us100Change >= 0 ? '+' : ''}${us100Change.toFixed(2)}%, with the US 10Y yield ${us10yChange >= 0 ? 'up' : 'down'} at ${us10yPrice.toFixed(3)}%. In FX, ${strongest.currency} carries the widest dispersion (+${strongest.strength_score.toFixed(1)}pt) while ${weakest.currency} is the weakest leg (${weakest.strength_score.toFixed(1)}pt). Gold (XAU/USD) is trading ${goldChange >= 0 ? 'higher' : 'lower'} at $${Math.round(goldPrice)}.`;
 
     return {

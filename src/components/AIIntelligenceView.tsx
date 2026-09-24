@@ -245,6 +245,13 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
                     CONFIDENCE: <strong className="text-[var(--text-primary)]">{((overview.confidence || 0.9) * 100).toFixed(0)}%</strong>
                   </span>
                 )}
+                {/* The synthesis is cached server-side until RE-SYNTHESIZE runs, so
+                    the read can be hours old while live prices move on. */}
+                {overview?.created_at && (
+                  <span className="text-[11px] text-[var(--text-muted)]">
+                    AS OF <strong className="text-[var(--text-secondary)]">{new Date(overview.created_at).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' })} WIB</strong>
+                  </span>
+                )}
                 <button
                   onClick={handleRefresh}
                   disabled={refreshing}
