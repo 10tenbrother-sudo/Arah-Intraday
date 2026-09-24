@@ -12,6 +12,20 @@ import { sseBroker } from '../realtime/sse.js';
 
 export class TelegramIngestionService {
   /**
+   * Reduces a stored handle to the bare channel name for t.me URLs.
+   * Returns null for junk that was persisted before validation existed
+   * (e.g. "@https://t.me/SM_News_24h"), so callers can skip instead of
+   * hammering a nonsense URL every cycle.
+   */
+  private static extractHandle(handle: string): string | null {
+    if (typeof handle !== 'string') return null;
+    const value = handle.trim();
+    const linkMatch = value.replace(/^@+/, '').match(/^(?:https?:\/\/)?(?:t\.me|telegram\.me)\/(?:s\/)?@?([A-Za-z0-9_]{4,})/i);
+    const name = linkMatch ? linkMatch[1] : value.replace(/^@+/, '');
+    return /^[A-Za-z0-9_]{4,}$/.test(name) ? name : null;
+  }
+
+  /**
    * Intelligently cleans and parses raw Telegram post text into a validated headline and body.
    * Filters out channel watermarks/signatures, casual chatter (e.g. "gm", "gn"), and ensures title >= 5 chars.
    */
@@ -88,7 +102,10 @@ export class TelegramIngestionService {
       return { count: 0, error: 'Channel is disabled' };
     }
 
-    const cleanHandle = channel.handle.replace('@', '').trim();
+    const cleanHandle = this.extractHandle(channel.handle);
+    if (!cleanHandle) {
+      return { count: 0, error: 'Malformed channel handle' };
+    }
     const url = `https://t.me/s/${cleanHandle}`;
 
     try {
@@ -408,7 +425,8 @@ export class TelegramIngestionService {
     const maxChannelsToCheck = Math.min(2, targetChannels.length);
     for (let i = 0; i < maxChannelsToCheck; i++) {
       const ch = targetChannels[(startIndex + i) % targetChannels.length];
-      const cleanHandle = ch.handle.replace('@', '').trim();
+      const cleanHandle = this.extractHandle(ch.handle);
+      if (!cleanHandle) continue;
       const url = `https://t.me/s/${cleanHandle}`;
 
       try {

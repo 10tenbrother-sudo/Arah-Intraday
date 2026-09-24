@@ -12,6 +12,20 @@ import { mailService } from '../services/mailService.js';
 
 export const adminRouter = Router();
 
+// Telegram handles are stored as "@name". Operators paste plain names, "@name",
+// or full t.me links; accepting the link form unchallenged once produced a
+// channel keyed "@https://t.me/SM_News_24h" that never scraped successfully.
+function normalizeTelegramHandle(raw: unknown): string | null {
+  if (typeof raw !== 'string') return null;
+
+  let value = raw.trim();
+  const linkMatch = value.replace(/^@+/, '').match(/^(?:https?:\/\/)?(?:t\.me|telegram\.me)\/(?:s\/)?@?([A-Za-z0-9_]{4,})/i);
+  if (linkMatch) value = linkMatch[1];
+  else value = value.replace(/^@+/, '');
+
+  return /^[A-Za-z0-9_]{4,}$/.test(value) ? `@${value}` : null;
+}
+
 // Enforce ADMIN role authentication across all admin endpoints
 adminRouter.use(requireAdmin as any);
 
@@ -72,7 +86,11 @@ adminRouter.post('/telegram', async (req, res) => {
     return;
   }
 
-  const cleanHandle = handle.startsWith('@') ? handle : `@${handle}`;
+  const cleanHandle = normalizeTelegramHandle(handle);
+  if (!cleanHandle) {
+    res.status(400).json({ error: 'Invalid Telegram channel handle. Use @channel_name or a t.me link.' });
+    return;
+  }
   const existing = await db.getTelegramChannel(cleanHandle);
   if (existing) {
     res.status(400).json({ error: `Channel ${cleanHandle} already registered.` });
