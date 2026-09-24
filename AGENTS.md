@@ -28,7 +28,11 @@ public URL returns 502 while local port 3000 still answers.
   are real and correct for the current catalog — do not "fix" them. The primary
   model frequently returns 429 and the fallback 503; the engine's retry/failover
   and its deterministic grounded-synthesis fallback are working as intended, so
-  those log lines are not a bug.
+  those log lines are not a bug. As of the latest audit the key's quota is
+  exhausted outright — every live call returns 429 before real generation — so
+  roughly three quarters of `AIAnalysis` rows carry the deterministic template
+  rather than a Gemini summary. That is a billing/quota limit on the key, not a
+  code defect: raise the plan or swap in a key with headroom to restore coverage.
 - Storage is SQLite via Prisma at `data/market_intelligence.sqlite` (data layer
   `server/db/database.ts`, client singleton `server/db/prisma.ts`, JSON codec
   `server/db/codec.ts`). Schema lives in `prisma/schema.prisma`; push changes
@@ -38,8 +42,11 @@ public URL returns 502 while local port 3000 still answers.
   `npm run seed:sqlite` (add `--force` to overwrite an existing database). The
   migration dedupes ids and repairs dangling foreign keys, because the old file
   was pruned over time and contained orphans.
-- Seeded demo login: `trader@marketintel.pro` / `Trader123!`
-  (`server/auth/authService.ts`).
+- The demo trader account is `trader@marketintel.pro`. Its password is seeded
+  from `DEMO_USER_PASSWORD`, or a random one printed once when unset — the repo
+  deliberately hardcodes no password. The account that already exists predates
+  that hardening and its current password is one of the leaked values, so treat
+  it as compromised and rotate it rather than trusting it.
 
 ## Package manager
 The repo ships `bun.lock`, but bun is not installed here and the sandbox npm
@@ -48,11 +55,12 @@ is the working path. It generates `package-lock.json`, which is not part of the
 repo's intended toolchain.
 
 ## GitHub access
-`GITHUB_TOKEN` in this environment is a GitHub App installation token with
-**read-only** access (`x-oauth-scopes` empty; writes return
-`Resource not accessible by integration`). Fetching and cloning work; pushing,
-opening PRs, and creating issues do not. Produce a patch with
-`git format-patch` for the user to apply when write access is unavailable.
+`GITHUB_TOKEN` in this environment is a GitHub App installation token.
+Fetching and cloning work, and as of the most recent session it is
+**write-capable**: `git push` with the token in the URL succeeds and the refs
+API returns 201. If a push starts failing with `Resource not accessible by
+integration`, the installation's permissions were reduced again; fall back to
+`git format-patch` so the user can apply the work manually.
 
 ## Conventions
 - UI primitives live in `src/components/ui/` and follow shadcn/Radix patterns
@@ -207,11 +215,37 @@ seeded with known passwords (`admin@marketintel.pro`, `trader@marketintel.pro`,
 `wildanmn1933@gmail.com`) should have their passwords reset, and `APP_SECRET`
 should be set to a fresh value so existing session tokens stop verifying.
 
+`scripts/rotate-compromised-credentials.ts` (`npx tsx
+scripts/rotate-compromised-credentials.ts`, or `npm run
+security:rotate-credentials`) automates that rotation. It compares live hashes
+against the leaked file to find accounts that are *still* exposed, revokes any
+leaked verification token that is still usable, and prints one-time reset links.
+It is dry-run by default and only writes with `--apply`, so it can be reviewed
+before it touches the database.
+
+Verified state as of the last rotation audit: all eight accounts still carried
+the leaked hash, so all eight are compromised, and all ten leaked verification
+tokens had already been consumed, so no takeover was live through that path.
+
 ## Pushing to this repository
 
-The configured `GITHUB_TOKEN` is read-only for this repo: `git push` and the
-refs API both return 403 ("Resource not accessible by integration") even though
-the API reports `push: true`. The stored remote URL also carries an expired
-token and will hang on a password prompt. Use
-`git push "https://${GITHUB_TOKEN}@github.com/..."` only if a write-capable
-token is supplied; otherwise the commit stays local.
+The `GITHUB_TOKEN` supplied to agents is write-capable for this repo, so
+`git push` with the token embedded in the URL works:
+
+```
+git push "https://${GITHUB_TOKEN}@github.com/10tenbrother-sudo/Arah-Intraday.git" <branch>
+```
+
+Never push to `main` directly. Work lands through a branch and a pull request.
+The stored remote URL may carry an expired token and hang on a password prompt;
+set it per-command as above when that happens.
+
+## Telegram channel handles
+
+`@` is part of how handles are stored (`@name`). The admin add-channel route
+accepts a plain name, `@name`, or a `t.me`/`telegram.me` link, and always
+persists the canonical `@name` form. Rejecting link-shaped input at the door
+matters: a pasted URL once produced a row keyed
+`@https://t.me/SM_News_24h`, which never scraped and re-logged a redirect
+warning every cycle, filling half the server log. Both scrapers now run stored
+handles through `extractHandle` and skip rows that are not valid handles.
