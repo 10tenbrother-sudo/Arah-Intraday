@@ -25,7 +25,8 @@ import { CurrencyStrengthService } from './server/ingestion/currencyStrength.js'
 import { MacroDataService } from './server/ingestion/macroData.js';
 import { IntradayMarketMapEngine } from './server/intelligence/intradayMarketMap.js';
 import { requireAuth, AuthRequest } from './src/middleware/auth.ts';
-import { getOrCreateUser, getUserById } from './src/db/users.ts';
+import { requireAuth as requireJwtAuth, requireAdmin as requireJwtAdmin } from './server/auth/authService.js';
+import { getOrCreateUser, getUserById, isCloudSqlConfigured } from './src/db/users.ts';
 
 async function startServer() {
   const app = express();
@@ -70,7 +71,7 @@ async function startServer() {
         return;
       }
       const user = await getOrCreateUser(req.user.uid, req.user.email || '', req.user.name);
-      res.json({ success: true, user });
+      res.json({ success: true, user, mirror_configured: isCloudSqlConfigured() });
     } catch (err: any) {
       console.error('Failed to get Cloud SQL user:', err);
       res.status(500).json({ error: err.message || 'Database error' });
@@ -78,7 +79,7 @@ async function startServer() {
   });
 
   // Unified global synchronization across all ingested elements and external sources
-  app.post('/api/sync', async (req, res) => {
+  app.post('/api/sync', requireJwtAuth, requireJwtAdmin, async (req, res) => {
     try {
       const [mktResult, macroResult, csResult, tgResult] = await Promise.allSettled([
         MarketDataService.updateMarketPrices(),

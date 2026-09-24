@@ -1,9 +1,25 @@
 import { Router, Response } from 'express';
-import { AuthService, requireAuth, AuthenticatedRequest } from '../auth/authService.js';
+import { AuthService, requireAuth, requireAdmin, AuthenticatedRequest, toPublicUser } from '../auth/authService.js';
 import { db } from '../db/database.js';
 import { getOrCreateUser } from '../../src/db/users.ts';
+import { adminAuth } from '../../src/lib/firebase-admin.ts';
+import { mailService, MailService } from '../services/mailService.js';
+import { authLimiter, credentialLimiter } from '../middleware/rateLimit.js';
 
 export const authRouter = Router();
+
+/**
+ * Verification/reset links are only echoed back outside production, so local
+ * development stays usable without an SMTP server while a deployed instance
+ * never hands a token to whoever happened to call the endpoint.
+ */
+function exposeLink<T extends { verificationUrl?: string; resetUrl?: string; magicUrl?: string }>(
+  payload: T
+): T {
+  if (MailService.linksVisibleToCaller()) return payload;
+  const { verificationUrl, resetUrl, magicUrl, ...rest } = payload;
+  return rest as T;
+}
 
 function getBaseUrl(req: any): string {
   if (process.env.APP_URL) {
@@ -16,7 +32,7 @@ function getBaseUrl(req: any): string {
   return `${protocol}://${host}`;
 }
 
-authRouter.post('/register', async (req, res) => {
+authRouter.post('/register', credentialLimiter, async (req, res) => {
   try {
     const { email, password, name } = req.body;
     if (!email || !password) {
@@ -27,39 +43,30 @@ authRouter.post('/register', async (req, res) => {
     const baseUrl = getBaseUrl(req);
     const result = await AuthService.register(email, password, name || 'Trader', baseUrl);
 
-    res.status(201).json({
+    res.status(201).json(exposeLink({
       success: true,
       status: result.status,
       message: result.message,
       email: result.user.email,
       token: result.token,
       verificationUrl: result.verificationUrl,
-      user: {
-        id: result.user.id,
-        email: result.user.email,
-        name: result.user.name,
-        role: result.user.role,
-        is_verified: result.user.is_verified,
-        verification_status: result.user.verification_status,
-        plan: result.user.plan || 'FREE',
-        subscription_status: result.user.subscription_status || 'active',
-      },
-    });
+      user: toPublicUser(result.user),
+    }));
   } catch (err: any) {
     if (err.code === 'EMAIL_NOT_VERIFIED') {
-      res.status(403).json({
+      res.status(403).json(exposeLink({
         error: err.message,
         code: 'EMAIL_NOT_VERIFIED',
         email: err.email,
         verificationUrl: err.verificationUrl,
-      });
+      }));
       return;
     }
     res.status(400).json({ error: err.message });
   }
 });
 
-authRouter.post('/login', async (req, res) => {
+authRouter.post('/login', credentialLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -68,17 +75,7 @@ authRouter.post('/login', async (req, res) => {
     }
     const result = await AuthService.login(email, password);
     res.json({
-      user: {
-        id: result.user.id,
-        email: result.user.email,
-        name: result.user.name,
-        role: result.user.role,
-        is_verified: result.user.is_verified,
-        verification_status: result.user.verification_status,
-        plan: result.user.plan || 'FREE',
-        subscription_status: result.user.subscription_status || 'active',
-        subscription_expires_at: result.user.subscription_expires_at,
-      },
+      user: toPublicUser(result.user),
       token: result.token,
     });
   } catch (err: any) {
@@ -95,12 +92,12 @@ authRouter.post('/login', async (req, res) => {
         }
         verificationUrl = `${baseUrl}/api/auth/verify-email?token=${encodeURIComponent(tokenRecord.token)}`;
       }
-      res.status(403).json({
+      res.status(403).json(exposeLink({
         error: err.message,
         code: 'EMAIL_NOT_VERIFIED',
         email: err.email || cleanEmail,
         verificationUrl,
-      });
+      }));
       return;
     }
 
@@ -114,14 +111,34 @@ authRouter.post('/login', async (req, res) => {
   }
 });
 
-authRouter.post('/firebase-login', async (req, res) => {
+authRouter.post('/firebase-login', credentialLimiter, async (req, res) => {
   try {
-    const { email, name, uid } = req.body;
-    if (!email || !uid) {
-      res.status(400).json({ error: 'Email address and Firebase UID are required.' });
+    const { idToken } = req.body;
+    if (!idToken || typeof idToken !== 'string') {
+      res.status(400).json({ error: 'A Firebase ID token is required.' });
       return;
     }
-    const cleanEmail = email.toLowerCase().trim();
+
+    // The client controls its own request body, so the identity must come from
+    // the signed token Firebase issued — never from `email`/`uid` fields.
+    let decoded;
+    try {
+      decoded = await adminAuth.verifyIdToken(idToken, true);
+    } catch (verifyErr: any) {
+      console.warn('[Auth] Rejected firebase-login token:', verifyErr?.code || verifyErr?.message);
+      res.status(401).json({ error: 'Invalid or expired Google sign-in token. Please sign in again.' });
+      return;
+    }
+
+    if (!decoded.email) {
+      res.status(400).json({ error: 'That Google account has no verified email address.' });
+      return;
+    }
+
+    const cleanEmail = decoded.email.toLowerCase().trim();
+    const uid = decoded.uid;
+    const displayName = typeof decoded.name === 'string' ? decoded.name : undefined;
+
     let user = await db.getUserByEmail(cleanEmail);
     if (!user) {
       user = {
@@ -129,7 +146,7 @@ authRouter.post('/firebase-login', async (req, res) => {
         email: cleanEmail,
         password_hash: '',
         salt: '',
-        name: name || cleanEmail.split('@')[0] || 'Trader',
+        name: displayName || cleanEmail.split('@')[0] || 'Trader',
         role: 'USER',
         is_verified: true,
         verification_status: 'verified',
@@ -149,7 +166,7 @@ authRouter.post('/firebase-login', async (req, res) => {
 
     // Also sync to Cloud SQL PostgreSQL
     try {
-      await getOrCreateUser(uid, cleanEmail, name);
+      await getOrCreateUser(uid, cleanEmail, displayName);
     } catch (sqlErr) {
       console.warn('[Cloud SQL] User sync notice:', sqlErr);
     }
@@ -158,16 +175,7 @@ authRouter.post('/firebase-login', async (req, res) => {
     res.json({
       success: true,
       token,
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-        is_verified: user.is_verified,
-        verification_status: user.verification_status,
-        plan: user.plan || 'PRO',
-        subscription_status: user.subscription_status || 'active',
-      },
+      user: toPublicUser(user),
     });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
@@ -294,7 +302,7 @@ authRouter.get('/check-status', async (req, res) => {
 /**
  * Verifies email via 6-digit OTP code (typed directly in UI)
  */
-authRouter.post('/verify-code', async (req, res) => {
+authRouter.post('/verify-code', credentialLimiter, async (req, res) => {
   const { email, code } = req.body;
   if (!email || !code) {
     res.status(400).json({ error: 'Email address and the 6-digit verification code are required.' });
@@ -311,23 +319,14 @@ authRouter.post('/verify-code', async (req, res) => {
     success: true,
     message: 'Email verified. Your account is now active.',
     token: result.token,
-    user: {
-      id: result.user.id,
-      email: result.user.email,
-      name: result.user.name,
-      role: result.user.role,
-      is_verified: true,
-      verification_status: 'verified',
-      plan: result.user.plan || 'FREE',
-      subscription_status: result.user.subscription_status || 'active',
-    },
+    user: toPublicUser(result.user),
   });
 });
 
 /**
  * Resends verification email for a registered user pending verification
  */
-authRouter.post('/resend-verification', async (req, res) => {
+authRouter.post('/resend-verification', authLimiter, async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) {
@@ -338,12 +337,11 @@ authRouter.post('/resend-verification', async (req, res) => {
     const baseUrl = getBaseUrl(req);
     const result = await AuthService.resendVerification(email, baseUrl);
 
-    res.json({
+    res.json(exposeLink({
       success: true,
       message: result.message,
-      code: result.code,
       verificationUrl: result.verificationUrl,
-    });
+    }));
   } catch (err: any) {
     res.status(400).json({ error: err.message });
   }
@@ -376,7 +374,7 @@ authRouter.patch('/profile', requireAuth, async (req: AuthenticatedRequest, res:
   const user = req.user!;
   const { name, avatar_url } = req.body;
   const updated = await db.updateUser(user.id, { name, avatar_url });
-  res.json({ user: updated });
+  res.json({ user: updated ? toPublicUser(updated) : null });
 });
 
 authRouter.put('/preferences', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
@@ -399,7 +397,7 @@ authRouter.put('/preferences', requireAuth, async (req: AuthenticatedRequest, re
 /**
  * Request Password Reset (Sends email with reset link)
  */
-authRouter.post('/forgot-password', async (req, res) => {
+authRouter.post('/forgot-password', authLimiter, async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) {
@@ -408,7 +406,7 @@ authRouter.post('/forgot-password', async (req, res) => {
     }
     const baseUrl = getBaseUrl(req);
     const result = await AuthService.requestPasswordReset(email, baseUrl);
-    res.json(result);
+    res.json(exposeLink(result));
   } catch (err: any) {
     res.status(400).json({ error: err.message, code: err.code });
   }
@@ -417,20 +415,9 @@ authRouter.post('/forgot-password', async (req, res) => {
 /**
  * Reset Password using Token or Direct Recovery
  */
-authRouter.post('/reset-password', async (req, res) => {
+authRouter.post('/reset-password', credentialLimiter, async (req, res) => {
   try {
-    const { token, newPassword, email, directReset } = req.body;
-
-    if (directReset && email && newPassword) {
-      const result = await AuthService.directPasswordReset(email, newPassword);
-      res.json({
-        success: true,
-        message: 'Password updated. You have been signed in automatically.',
-        user: result.user,
-        token: result.token,
-      });
-      return;
-    }
+    const { token, newPassword } = req.body;
 
     if (!token || !newPassword) {
       res.status(400).json({ error: 'Verification token and new password are required.' });
@@ -438,7 +425,12 @@ authRouter.post('/reset-password', async (req, res) => {
     }
 
     const result = await AuthService.resetPassword(token, newPassword);
-    res.json(result);
+    res.json({
+      success: result.success,
+      message: result.message,
+      token: result.token,
+      user: toPublicUser(result.user),
+    });
   } catch (err: any) {
     res.status(400).json({ error: err.message });
   }
@@ -446,30 +438,29 @@ authRouter.post('/reset-password', async (req, res) => {
 
 /**
  * Password Reset Legacy/Compatibility Endpoint
+ *
+ * Only the token-based path is honoured. Resetting from an email alone let any
+ * caller overwrite any account's password, so it is no longer accepted.
  */
-authRouter.post('/password-reset', async (req, res) => {
+authRouter.post('/password-reset', credentialLimiter, async (req, res) => {
   try {
-    const { token, newPassword, password, email } = req.body;
+    const { token, newPassword, password } = req.body;
     const targetPassword = newPassword || password;
 
-    if (token && targetPassword) {
-      const result = await AuthService.resetPassword(token, targetPassword);
-      res.json(result);
-      return;
-    }
-
-    if (email && targetPassword) {
-      const result = await AuthService.directPasswordReset(email, targetPassword);
-      res.json({
-        success: true,
-        message: 'Password updated.',
-        user: result.user,
-        token: result.token,
+    if (!token || !targetPassword) {
+      res.status(400).json({
+        error: 'A reset token and a new password are required. Request a reset link first.',
       });
       return;
     }
 
-    res.status(400).json({ error: 'Incomplete parameters for the password reset.' });
+    const result = await AuthService.resetPassword(token, targetPassword);
+    res.json({
+      success: result.success,
+      message: result.message,
+      token: result.token,
+      user: toPublicUser(result.user),
+    });
   } catch (err: any) {
     res.status(400).json({ error: err.message });
   }
@@ -478,7 +469,7 @@ authRouter.post('/password-reset', async (req, res) => {
 /**
  * Passwordless Magic Link Request
  */
-authRouter.post('/magic-link', async (req, res) => {
+authRouter.post('/magic-link', authLimiter, async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) {
@@ -487,7 +478,7 @@ authRouter.post('/magic-link', async (req, res) => {
     }
     const baseUrl = getBaseUrl(req);
     const result = await AuthService.requestMagicLink(email, baseUrl);
-    res.json(result);
+    res.json(exposeLink(result));
   } catch (err: any) {
     res.status(400).json({ error: err.message });
   }
@@ -534,7 +525,7 @@ authRouter.get('/magic-link', async (req, res) => {
     success: true,
     message: 'Signed in via instant link.',
     token: result.token,
-    user: result.user,
+    user: toPublicUser(result.user),
   });
 });
 
@@ -556,11 +547,11 @@ authRouter.post('/magic-link-verify', async (req, res) => {
     success: true,
     message: 'Signed in.',
     token: result.token,
-    user: result.user,
+    user: toPublicUser(result.user),
   });
 });
 
-authRouter.get('/accounts', async (req, res) => {
+authRouter.get('/accounts', requireAdmin, async (_req, res) => {
   try {
     const users = (await db.getAllUsers()).map(u => ({
       email: u.email,
@@ -577,57 +568,15 @@ authRouter.get('/accounts', async (req, res) => {
 
 /**
  * Emergency Quick Login / Demo Trader Login
+ *
+ * Removed: it issued a session (admin, for known addresses) from an email alone,
+ * with no password and no token. Use POST /login or /firebase-login instead.
  */
-authRouter.post('/quick-login', async (req, res) => {
-  try {
-    const { email } = req.body;
-    const cleanEmail = (email || 'danwil028@gmail.com').toLowerCase().trim();
-    let user = await db.getUserByEmail(cleanEmail);
-    const isAdminAccount = cleanEmail === 'danwil028@gmail.com' || cleanEmail === 'wildanmn1933@gmail.com' || cleanEmail === 'admin@marketintel.pro';
-
-    if (!user) {
-      // Auto register user if not found for seamless recovery
-      const pass = AuthService.hashPassword('Trader123!');
-      user = {
-        id: `usr_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-        email: cleanEmail,
-        password_hash: pass.hash,
-        salt: pass.salt,
-        name: cleanEmail.split('@')[0] || 'Trader',
-        role: isAdminAccount ? 'ADMIN' : 'USER',
-        is_verified: true,
-        verification_status: 'verified',
-        plan: isAdminAccount ? 'INSTITUTIONAL' : 'FREE',
-        subscription_status: 'active',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      await db.insertUser(user);
-    } else {
-      const updates: any = {};
-      if (!user.is_verified) {
-        updates.is_verified = true;
-        updates.verification_status = 'verified';
-      }
-      if (isAdminAccount && user.role !== 'ADMIN') {
-        updates.role = 'ADMIN';
-        updates.plan = 'INSTITUTIONAL';
-      }
-      if (Object.keys(updates).length > 0) {
-        user = await db.updateUser(user.id, updates) || user;
-      }
-    }
-
-    const token = AuthService.generateToken(user);
-    res.json({
-      success: true,
-      message: `Berhasil masuk sebagai ${user.name} (${user.email}).`,
-      token,
-      user,
-    });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
-  }
+authRouter.post('/quick-login', credentialLimiter, (_req, res) => {
+  res.status(410).json({
+    error: 'Endpoint ini sudah dinonaktifkan. Silakan masuk memakai email dan password, atau Google Sign-In.',
+    code: 'ENDPOINT_REMOVED',
+  });
 });
 
 function renderVerificationResultHtml(success: boolean, message: string, token?: string, user?: any): string {

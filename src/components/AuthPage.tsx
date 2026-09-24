@@ -246,10 +246,12 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     setLoading(true);
     setError(null);
     try {
+      if (!resetToken) {
+        throw new Error('Open the reset link from your email to continue. Request a new one if it expired.');
+      }
+
       const res = await api.resetPassword({
-        token: resetToken || undefined,
-        email: email.trim() || undefined,
-        directReset: !resetToken,
+        token: resetToken,
         newPassword,
       });
 
@@ -283,13 +285,10 @@ export const AuthPage: React.FC<AuthPageProps> = ({
       const fbUser = result.user;
       if (!fbUser.email) throw new Error('The Google account has no public email address.');
 
-      // 1. Authenticate with backend API
-      const apiRes = await api.firebaseLogin({
-        email: fbUser.email,
-        name: fbUser.displayName || 'Trader',
-        uid: fbUser.uid,
-        photoURL: fbUser.photoURL || undefined,
-      });
+      // 1. Authenticate with backend API. The backend verifies this token's
+      // signature itself, so it cannot be spoofed with a plain email/uid.
+      const idToken = await fbUser.getIdToken();
+      const apiRes = await api.firebaseLogin({ idToken });
 
       // 2. Persist user document to Firestore database
       try {
@@ -748,21 +747,17 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 
               <form onSubmit={handleResetPassword} className="space-y-4 font-mono text-xs">
                 {!resetToken && (
-                  <div className="space-y-1.5">
-                    <label className="block text-[var(--text-secondary)] text-[11px] font-semibold">
-                      Alamat Email Akun
-                    </label>
-                    <div className="relative">
-                      <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] z-10" />
-                      <Input
-                        type="email"
-                        required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="trader@marketintel.pro"
-                        className="pl-9 h-10"
-                      />
-                    </div>
+                  <div className="p-3.5 rounded-md bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-[var(--text-secondary)] text-xs font-sans leading-relaxed">
+                    Reset password hanya bisa dilakukan lewat tautan yang kami kirim ke email Anda.
+                    Minta tautan baru dari halaman{' '}
+                    <button
+                      type="button"
+                      onClick={() => onNavigate('/forgot-password')}
+                      className="text-[var(--accent)] underline underline-offset-2"
+                    >
+                      lupa password
+                    </button>
+                    .
                   </div>
                 )}
 
