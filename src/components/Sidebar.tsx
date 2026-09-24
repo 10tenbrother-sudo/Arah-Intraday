@@ -1,8 +1,6 @@
 import React from 'react';
 import {
   LayoutDashboard,
-  Compass,
-  Zap,
   Activity,
   TrendingUp,
   Calendar,
@@ -25,8 +23,6 @@ import { ThemeToggle } from './ThemeToggle';
 export type NavTabId =
   | 'terminal'
   | 'arah_market'
-  | 'intraday_map'
-  | 'today_catalysts'
   | 'markets'
   | 'intermarket'
   | 'currency'
@@ -44,8 +40,6 @@ interface SidebarProps {
   onClose: () => void;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
-  marketMapCount?: number;
-  catalystsCount?: number;
   user?: User | null;
   onOpenAuth?: () => void;
   onLogout?: () => void;
@@ -60,8 +54,6 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
   onClose,
   isCollapsed,
   onToggleCollapse,
-  marketMapCount = 13,
-  catalystsCount,
   user,
   onOpenAuth,
   onLogout,
@@ -115,20 +107,6 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
           icon: Target,
           badge: 'BIAS',
           badgeClass: 'badge-neutral',
-        },
-        {
-          id: 'intraday_map' as NavTabId,
-          label: 'Market Map',
-          icon: Compass,
-          badge: `${marketMapCount}`,
-          badgeClass: 'badge-neutral',
-        },
-        {
-          id: 'today_catalysts' as NavTabId,
-          label: 'Catalysts',
-          icon: Zap,
-          badge: catalystsCount !== undefined ? `${catalystsCount}` : null,
-          badgeClass: 'badge-warning',
         },
         {
           id: 'intermarket' as NavTabId,
@@ -200,23 +178,20 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
       >
         {/* Brand Header */}
         <div
-          className="h-12 px-3.5 flex items-center justify-between shrink-0 border-b"
-          style={{ borderColor: 'var(--border-subtle)' }}
+          className="h-14 px-4 flex items-center justify-between shrink-0 border-b"
+          style={{ borderColor: 'var(--border-hairline)' }}
         >
           <div className="flex items-center gap-2.5 overflow-hidden">
-            <div className="w-6 h-6 rounded flex items-center justify-center font-mono font-bold text-xs bg-[var(--accent)] text-white shrink-0 shadow-xs">
-              IM
+            <div className="w-6 h-6 rounded flex items-center justify-center font-mono font-bold text-xs bg-[var(--accent)] text-white shrink-0">
+              AM
             </div>
             {(!isCollapsed || isOpen) && (
               <div className="truncate">
-                <div className="font-mono font-bold text-xs tracking-wider text-[var(--text-primary)] flex items-center gap-1.5">
-                  <span>INTRADAY</span>
-                  <span className="text-[9px] px-1 py-0 rounded font-mono font-semibold bg-[var(--bg-section-alt)] text-[var(--text-secondary)] border border-[var(--border-subtle)]">
-                    PRO
-                  </span>
+                <div className="font-display font-semibold text-[13px] tracking-tight text-[var(--text-primary)] leading-tight">
+                  Arah Market
                 </div>
-                <div className="text-[9px] font-mono text-[var(--text-muted)] tracking-wider">
-                  MARKET INTELLIGENCE
+                <div className="metadata-label text-[9px] text-[var(--text-muted)]">
+                  Macro &amp; FX
                 </div>
               </div>
             )}
@@ -233,7 +208,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
             </button>
             <button
               onClick={onToggleCollapse}
-              className="hidden lg:flex p-1 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition cursor-pointer"
+              className="hidden lg:flex p-1 rounded text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-section-alt)] transition cursor-pointer"
               title={isCollapsed ? 'Expand Navigation' : 'Collapse Navigation'}
               id="toggle-sidebar-collapse-btn"
             >
@@ -243,11 +218,11 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
         </div>
 
         {/* Navigation Sections */}
-        <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-4">
+        <nav className="flex-1 overflow-y-auto px-2 py-4 space-y-5">
           {navSections.map((sec, sIdx) => (
-            <div key={sIdx} className="space-y-0.5">
+            <div key={sIdx} className="space-y-1">
               {(!isCollapsed || isOpen) && (
-                <div className="px-2 pb-1 text-[9.5px] font-mono uppercase tracking-widest text-[var(--text-muted)] font-semibold">
+                <div className="px-2.5 pb-1 metadata-label text-[9px] text-[var(--text-muted)]">
                   {sec.group}
                 </div>
               )}
@@ -260,9 +235,9 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
                   <button
                     key={item.id}
                     onClick={() => handleSelect(item.id)}
-                    className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded text-xs font-medium transition cursor-pointer group relative ${
+                    className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded transition cursor-pointer group relative ${
                       isActive
-                        ? 'bg-[var(--active-bg)] text-[var(--active-text)] border border-[var(--active-border)] font-semibold shadow-xs'
+                        ? 'bg-[var(--active-bg)] text-[var(--text-primary)] font-semibold'
                         : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-section-alt)]'
                     }`}
                     title={isCollapsed && !isOpen ? item.label : undefined}
@@ -270,7 +245,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
                   >
                     {/* Active Accent Bar */}
                     {isActive && (
-                      <span className="absolute left-0 top-1 bottom-1 w-0.5 rounded-r bg-[var(--accent)]" />
+                      <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-r bg-[var(--accent)]" />
                     )}
 
                     <Icon
@@ -280,16 +255,16 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
                     />
 
                     {(!isCollapsed || isOpen) && (
-                      <span className="truncate flex-1 text-left font-sans text-xs">
+                      <span className="truncate flex-1 text-left font-sans text-[13px]">
                         {item.label}
                       </span>
                     )}
 
                     {(!isCollapsed || isOpen) && item.badge && (
                       <span
-                        className={`text-[9px] font-mono px-1 py-0 rounded border ${
+                        className={`text-[9px] font-mono px-1.5 py-0.5 rounded-full border ${
                           isActive
-                            ? 'bg-[var(--bg-canvas)] text-[var(--text-primary)] border-transparent'
+                            ? 'bg-[var(--bg-canvas)] text-[var(--text-secondary)] border-[var(--border-subtle)]'
                             : item.badgeClass || 'badge-neutral'
                         }`}
                       >
@@ -305,24 +280,21 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
 
         {/* Sidebar Footer: Feed Status & User Account Profile */}
         <div
-          className="p-2.5 border-t shrink-0 font-mono text-[11px]"
-          style={{
-            borderColor: 'var(--border-subtle)',
-            backgroundColor: 'var(--bg-section-alt)',
-          }}
+          className="px-3 py-3 border-t shrink-0"
+          style={{ borderColor: 'var(--border-hairline)' }}
           id="sidebar-footer-corner"
         >
           {(!isCollapsed || isOpen) ? (
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               {/* Telemetry Indicator */}
-              <div className="flex items-center justify-between pb-1.5 border-b" style={{ borderColor: 'var(--border-hairline)' }}>
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-[var(--bullish)]" />
-                  <span className="text-[10px] font-mono font-semibold tracking-wider text-[var(--text-primary)]">
-                    FEED: ACTIVE
+                  <span className="metadata-label text-[9px] text-[var(--text-secondary)]">
+                    Feed active
                   </span>
                 </div>
-                <span className="text-[9px] font-mono text-[var(--text-muted)]">
+                <span className="text-[10px] font-mono text-[var(--text-muted)]">
                   100ms
                 </span>
               </div>
@@ -330,15 +302,12 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
               {/* User Account / Profile Box */}
               {user ? (
                 <div
-                  className="flex items-center justify-between gap-2 p-1.5 rounded border"
-                  style={{
-                    backgroundColor: 'var(--bg-surface)',
-                    borderColor: 'var(--border-subtle)',
-                  }}
+                  className="flex items-center justify-between gap-2 pt-2.5 border-t"
+                  style={{ borderColor: 'var(--border-hairline)' }}
                   id="sidebar-user-card"
                 >
                   <div className="flex items-center gap-2 min-w-0">
-                    <div className="w-6 h-6 rounded flex items-center justify-center font-mono font-bold text-[10px] bg-[var(--accent)] text-white shrink-0">
+                    <div className="w-7 h-7 rounded-full flex items-center justify-center font-mono font-bold text-[10px] bg-[var(--accent)] text-white shrink-0">
                       {user.name ? user.name.slice(0, 2).toUpperCase() : 'TR'}
                     </div>
                     <div className="truncate">
@@ -365,17 +334,17 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
               ) : (
                 <button
                   onClick={onOpenAuth}
-                  className="w-full flex items-center justify-center gap-2 py-1.5 px-3 rounded font-mono text-xs font-semibold bg-[var(--accent)] text-white hover:opacity-90 transition cursor-pointer shadow-xs"
+                  className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded text-xs font-semibold bg-[var(--accent)] text-white hover:opacity-90 transition cursor-pointer"
                   id="sidebar-login-btn"
                 >
                   <UserIcon className="w-3.5 h-3.5" />
-                  <span>TRADER LOGIN</span>
+                  <span>Trader login</span>
                 </button>
               )}
               {/* Theme Switcher Row */}
               {onToggleTheme && (
                 <div className="flex items-center justify-between pt-1">
-                  <span className="text-[10px] font-mono text-[var(--text-secondary)]">TEMA:</span>
+                  <span className="metadata-label text-[9px] text-[var(--text-muted)]">Tema</span>
                   <ThemeToggle theme={theme} onToggle={onToggleTheme} variant="pill" />
                 </div>
               )}
@@ -388,7 +357,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
               )}
               {user ? (
                 <div
-                  className="w-6 h-6 rounded flex items-center justify-center font-mono font-bold text-[10px] bg-[var(--accent)] text-white cursor-pointer"
+                  className="w-7 h-7 rounded-full flex items-center justify-center font-mono font-bold text-[10px] bg-[var(--accent)] text-white cursor-pointer"
                   title={`${user.name} (${user.role})`}
                   onClick={onLogout}
                 >

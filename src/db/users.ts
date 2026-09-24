@@ -3,7 +3,18 @@ import { db } from './index.ts';
 import { users } from './schema.ts';
 import { eq } from 'drizzle-orm';
 
+/**
+ * The PostgreSQL mirror is optional. Without SQL_HOST configured the pool would
+ * dial 127.0.0.1:5432 on every call and log a connection refusal, so callers
+ * skip it entirely.
+ */
+export function isCloudSqlConfigured(): boolean {
+  return Boolean(process.env.SQL_HOST);
+}
+
 export async function getOrCreateUser(uid: string, email: string, name?: string) {
+  if (!isCloudSqlConfigured()) return null;
+
   try {
     const result = await db.insert(users)
       .values({

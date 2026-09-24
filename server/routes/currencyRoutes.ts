@@ -5,8 +5,8 @@ import { CurrencyStrengthService } from '../ingestion/currencyStrength.js';
 export const currencyRouter = Router();
 
 // GET current currency strength table
-currencyRouter.get('/', (req, res) => {
-  const list = db.getCurrencyStrength();
+currencyRouter.get('/', async (req, res) => {
+  const list = await db.getCurrencyStrength();
   res.json({
     currency_strength: list,
     source: 'https://currency-strength.com/en/',
@@ -32,9 +32,9 @@ currencyRouter.get('/chart-feed', async (req, res) => {
 });
 
 // GET currency strength history
-currencyRouter.get('/history', (req, res) => {
+currencyRouter.get('/history', async (req, res) => {
   const currency = req.query.currency as string | undefined;
-  const history = db.getCurrencyStrengthHistory(currency);
+  const history = await db.getCurrencyStrengthHistory(currency);
   res.json({
     history,
     count: history.length,

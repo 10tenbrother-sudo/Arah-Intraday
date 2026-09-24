@@ -25,7 +25,8 @@ import { CurrencyStrengthService } from './server/ingestion/currencyStrength.js'
 import { MacroDataService } from './server/ingestion/macroData.js';
 import { IntradayMarketMapEngine } from './server/intelligence/intradayMarketMap.js';
 import { requireAuth, AuthRequest } from './src/middleware/auth.ts';
-import { getOrCreateUser, getUserById } from './src/db/users.ts';
+import { requireAuth as requireJwtAuth, requireAdmin as requireJwtAdmin } from './server/auth/authService.js';
+import { getOrCreateUser, getUserById, isCloudSqlConfigured } from './src/db/users.ts';
 
 async function startServer() {
   const app = express();
@@ -70,7 +71,7 @@ async function startServer() {
         return;
       }
       const user = await getOrCreateUser(req.user.uid, req.user.email || '', req.user.name);
-      res.json({ success: true, user });
+      res.json({ success: true, user, mirror_configured: isCloudSqlConfigured() });
     } catch (err: any) {
       console.error('Failed to get Cloud SQL user:', err);
       res.status(500).json({ error: err.message || 'Database error' });
@@ -78,7 +79,7 @@ async function startServer() {
   });
 
   // Unified global synchronization across all ingested elements and external sources
-  app.post('/api/sync', async (req, res) => {
+  app.post('/api/sync', requireJwtAuth, requireJwtAdmin, async (req, res) => {
     try {
       const [mktResult, macroResult, csResult, tgResult] = await Promise.allSettled([
         MarketDataService.updateMarketPrices(),
@@ -103,12 +104,12 @@ async function startServer() {
   });
 
   // Source Transparency & Integrity Audit Endpoint
-  app.get('/api/sources', (req, res) => {
+  app.get('/api/sources', async (req, res) => {
     try {
-      const sources = db.getAllSources();
-      const channels = db.getAllTelegramChannels();
-      const events = db.getAllEvents(100);
-      const news = db.getAllNews(100);
+      const sources = await db.getAllSources();
+      const channels = await db.getAllTelegramChannels();
+      const events = await db.getAllEvents(100);
+      const news = await db.getAllNews(100);
 
       res.json({
         total_sources: sources.length,
@@ -204,17 +205,17 @@ async function startServer() {
     }, 60000);
 
     // Automated Daily Market Snapshot Generator (every 10 minutes)
-    setInterval(() => {
+    setInterval(async () => {
       try {
         const todayStr = new Date().toISOString().slice(0, 10);
-        const existing = db.getDailySnapshotByDate(todayStr);
+        const existing = await db.getDailySnapshotByDate(todayStr);
         if (!existing) {
           console.log(`[Scheduler] Generating automated daily snapshot for ${todayStr}...`);
           // Trigger generation
-          const map = IntradayMarketMapEngine.getIntradayMarketMap();
-          const strengths = db.getCurrencyStrength();
+          const map = await IntradayMarketMapEngine.getIntradayMarketMap();
+          const strengths = await db.getCurrencyStrength();
           const biases: Record<string, any> = {};
-          map.forEach((item: any) => {
+          map.forEach(async (item: any) => {
             biases[item.symbol] = {
               symbol: item.symbol,
               bias: item.overall_bias,
@@ -227,7 +228,7 @@ async function startServer() {
             };
           });
 
-          db.saveDailySnapshot({
+          await db.saveDailySnapshot({
             id: `snapshot_${todayStr}`,
             date: todayStr,
             timestamp: new Date().toISOString(),
@@ -262,7 +263,14 @@ async function startServer() {
     console.error('[System] Error during server initialization:', err);
   }
 
-  // 3. Vite Middleware (SPA handling)
+  // 3. Unmatched API paths must 404 as JSON, not fall through to the SPA.
+  // Without this an unknown /api/* route returned index.html with HTTP 200,
+  // so a client typo looked like a successful call with a broken body.
+  app.use('/api', (req, res) => {
+    res.status(404).json({ error: 'Not found', path: req.originalUrl });
+  });
+
+  // 4. Vite Middleware (SPA handling)
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
       server: { middlewareMode: true },

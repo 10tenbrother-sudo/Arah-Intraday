@@ -10,6 +10,7 @@ import {
   Clock,
   ChevronRight,
   Target,
+  BarChart2,
 } from 'lucide-react';
 import {
   MarketPrice,
@@ -19,12 +20,12 @@ import {
   AIAnalysis,
   IntradayAssetBias,
   TodayCatalyst,
+  ArahMarketTodayData,
 } from '../types';
-import { CurrencyStrengthWidget } from './CurrencyStrengthWidget';
-import { MarketDataGrid } from './MarketDataGrid';
 import { ExecutiveMarketBrief } from './ExecutiveMarketBrief';
 import { NavTabId } from './Sidebar';
 import { EmptyState } from './shared/EmptyState';
+import { PageHeader } from './shared/PageHeader';
 
 interface OverviewDashboardProps {
   intradayMap: IntradayAssetBias[];
@@ -34,17 +35,10 @@ interface OverviewDashboardProps {
   events: MarketEvent[];
   calendar: EconomicEvent[];
   overview: AIAnalysis | null;
-  watchlistSymbols: string[];
-  selectedSymbol: string | null;
-  onSelectSymbol: (symbol: string | null) => void;
   onNavigateTab: (tab: NavTabId) => void;
-  onToggleWatchlist: (symbol: string, assetType: string) => void;
+  globalRegime: ArahMarketTodayData['globalRegime'] | null;
   onOpenChart: (symbol: string) => void;
   onSelectEvent: (eventId: string) => void;
-  onRefreshPrices: () => Promise<void>;
-  isRefreshingPrices: boolean;
-  onRefreshCS: () => Promise<void>;
-  isRefreshingCS: boolean;
   onSyncWire: () => Promise<void>;
   isSyncingWire: boolean;
 }
@@ -57,17 +51,10 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
   events,
   calendar,
   overview,
-  watchlistSymbols,
-  selectedSymbol,
-  onSelectSymbol,
   onNavigateTab,
-  onToggleWatchlist,
+  globalRegime,
   onOpenChart,
   onSelectEvent,
-  onRefreshPrices,
-  isRefreshingPrices,
-  onRefreshCS,
-  isRefreshingCS,
   onSyncWire,
   isSyncingWire,
 }) => {
@@ -142,155 +129,139 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
         className="terminal-panel p-4 sm:p-5 border transition-colors"
         id="editorial-market-overview"
       >
-        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5">
-          {/* Left Column: Bold Typography & Market Narrative */}
-          <div className="space-y-3 max-w-3xl">
-            <div className="flex items-center gap-2">
-              <span className="metadata-label text-[10px] text-[var(--text-muted)]">
-                MARKET INTELLIGENCE · SURVEILLANCE DESK
-              </span>
-              <span className="text-[var(--border-subtle)]">·</span>
-              <span className="text-[10px] font-mono text-[var(--accent)] font-semibold">
-                INTRADAY REGIME
-              </span>
-            </div>
+        <PageHeader
+          eyebrow="MAIN · OVERVIEW"
+          accentNote="INTRADAY REGIME"
+          title={`Today's market regime: ${kpiStats.overallRegime}`}
+          description="Cross-asset analysis across G8 currencies, US benchmark yields, technology equities, and gold. High-conviction setups prioritized based on intermarket yield differentials and liquidity flows."
+          actions={
+            <div
+              className="w-full lg:w-80 shrink-0 rounded-lg p-3.5 space-y-3"
+              style={{ backgroundColor: 'var(--bg-section-alt)' }}
+            >
+              <div className="flex items-center justify-between">
+                <span className="metadata-label text-[9px] text-[var(--text-muted)]">
+                  At a glance
+                </span>
+                <span className="text-[10px] font-semibold text-[var(--bullish)] tabular-nums">
+                  {kpiStats.bullishCount} bull / {kpiStats.bearishCount} bear
+                </span>
+              </div>
 
-            <div className="space-y-1">
-              <h1 className="headline-h2 text-[var(--text-primary)]">
-                TODAY'S MARKET REGIME: {kpiStats.overallRegime}
-              </h1>
-              <p className="text-xs sm:text-[13px] text-[var(--text-secondary)] leading-relaxed font-sans">
-                Cross-asset analysis across G8 currencies, US benchmark yields, technology equities, and gold. High-conviction setups prioritized based on intermarket yield differentials and liquidity flows.
-              </p>
-            </div>
+              <div className="grid grid-cols-2 gap-x-3 gap-y-2.5 text-[11px] tabular-nums">
+                <div className="space-y-0.5">
+                  <span className="metadata-label text-[9px] text-[var(--text-muted)] block">
+                    US dollar · DXY
+                  </span>
+                  <span className="font-bold text-[var(--text-primary)]">
+                    {kpiStats.dxy?.price.toFixed(2) || '101.24'}
+                    <span className={`ml-1 text-[10px] ${((kpiStats.dxy?.change_24h_pct ?? 0) >= 0) ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}`}>
+                      {((kpiStats.dxy?.change_24h_pct ?? 0) >= 0) ? '+' : ''}
+                      {(kpiStats.dxy?.change_24h_pct ?? 0.18).toFixed(2)}%
+                    </span>
+                  </span>
+                </div>
 
-            {/* Quick Navigation Action Strip */}
-            <div className="pt-1 flex items-center gap-2 flex-wrap text-xs font-mono">
-              <button
+                <div className="space-y-0.5">
+                  <span className="metadata-label text-[9px] text-[var(--text-muted)] block">
+                    Gold · XAUUSD
+                  </span>
+                  <span className="font-bold text-[var(--text-primary)]">
+                    ${kpiStats.gold?.price.toFixed(1) || '2,654.8'}
+                    <span className={`ml-1 text-[10px] ${((kpiStats.gold?.change_24h_pct ?? 0) >= 0) ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}`}>
+                      {((kpiStats.gold?.change_24h_pct ?? 0) >= 0) ? '+' : ''}
+                      {(kpiStats.gold?.change_24h_pct ?? 0.73).toFixed(2)}%
+                    </span>
+                  </span>
+                </div>
+
+                <div className="space-y-0.5">
+                  <span className="metadata-label text-[9px] text-[var(--text-muted)] block">
+                    Nasdaq · US100
+                  </span>
+                  <span className="font-bold text-[var(--text-primary)]">
+                    {kpiStats.us100?.price.toLocaleString(undefined, { maximumFractionDigits: 0 }) || '23,421'}
+                    <span className={`ml-1 text-[10px] ${((kpiStats.us100?.change_24h_pct ?? 0) >= 0) ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}`}>
+                      {((kpiStats.us100?.change_24h_pct ?? 0) >= 0) ? '+' : ''}
+                      {(kpiStats.us100?.change_24h_pct ?? 0.41).toFixed(2)}%
+                    </span>
+                  </span>
+                </div>
+
+                <div className="space-y-0.5">
+                  <span className="metadata-label text-[9px] text-[var(--text-muted)] block">
+                    10Y yield · US10Y
+                  </span>
+                  <span className="font-bold text-[var(--text-primary)]">
+                    {kpiStats.us10y?.price.toFixed(3) || '4.085'}%
+                    <span className={`ml-1 text-[10px] ${((kpiStats.us10y?.change_24h_pct ?? 0) <= 0) ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}`}>
+                      {((kpiStats.us10y?.change_24h_pct ?? 0) >= 0) ? '+' : ''}
+                      {(kpiStats.us10y?.change_24h_pct ?? -0.32).toFixed(2)}%
+                    </span>
+                  </span>
+                </div>
+              </div>
+
+              <div className="pt-1 flex items-center justify-between text-[10px] text-[var(--text-muted)] border-t" style={{ borderColor: 'var(--border-hairline)' }}>
+                <span>LEAD: <strong className="text-[var(--bullish)]">{kpiStats.strongest?.currency || 'USD'} ({kpiStats.strongest?.strength_score.toFixed(1) || '7.8'})</strong></span>
+                <span>LAG: <strong className="text-[var(--bearish)]">{kpiStats.weakest?.currency || 'JPY'} ({kpiStats.weakest?.strength_score.toFixed(1) || '2.1'})</strong></span>
+              </div>
+            </div>
+          }
+        >
+          <div className="pt-1 flex items-center gap-2 flex-wrap text-xs font-mono">
+            <button
                 onClick={() => onNavigateTab('arah_market')}
-                className="h-7 px-3 rounded font-semibold text-xs flex items-center gap-1.5 transition cursor-pointer bg-[var(--accent)] text-white hover:opacity-90 shadow-xs"
+              className="h-8 px-3.5 rounded-md font-semibold text-xs flex items-center gap-1.5 transition cursor-pointer bg-[var(--accent)] text-white hover:opacity-90 shadow-[var(--accent-glow)]"
               >
-                <Target className="w-3.5 h-3.5" />
-                <span>MARKET BIAS DOSSIER</span>
+              <Target className="w-3.5 h-3.5" />
+              <span>MARKET BIAS DOSSIER</span>
               </button>
 
-              <button
+            <button
                 onClick={() => onNavigateTab('currency')}
-                className="h-7 px-3 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-primary)] text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+              className="h-7 px-3 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-primary)] text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
               >
-                <TrendingUp className="w-3.5 h-3.5 text-[var(--bullish)]" />
-                <span>G8 CURRENCY MATRIX</span>
+              <TrendingUp className="w-3.5 h-3.5 text-[var(--bullish)]" />
+              <span>G8 CURRENCY MATRIX</span>
               </button>
 
-              <button
+            <button
                 onClick={() => onNavigateTab('intermarket')}
-                className="h-7 px-3 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-primary)] text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+              className="h-7 px-3 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-primary)] text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
               >
-                <Zap className="w-3.5 h-3.5 text-[var(--accent)]" />
-                <span>INTERMARKET FLOWS</span>
+              <Zap className="w-3.5 h-3.5 text-[var(--accent)]" />
+              <span>INTERMARKET FLOWS</span>
               </button>
 
-              <button
+            <button
                 onClick={() => onNavigateTab('events')}
-                className="h-7 px-3 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-primary)] text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+              className="h-7 px-3 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-primary)] text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
               >
-                <Radio className="w-3.5 h-3.5 text-[var(--text-muted)]" />
-                <span>CANONICAL WIRE</span>
+              <Radio className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+              <span>CANONICAL WIRE</span>
               </button>
-            </div>
           </div>
-
-          {/* Right Column: 5-Second Market Snapshot Table */}
-          <div
-            className="w-full lg:w-80 shrink-0 border rounded p-3 space-y-2.5 font-mono text-xs"
-            style={{
-              backgroundColor: 'var(--bg-section-alt)',
-              borderColor: 'var(--border-subtle)',
-            }}
-          >
-            <div className="flex items-center justify-between pb-1.5 border-b" style={{ borderColor: 'var(--border-hairline)' }}>
-              <span className="metadata-label text-[10px] text-[var(--text-secondary)]">
-                5-SECOND SCAN
-              </span>
-              <span className="text-[10px] font-semibold text-[var(--bullish)]">
-                {kpiStats.bullishCount} BULL / {kpiStats.bearishCount} BEAR
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 text-[11px] tabular-nums">
-              <div className="p-1.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-surface)]">
-                <span className="text-[9.5px] uppercase tracking-wider text-[var(--text-muted)] block">
-                  US DOLLAR (DXY)
-                </span>
-                <span className="font-bold text-[var(--text-primary)]">
-                  {kpiStats.dxy?.price.toFixed(2) || '101.24'}
-                  <span className={`ml-1 text-[10px] ${((kpiStats.dxy?.change_24h_pct ?? 0) >= 0) ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}`}>
-                    {((kpiStats.dxy?.change_24h_pct ?? 0) >= 0) ? '+' : ''}
-                    {(kpiStats.dxy?.change_24h_pct ?? 0.18).toFixed(2)}%
-                  </span>
-                </span>
-              </div>
-
-              <div className="p-1.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-surface)]">
-                <span className="text-[9.5px] uppercase tracking-wider text-[var(--text-muted)] block">
-                  GOLD (XAUUSD)
-                </span>
-                <span className="font-bold text-[var(--text-primary)]">
-                  ${kpiStats.gold?.price.toFixed(1) || '2,654.8'}
-                  <span className={`ml-1 text-[10px] ${((kpiStats.gold?.change_24h_pct ?? 0) >= 0) ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}`}>
-                    {((kpiStats.gold?.change_24h_pct ?? 0) >= 0) ? '+' : ''}
-                    {(kpiStats.gold?.change_24h_pct ?? 0.73).toFixed(2)}%
-                  </span>
-                </span>
-              </div>
-
-              <div className="p-1.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-surface)]">
-                <span className="text-[9.5px] uppercase tracking-wider text-[var(--text-muted)] block">
-                  NASDAQ (US100)
-                </span>
-                <span className="font-bold text-[var(--text-primary)]">
-                  {kpiStats.us100?.price.toLocaleString(undefined, { maximumFractionDigits: 0 }) || '23,421'}
-                  <span className={`ml-1 text-[10px] ${((kpiStats.us100?.change_24h_pct ?? 0) >= 0) ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}`}>
-                    {((kpiStats.us100?.change_24h_pct ?? 0) >= 0) ? '+' : ''}
-                    {(kpiStats.us100?.change_24h_pct ?? 0.41).toFixed(2)}%
-                  </span>
-                </span>
-              </div>
-
-              <div className="p-1.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-surface)]">
-                <span className="text-[9.5px] uppercase tracking-wider text-[var(--text-muted)] block">
-                  10Y YIELD (US10Y)
-                </span>
-                <span className="font-bold text-[var(--text-primary)]">
-                  {kpiStats.us10y?.price.toFixed(3) || '4.085'}%
-                  <span className={`ml-1 text-[10px] ${((kpiStats.us10y?.change_24h_pct ?? 0) <= 0) ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}`}>
-                    {((kpiStats.us10y?.change_24h_pct ?? 0) >= 0) ? '+' : ''}
-                    {(kpiStats.us10y?.change_24h_pct ?? -0.32).toFixed(2)}%
-                  </span>
-                </span>
-              </div>
-            </div>
-
-            <div className="pt-1 flex items-center justify-between text-[10px] text-[var(--text-muted)] border-t" style={{ borderColor: 'var(--border-hairline)' }}>
-              <span>LEAD: <strong className="text-[var(--bullish)]">{kpiStats.strongest?.currency || 'USD'} ({kpiStats.strongest?.strength_score.toFixed(1) || '7.8'})</strong></span>
-              <span>LAG: <strong className="text-[var(--bearish)]">{kpiStats.weakest?.currency || 'JPY'} ({kpiStats.weakest?.strength_score.toFixed(1) || '2.1'})</strong></span>
-            </div>
-          </div>
-        </div>
+        </PageHeader>
       </section>
 
       {/* ======================================================== */}
       {/* 2. 4-COLUMN STRUCTURAL KPI TELEMETRY GRID               */}
       {/* ======================================================== */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {/* KPI 1: Market Regime */}
-        <div className="terminal-panel p-3 flex flex-col justify-between space-y-1.5">
+        {/* KPI 1: Market Regime — derived from per-asset bias; the detail lives in the Bias view */}
+        <button
+          type="button"
+          onClick={() => onNavigateTab('arah_market')}
+          title="Derived from per-asset bias across core assets — open Market Bias for the full read"
+          className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3.5 flex flex-col justify-between gap-2 text-left transition hover:border-[var(--border-strong)] cursor-pointer"
+        >
           <div className="flex items-center justify-between">
             <span className="metadata-label text-[10px] text-[var(--text-muted)]">
-              REGIME
+              Regime
             </span>
             <span
-              className={`text-[9.5px] px-1 py-0 font-mono font-semibold rounded border ${
+              className={`text-[9px] px-2 py-0.5 rounded-full font-semibold ${
                 kpiStats.regimeStatus === 'BULLISH'
                   ? 'badge-bullish'
                   : kpiStats.regimeStatus === 'BEARISH'
@@ -301,19 +272,20 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
               {kpiStats.regimeStatus}
             </span>
           </div>
-          <div className="text-xs font-mono font-bold text-[var(--text-primary)]">
+          <div className="text-[15px] font-semibold text-[var(--text-primary)]">
             {kpiStats.overallRegime}
           </div>
-          <div className="text-[10px] font-mono text-[var(--text-muted)]">
-            Distribution across 13 core tracking assets
+          <div className="text-[11px] text-[var(--text-muted)] flex items-center gap-1">
+            <span>Distribution across 13 core tracking assets</span>
+            <ChevronRight className="w-3 h-3 shrink-0" />
           </div>
-        </div>
+        </button>
 
         {/* KPI 2: Currency Divergence */}
-        <div className="terminal-panel p-3 flex flex-col justify-between space-y-1.5">
+        <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3.5 flex flex-col justify-between gap-2">
           <div className="flex items-center justify-between">
             <span className="metadata-label text-[10px] text-[var(--text-muted)]">
-              G8 DIVERGENCE
+              G8 divergence
             </span>
             <button
               onClick={() => onNavigateTab('currency')}
@@ -330,13 +302,13 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
               Δ {((kpiStats.strongest?.strength_score ?? 6) - (kpiStats.weakest?.strength_score ?? 2)).toFixed(1)}pt
             </span>
           </div>
-          <div className="text-[10px] font-mono text-[var(--text-muted)]">
+          <div className="text-[11px] text-[var(--text-muted)]">
             Maximum directional divergence basket
           </div>
         </div>
 
         {/* KPI 3: Key Imminent Catalyst */}
-        <div className="terminal-panel p-3 flex flex-col justify-between space-y-1.5">
+        <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3.5 flex flex-col justify-between gap-2">
           <div className="flex items-center justify-between">
             <span className="metadata-label text-[10px] text-[var(--text-muted)]">
               NEXT HIGH IMPACT
@@ -350,9 +322,9 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
           <div className="text-xs font-mono font-bold text-[var(--text-primary)] truncate" title={kpiStats.upcomingHigh?.event_name}>
             {kpiStats.upcomingHigh?.event_name || 'No imminent high-impact data'}
           </div>
-          <div className="text-[10px] font-mono text-[var(--text-muted)]">
+          <div className="text-[11px] text-[var(--text-muted)]">
             {kpiStats.upcomingHigh ? (
-              `${new Date(kpiStats.upcomingHigh.date_time_utc).toLocaleTimeString('id-ID', {
+              `${new Date(kpiStats.upcomingHigh.date_time_utc).toLocaleTimeString('en-GB', {
                 timeZone: 'Asia/Jakarta',
                 hour12: false,
                 hour: '2-digit',
@@ -363,7 +335,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
         </div>
 
         {/* KPI 4: Intermarket Flow Transmissions */}
-        <div className="terminal-panel p-3 flex flex-col justify-between space-y-1.5">
+        <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3.5 flex flex-col justify-between gap-2">
           <div className="flex items-center justify-between">
             <span className="metadata-label text-[10px] text-[var(--text-muted)]">
               CROSS-ASSET ENGINE
@@ -375,26 +347,24 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
               Flows →
             </button>
           </div>
-          <div className="text-xs font-mono font-bold text-[var(--text-primary)]">
+          <div className="text-[15px] font-semibold text-[var(--text-primary)]">
             US10Y → US100 / XAU
           </div>
-          <div className="text-[10px] font-mono text-[var(--text-muted)]">
+          <div className="text-[11px] text-[var(--text-muted)]">
             Bond yield discount anchor active
           </div>
         </div>
       </div>
 
       {/* ======================================================== */}
-      {/* 3. EXECUTIVE MARKET BRIEF (KESIMPULAN & TRADE ENTRIES)   */}
+      {/* 3. EXECUTIVE MARKET BRIEF (MACRO CONCLUSION)             */}
       {/* ======================================================== */}
       <ExecutiveMarketBrief
         strengths={strengths}
-        intradayMap={intradayMap}
-        todayCatalysts={todayCatalysts}
         prices={prices}
-        calendar={calendar}
+        globalRegime={globalRegime}
         onOpenChart={onOpenChart}
-        onSelectSymbol={onSelectSymbol}
+        onNavigateMarketBias={() => onNavigateTab('arah_market')}
       />
 
       {/* ======================================================== */}
@@ -403,11 +373,11 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         {/* Left Column: Real-Time Wire Feed (8 Columns) */}
         <div className="lg:col-span-8 space-y-3">
-          <div className="terminal-panel p-3.5 space-y-3">
+          <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4 space-y-3">
             {/* Header with Switcher Tabs & Impact Filter */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2.5 border-b" style={{ borderColor: 'var(--border-hairline)' }}>
-              <div className="flex items-center gap-2">
-                <div className="flex items-center rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] p-0.5 text-xs font-mono">
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-0.5 rounded-md bg-[var(--bg-section-alt)] p-0.5">
                   <button
                     onClick={() => setNewsFeedTab('news')}
                     className={`h-6 px-2.5 rounded font-semibold transition cursor-pointer flex items-center gap-1.5 ${
@@ -456,7 +426,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
                       onClick={() => setWireImpactFilter('ALL')}
                       className={`h-6 px-2 rounded border transition cursor-pointer ${
                         wireImpactFilter === 'ALL'
-                          ? 'border-[var(--text-primary)] text-[var(--text-primary)] font-bold'
+                          ? 'bg-[var(--active-bg)] border-[var(--active-border)] text-[var(--active-text)] font-semibold'
                           : 'border-[var(--border-subtle)] text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                       }`}
                       title="Show all wire headlines"
@@ -506,7 +476,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
                     const eventDate = new Date(event.last_updated_at || event.first_detected_at);
                     const eventTime = isNaN(eventDate.getTime())
                       ? 'LIVE'
-                      : eventDate.toLocaleTimeString('id-ID', {
+                      : eventDate.toLocaleTimeString('en-GB', {
                           timeZone: 'Asia/Jakarta',
                           hour12: false,
                           hour: '2-digit',
@@ -587,7 +557,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
 
                     <div className="flex items-center gap-3 shrink-0 text-[10px] tabular-nums">
                       <span className="font-bold text-[var(--text-primary)]">
-                        {new Date(item.date_time_utc).toLocaleTimeString('id-ID', {
+                        {new Date(item.date_time_utc).toLocaleTimeString('en-GB', {
                           timeZone: 'Asia/Jakarta',
                           hour12: false,
                           hour: '2-digit',
@@ -615,16 +585,16 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
         {/* Right Column: Macro Catalysts Radar & AI Digest (4 Columns) */}
         <div className="lg:col-span-4 space-y-3">
           {/* Today's Key Catalysts */}
-          <div className="terminal-panel p-3.5 space-y-2.5">
+          <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4 space-y-3">
             <div className="flex items-center justify-between pb-2 border-b" style={{ borderColor: 'var(--border-hairline)' }}>
               <div className="flex items-center gap-1.5">
                 <Zap className="w-3.5 h-3.5 text-[var(--accent)]" />
-                <h3 className="metadata-label text-[10px] text-[var(--text-primary)]">
-                  TODAY'S CATALYSTS
+                <h3 className="text-[13px] font-semibold text-[var(--text-primary)]">
+                  Today's catalysts
                 </h3>
               </div>
               <button
-                onClick={() => onNavigateTab('today_catalysts')}
+                onClick={() => onNavigateTab('macro')}
                 className="text-[10px] font-mono text-[var(--accent)] hover:underline flex items-center gap-0.5 cursor-pointer"
               >
                 <span>Detail</span>
@@ -667,16 +637,16 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
 
           {/* AI Macro Synthesis Digest */}
           {overview && (
-            <div className="terminal-panel p-3.5 space-y-2">
+            <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4 space-y-3">
               <div className="flex items-center justify-between pb-1.5 border-b" style={{ borderColor: 'var(--border-hairline)' }}>
-                <span className="metadata-label text-[10px] text-[var(--text-primary)] flex items-center gap-1">
-                  <span>AI MACRO SYNTHESIS</span>
+                <span className="text-[13px] font-semibold text-[var(--text-primary)]">
+                  AI macro synthesis
                 </span>
                 <button
                   onClick={() => onNavigateTab('intelligence')}
-                  className="text-[10px] font-mono text-[var(--accent)] hover:underline cursor-pointer"
+                  className="text-[11px] font-medium text-[var(--accent)] hover:underline cursor-pointer"
                 >
-                  Deep Analysis →
+                  Full analysis
                 </button>
               </div>
               <p className="text-[11px] text-[var(--text-secondary)] font-sans leading-relaxed line-clamp-3">
@@ -688,33 +658,53 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
       </div>
 
       {/* ======================================================== */}
-      {/* 5. MARKET SURVEILLANCE & G8 CURRENCY FLOW MATRIX         */}
+      {/* 5. DEPTH MAP — Overview stays a summary; the grids live   */}
+      {/*    on their own tabs so this surface is not a second copy  */}
       {/* ======================================================== */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        {/* Left Column: Live 13 Assets Surveillance Grid (8 Columns) */}
-        <div className="lg:col-span-8">
-          <MarketDataGrid
-            prices={prices}
-            watchlistSymbols={watchlistSymbols}
-            intradayMap={intradayMap}
-            onToggleWatchlist={onToggleWatchlist}
-            onRefresh={onRefreshPrices}
-            isRefreshing={isRefreshingPrices}
-            onSelectSymbol={onSelectSymbol}
-            onOpenChart={onOpenChart}
-          />
-        </div>
-
-        {/* Right Column: Currency Strength Widget (4 Columns) */}
-        <div className="lg:col-span-4">
-          <CurrencyStrengthWidget
-            strengths={strengths}
-            onRefresh={onRefreshCS}
-            isRefreshing={isRefreshingCS}
-            onSelectCurrency={cur => onSelectSymbol(cur === selectedSymbol ? null : cur)}
-            initialTab="CHART"
-          />
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+        {[
+          {
+            id: 'markets' as const,
+            icon: BarChart2,
+            label: 'Market surveillance',
+            hint: 'Full quote grid · 14 instruments',
+          },
+          {
+            id: 'currency' as const,
+            icon: TrendingUp,
+            label: 'Currency G8 matrix',
+            hint: 'Strength chart · pair opportunity matrix',
+          },
+          {
+            id: 'intermarket' as const,
+            icon: Zap,
+            label: 'Intermarket flows',
+            hint: 'Cross-asset correlations & divergences',
+          },
+          {
+            id: 'history' as const,
+            icon: Clock,
+            label: 'Historical memory',
+            hint: 'Session archive · multi-day deltas',
+          },
+        ].map(({ id, icon: Icon, label, hint }) => (
+          <button
+            key={id}
+            onClick={() => onNavigateTab(id)}
+            className="press text-left rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3.5 flex items-start gap-3 transition hover:border-[var(--border-strong)] hover:bg-[var(--bg-section-alt)] cursor-pointer"
+          >
+            <Icon className="w-4 h-4 text-[var(--accent)] mt-0.5 shrink-0" />
+            <span className="min-w-0 space-y-0.5">
+              <span className="block text-[13px] font-semibold text-[var(--text-primary)]">
+                {label}
+              </span>
+              <span className="block text-[11px] text-[var(--text-muted)] leading-snug">
+                {hint}
+              </span>
+            </span>
+            <ArrowRight className="w-3.5 h-3.5 text-[var(--text-muted)] ml-auto mt-0.5 shrink-0" />
+          </button>
+        ))}
       </div>
     </div>
   );

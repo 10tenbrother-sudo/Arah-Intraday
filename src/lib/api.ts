@@ -261,7 +261,7 @@ export const api = {
     method: 'POST',
     body: JSON.stringify(credentials),
   }),
-  firebaseLogin: (payload: { email: string; name?: string; uid: string; photoURL?: string }) =>
+  firebaseLogin: (payload: { idToken: string }) =>
     request<{ user: User; token: string; success: boolean }>('/auth/firebase-login', {
       method: 'POST',
       body: JSON.stringify(payload),
@@ -272,7 +272,6 @@ export const api = {
     message: string;
     email: string;
     token?: string;
-    code?: string;
     verificationUrl?: string;
     user: User;
   }>('/auth/register', {
@@ -335,7 +334,7 @@ export const api = {
     method: 'POST',
     body: JSON.stringify({ email }),
   }),
-  resetPassword: (payload: { token?: string; newPassword: string; email?: string; directReset?: boolean }) => request<{
+  resetPassword: (payload: { token: string; newPassword: string }) => request<{
     success: boolean;
     message: string;
     token: string;
@@ -357,15 +356,7 @@ export const api = {
     method: 'POST',
     body: JSON.stringify({ token }),
   }),
-  quickLogin: (email?: string) => request<{
-    success: boolean;
-    message: string;
-    token: string;
-    user: User;
-  }>('/auth/quick-login', {
-    method: 'POST',
-    body: JSON.stringify({ email }),
-  }),
+
 
   // Admin
   getSystemHealth: () => request<any>('/admin/system-health'),

@@ -8,7 +8,7 @@ import crypto from 'node:crypto';
 import { Request, Response, NextFunction } from 'express';
 import { db } from '../db/database.js';
 import { User, UserRole, UserPreferences } from '../types.js';
-import { mailService, EmailSendResult } from '../services/mailService.js';
+import { mailService, MailService, EmailSendResult } from '../services/mailService.js';
 
 const PBKDF2_ITERATIONS = 210_000;
 const PBKDF2_KEYLEN = 64;
@@ -17,14 +17,22 @@ const PBKDF2_DIGEST = 'sha512';
 function resolveSecret(): string {
   const fromEnv = process.env.APP_SECRET;
   if (fromEnv && fromEnv.length >= 32) return fromEnv;
+
   if (process.env.NODE_ENV === 'production') {
     throw new Error(
-      '[FATAL] APP_SECRET tidak diset (atau kurang dari 32 karakter). ' +
-      'Set di environment variable sebelum menjalankan production.'
+      '[FATAL] APP_SECRET is not set (or is shorter than 32 characters). ' +
+      'Set it in the environment before starting production.'
     );
   }
-  console.warn('[Auth] APP_SECRET belum diset — memakai secret sementara khusus development.');
-  return 'dev-only-insecure-secret-do-not-use-in-production';
+
+  // A fixed development fallback would let anyone forge a token for this
+  // instance, since the constant is published in the repository. Mint a random
+  // one instead: sessions stop surviving a restart, which is the safe trade.
+  console.warn(
+    '[Auth] APP_SECRET is not set - using a random per-process secret. ' +
+    'Sessions will not survive a server restart. Set APP_SECRET for persistent sessions.'
+  );
+  return crypto.randomBytes(48).toString('hex');
 }
 
 const JWT_SECRET = resolveSecret();
@@ -34,6 +42,19 @@ export interface AuthTokenPayload {
   email: string;
   role: UserRole;
   exp: number;
+}
+
+/** User shape that is safe to send to a client: no credential material. */
+export function toPublicUser(user: User) {
+  const {
+    password_hash: _passwordHash,
+    salt: _salt,
+    last_order_id: _lastOrderId,
+    payment_method: _paymentMethod,
+    billing_cycle: _billingCycle,
+    ...safe
+  } = user;
+  return safe;
 }
 
 export interface AuthenticatedRequest extends Request {
@@ -88,7 +109,7 @@ export class AuthService {
   /**
    * Validates token and returns decoded payload
    */
-  public static verifyToken(token: string): AuthTokenPayload | null {
+  static async verifyToken(token: string): Promise<AuthTokenPayload | null> {
     try {
       const parts = token.split('.');
       if (parts.length !== 3) return null;
@@ -128,20 +149,20 @@ export class AuthService {
     verificationUrl?: string;
   }> {
     const cleanEmail = email.toLowerCase().trim();
-    const existing = db.getUserByEmail(cleanEmail);
+    const existing = await db.getUserByEmail(cleanEmail);
     if (existing) {
       if (!existing.is_verified || existing.verification_status === 'pending_verification') {
-        const tokenRecord = db.createVerificationToken(existing.id, existing.email, 24);
+        const tokenRecord = await db.createVerificationToken(existing.id, existing.email, 24);
         const verificationUrl = `${baseUrl}/api/auth/verify-email?token=${encodeURIComponent(tokenRecord.token)}`;
         const mailResult = await mailService.sendVerificationEmail(existing.email, existing.name, tokenRecord.token, baseUrl, tokenRecord.code);
-        const err: any = new Error('Akun dengan email ini sudah terdaftar namun belum diverifikasi. Kode dan tautan aktivasi baru telah dikirimkan ke email Anda.');
+        const err: any = new Error('This email is already registered but not verified. A fresh activation code and link have been sent to your email.');
         err.code = 'EMAIL_NOT_VERIFIED';
         err.email = cleanEmail;
         err.code_otp = tokenRecord.code;
         err.verificationUrl = verificationUrl;
         throw err;
       }
-      throw new Error('Alamat email ini sudah terdaftar. Silakan langsung masuk (login) menggunakan kata sandi Anda.');
+      throw new Error('This email address is already registered. Sign in with your password instead.');
     }
 
     if (password.length < 6) {
@@ -150,24 +171,26 @@ export class AuthService {
 
     const { hash, salt } = this.hashPassword(password);
     const userId = `usr_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
-    const isAdminAccount = cleanEmail === 'danwil028@gmail.com' || cleanEmail === 'wildanmn1933@gmail.com' || cleanEmail === 'admin@marketintel.pro';
 
+    // Registration never grants elevated privileges: the email address is
+    // self-asserted and unverified at this point. Admin rights are assigned
+    // through the admin API only.
     const newUser: User = {
       id: userId,
       email: cleanEmail,
       password_hash: hash,
       salt,
       name: name.trim() || cleanEmail.split('@')[0] || 'Trader',
-      role: isAdminAccount ? 'ADMIN' : 'USER',
+      role: 'USER',
       is_verified: false,
       verification_status: 'pending_verification',
-      plan: isAdminAccount ? 'INSTITUTIONAL' : 'FREE',
+      plan: 'FREE',
       subscription_status: 'active',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
 
-    db.insertUser(newUser);
+    await db.insertUser(newUser);
 
     const defaultPrefs: UserPreferences = {
       user_id: userId,
@@ -180,17 +203,17 @@ export class AuthService {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
-    db.upsertUserPreferences(defaultPrefs);
+    await db.upsertUserPreferences(defaultPrefs);
 
     // Create 24h verification token and send verification email
-    const tokenRecord = db.createVerificationToken(newUser.id, newUser.email, 24);
+    const tokenRecord = await db.createVerificationToken(newUser.id, newUser.email, 24);
     const verificationUrl = `${baseUrl}/api/auth/verify-email?token=${encodeURIComponent(tokenRecord.token)}`;
     const mailResult = await mailService.sendVerificationEmail(newUser.email, newUser.name, tokenRecord.token, baseUrl, tokenRecord.code);
 
     return {
       user: newUser,
       status: 'pending_verification',
-      message: 'Pendaftaran berhasil! Silakan periksa kotak masuk email Anda untuk mengaktifkan akun.',
+      message: 'Registration successful. Check your inbox to activate your account.',
       mailResult,
       code: tokenRecord.code,
       verificationUrl,
@@ -200,11 +223,11 @@ export class AuthService {
   /**
    * Authenticates user credentials with verification enforcement
    */
-  public static login(email: string, password: string): { user: User; token: string } {
+  public static async login(email: string, password: string): Promise<{ user: User; token: string }>  {
     const cleanEmail = email.toLowerCase().trim();
-    let user = db.getUserByEmail(cleanEmail);
+    let user = await db.getUserByEmail(cleanEmail);
     if (!user) {
-      const err: any = new Error('Alamat email belum terdaftar di ArahMarket. Silakan daftar akun baru.');
+      const err: any = new Error('This email address is not registered with ArahMarket. Create a new account instead.');
       err.code = 'USER_NOT_FOUND';
       err.email = cleanEmail;
       throw err;
@@ -212,7 +235,7 @@ export class AuthService {
 
     const isValid = this.verifyPassword(password, user.password_hash, user.salt);
     if (!isValid) {
-      const err: any = new Error('Kata sandi salah untuk akun ini. Silakan periksa kembali atau gunakan fitur Reset Kata Sandi.');
+      const err: any = new Error('Incorrect password for this account. Check it again or use the password reset flow.');
       err.code = 'INVALID_PASSWORD';
       err.email = cleanEmail;
       throw err;
@@ -220,7 +243,7 @@ export class AuthService {
 
     // Enforce email verification check
     if (!user.is_verified || user.verification_status === 'pending_verification') {
-      const err: any = new Error('Akun Anda belum aktif. Silakan verifikasi email Anda terlebih dahulu melalui tautan yang kami kirimkan.');
+      const err: any = new Error('Your account is not active yet. Verify your email first using the link we sent.');
       err.code = 'EMAIL_NOT_VERIFIED';
       err.email = cleanEmail;
       throw err;
@@ -233,10 +256,10 @@ export class AuthService {
   /**
    * Verifies an email token from verification_tokens table and activates user
    */
-  public static verifyEmail(token: string): { success: boolean; user?: User; token?: string; error?: string } {
-    const res = db.consumeVerificationToken(token);
+  public static async verifyEmail(token: string): Promise<{ success: boolean; user?: User; token?: string; error?: string }>  {
+    const res = await db.consumeVerificationToken(token);
     if (!res.success || !res.user) {
-      return { success: false, error: res.error || 'Token verifikasi tidak valid atau telah kedaluwarsa.' };
+      return { success: false, error: res.error || 'That verification token is invalid or has expired.' };
     }
 
     const sessionToken = this.generateToken(res.user);
@@ -250,10 +273,10 @@ export class AuthService {
   /**
    * Verifies an email using 6-digit numeric OTP code and activates user
    */
-  public static verifyCode(email: string, code: string): { success: boolean; user?: User; token?: string; error?: string } {
-    const res = db.consumeVerificationCode(email, code);
+  public static async verifyCode(email: string, code: string): Promise<{ success: boolean; user?: User; token?: string; error?: string }>  {
+    const res = await db.consumeVerificationCode(email, code);
     if (!res.success || !res.user) {
-      return { success: false, error: res.error || 'Kode verifikasi tidak sesuai atau telah kedaluwarsa.' };
+      return { success: false, error: res.error || 'That verification code is incorrect or has expired.' };
     }
 
     const sessionToken = this.generateToken(res.user);
@@ -270,17 +293,17 @@ export class AuthService {
   public static async requestPasswordReset(
     email: string,
     baseUrl: string
-  ): Promise<{ success: boolean; message: string; resetUrl?: string; email: string }> {
+  ): Promise<{ success: boolean; message: string; mailSent: boolean; resetUrl?: string; email: string }> {
     const cleanEmail = email.toLowerCase().trim();
-    const user = db.getUserByEmail(cleanEmail);
+    const user = await db.getUserByEmail(cleanEmail);
     if (!user) {
-      const err: any = new Error('Alamat email belum terdaftar di ArahMarket.');
+      const err: any = new Error('This email address is not registered with ArahMarket.');
       err.code = 'USER_NOT_FOUND';
       err.email = cleanEmail;
       throw err;
     }
 
-    const tokenRecord = db.createPasswordResetToken(user.id, user.email, 2);
+    const tokenRecord = await db.createPasswordResetToken(user.id, user.email, 2);
     const result = await mailService.sendPasswordResetEmail(
       user.email,
       user.name,
@@ -288,10 +311,31 @@ export class AuthService {
       baseUrl
     );
 
+    // Never claim an email went out when the transport never ran. The previous
+    // unconditional "sent to your email" made a misconfigured SMTP look like a
+    // missing inbox message, which is the hardest possible thing to debug.
+    const linkVisible = MailService.linksVisibleToCaller();
+    let message: string;
+    if (result.devMode) {
+      message = linkVisible
+        ? 'No mail transport is configured, so no email was sent. Use the reset link returned below.'
+        : 'No mail transport is configured, so no email was sent. Ask an operator for the link in the server log.';
+      console.warn(
+        `[Auth] Password reset for ${user.email} was generated in dev mode; no email left the server. ` +
+        'Set AUTH_DEV_LINK_ECHO=true to receive the link in the response, or configure SMTP_* for real delivery.'
+      );
+    } else if (!result.success) {
+      message = 'The reset link was created but the email could not be delivered. Request a new link or contact support.';
+      console.error(`[Auth] Password reset email for ${user.email} failed: ${result.error || 'unknown error'}`);
+    } else {
+      message = 'A password reset link has been sent to your email.';
+    }
+
     return {
       success: true,
-      message: 'Tautan pengaturan ulang kata sandi telah dikirim ke email Anda.',
-      resetUrl: result.resetUrl,
+      message,
+      mailSent: !result.devMode && result.success,
+      resetUrl: result.devMode && linkVisible ? result.resetUrl : undefined,
       email: user.email,
     };
   }
@@ -299,21 +343,21 @@ export class AuthService {
   /**
    * Resets user password using valid reset token and logs them in
    */
-  public static resetPassword(
+  public static async resetPassword(
     token: string,
     newPassword: string
-  ): { success: boolean; message: string; user: User; token: string } {
+  ): Promise<{ success: boolean; message: string; user: User; token: string }>  {
     if (!newPassword || newPassword.length < 6) {
-      throw new Error('Kata sandi baru minimal harus 6 karakter.');
+      throw new Error('The new password must be at least 6 characters.');
     }
 
-    const res = db.consumeToken(token, 'password_reset');
+    const res = await db.consumeToken(token, 'password_reset');
     if (!res.success || !res.user) {
-      throw new Error(res.error || 'Tautan reset kata sandi tidak valid atau telah kedaluwarsa.');
+      throw new Error(res.error || 'That password reset link is invalid or has expired.');
     }
 
     const { hash, salt } = this.hashPassword(newPassword);
-    const updated = db.updateUser(res.user.id, {
+    const updated = await db.updateUser(res.user.id, {
       password_hash: hash,
       salt,
       is_verified: true,
@@ -321,13 +365,13 @@ export class AuthService {
     });
 
     if (!updated) {
-      throw new Error('Gagal memperbarui kata sandi pengguna.');
+      throw new Error('Could not update the user password.');
     }
 
     const sessionToken = this.generateToken(updated);
     return {
       success: true,
-      message: 'Kata sandi berhasil diperbarui! Anda telah otomatis masuk.',
+      message: 'Password updated. You have been signed in automatically.',
       user: updated,
       token: sessionToken,
     };
@@ -341,7 +385,7 @@ export class AuthService {
     baseUrl: string
   ): Promise<{ success: boolean; message: string; magicUrl?: string; email: string }> {
     const cleanEmail = email.toLowerCase().trim();
-    let user = db.getUserByEmail(cleanEmail);
+    let user = await db.getUserByEmail(cleanEmail);
 
     // If user does not exist yet, provision account seamlessly
     if (!user) {
@@ -361,10 +405,10 @@ export class AuthService {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
-      db.insertUser(user);
+      await db.insertUser(user);
     }
 
-    const tokenRecord = db.createMagicLinkToken(user.id, user.email, 1);
+    const tokenRecord = await db.createMagicLinkToken(user.id, user.email, 1);
     const result = await mailService.sendMagicLinkEmail(
       user.email,
       user.name,
@@ -374,7 +418,7 @@ export class AuthService {
 
     return {
       success: true,
-      message: 'Tautan masuk langsung (Magic Link) telah dikirim ke email Anda.',
+      message: 'A magic sign-in link has been sent to your email.',
       magicUrl: result.magicUrl,
       email: user.email,
     };
@@ -383,13 +427,13 @@ export class AuthService {
   /**
    * Verifies magic link token and produces session JWT
    */
-  public static verifyMagicLink(token: string): { success: boolean; user?: User; token?: string; error?: string } {
-    const res = db.consumeToken(token, 'magic_link');
+  public static async verifyMagicLink(token: string): Promise<{ success: boolean; user?: User; token?: string; error?: string }>  {
+    const res = await db.consumeToken(token, 'magic_link');
     if (!res.success || !res.user) {
-      return { success: false, error: res.error || 'Tautan masuk tidak valid atau telah kedaluwarsa.' };
+      return { success: false, error: res.error || 'That sign-in link is invalid or has expired.' };
     }
 
-    const updated = db.updateUser(res.user.id, {
+    const updated = await db.updateUser(res.user.id, {
       is_verified: true,
       verification_status: 'verified',
     }) || res.user;
@@ -403,37 +447,6 @@ export class AuthService {
   }
 
   /**
-   * Direct password reset by email (for self-recovery / instant reset)
-   */
-  public static directPasswordReset(
-    email: string,
-    newPassword: string
-  ): { success: boolean; user: User; token: string } {
-    const cleanEmail = email.toLowerCase().trim();
-    const user = db.getUserByEmail(cleanEmail);
-    if (!user) {
-      const err: any = new Error('Akun dengan email ini tidak ditemukan.');
-      err.code = 'USER_NOT_FOUND';
-      throw err;
-    }
-    if (!newPassword || newPassword.length < 6) {
-      throw new Error('Kata sandi minimal 6 karakter.');
-    }
-    const { hash, salt } = this.hashPassword(newPassword);
-    const updated = db.updateUser(user.id, {
-      password_hash: hash,
-      salt,
-      is_verified: true,
-      verification_status: 'verified',
-    });
-    if (!updated) {
-      throw new Error('Gagal memperbarui kata sandi.');
-    }
-    const token = this.generateToken(updated);
-    return { success: true, user: updated, token };
-  }
-
-  /**
    * Resends verification email for unverified user
    */
   public static async resendVerification(
@@ -441,16 +454,16 @@ export class AuthService {
     baseUrl: string
   ): Promise<{ success: boolean; message: string; code?: string; mailResult: EmailSendResult; verificationUrl?: string }> {
     const cleanEmail = email.toLowerCase().trim();
-    const user = db.getUserByEmail(cleanEmail);
+    const user = await db.getUserByEmail(cleanEmail);
     if (!user) {
-      throw new Error('Akun dengan alamat email ini tidak ditemukan.');
+      throw new Error('No account found with this email address.');
     }
 
     if (user.is_verified && user.verification_status !== 'pending_verification') {
-      throw new Error('Akun Anda sudah terverifikasi sebelumnya. Silakan langsung masuk ke terminal.');
+      throw new Error('Your account was already verified. Sign in to the terminal directly.');
     }
 
-    const tokenRecord = db.createVerificationToken(user.id, user.email, 24);
+    const tokenRecord = await db.createVerificationToken(user.id, user.email, 24);
     const mailResult = await mailService.sendVerificationEmail(
       user.email,
       user.name,
@@ -461,7 +474,7 @@ export class AuthService {
 
     return {
       success: true,
-      message: 'Kode dan tautan verifikasi baru telah dikirimkan ke email Anda.',
+      message: 'A new verification code and link have been sent to your email.',
       mailResult,
       code: tokenRecord.code,
       verificationUrl: mailResult.devMode ? mailResult.verificationUrl : undefined,
@@ -472,7 +485,7 @@ export class AuthService {
 /**
  * Express Middleware: Require Authentication
  */
-export function requireAuth(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
+export async function requireAuth(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
   const authHeader = req.headers.authorization;
   const queryToken = req.query.token as string | undefined;
   const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : queryToken;
@@ -482,41 +495,26 @@ export function requireAuth(req: AuthenticatedRequest, res: Response, next: Next
     return;
   }
 
-  const payload = AuthService.verifyToken(token);
+  const payload = await AuthService.verifyToken(token);
   if (!payload) {
     res.status(401).json({ error: 'Unauthorized: Invalid or expired token' });
     return;
   }
 
-  let user = db.getUserById(payload.userId);
-  if (!user && payload.email) {
-    user = db.getUserByEmail(payload.email);
-  }
+  // Resolve the caller strictly from stored records. Never trust role, email or
+  // plan from the token body, and never create an account from a token — doing
+  // so let a forged payload mint its own admin user.
+  const user =
+    (await db.getUserById(payload.userId)) ||
+    (payload.email ? await db.getUserByEmail(payload.email) : null);
+
   if (!user) {
-    // If the token is cryptographically verified by server secret, auto-recover user so session is permanent
-    const cleanEmail = payload.email.toLowerCase().trim();
-    const isAdminAccount = payload.role === 'ADMIN' || cleanEmail === 'danwil028@gmail.com' || cleanEmail === 'wildanmn1933@gmail.com' || cleanEmail === 'admin@marketintel.pro';
-    const defaultPass = AuthService.hashPassword('Trader123!');
-    const recoveredUser: User = {
-      id: payload.userId,
-      email: cleanEmail,
-      password_hash: defaultPass.hash,
-      salt: defaultPass.salt,
-      name: cleanEmail.split('@')[0],
-      role: isAdminAccount ? 'ADMIN' : 'USER',
-      is_verified: true,
-      verification_status: 'verified',
-      plan: isAdminAccount ? 'INSTITUTIONAL' : 'FREE',
-      subscription_status: 'active',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-    db.insertUser(recoveredUser);
-    user = recoveredUser;
+    res.status(401).json({ error: 'Unauthorized: Account no longer exists' });
+    return;
   }
 
   if (!user.is_verified || user.verification_status === 'pending_verification') {
-    db.updateUser(user.id, { is_verified: true, verification_status: 'verified' });
+    await db.updateUser(user.id, { is_verified: true, verification_status: 'verified' });
     user.is_verified = true;
     user.verification_status = 'verified';
   }
@@ -541,17 +539,17 @@ export function requireAdmin(req: AuthenticatedRequest, res: Response, next: Nex
 /**
  * Express Middleware: Optional Authentication (sets req.user if valid token provided)
  */
-export function optionalAuth(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
+export async function optionalAuth(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
   const authHeader = req.headers.authorization;
   const queryToken = req.query.token as string | undefined;
   const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : queryToken;
 
   if (token) {
-    const payload = AuthService.verifyToken(token);
+    const payload = await AuthService.verifyToken(token);
     if (payload) {
-      let user = db.getUserById(payload.userId);
+      let user = await db.getUserById(payload.userId);
       if (!user && payload.email) {
-        user = db.getUserByEmail(payload.email);
+        user = await db.getUserByEmail(payload.email);
       }
       if (user) req.user = user;
     }

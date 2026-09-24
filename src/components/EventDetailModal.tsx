@@ -129,7 +129,7 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({ eventId, onC
               onClick={handleReanalyze}
               disabled={reanalyzing}
               title="Generate fresh AI market intelligence"
-              className="flex items-center gap-1.5 h-7 px-2.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] hover:border-[var(--text-primary)] text-[var(--text-primary)] text-xs font-mono cursor-pointer"
+              className="flex items-center gap-1.5 h-7 px-2.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] hover:border-[var(--border-strong)] text-[var(--text-primary)] text-xs font-mono cursor-pointer"
             >
               <Sparkles className={`w-3.5 h-3.5 text-[var(--accent)] ${reanalyzing ? 'animate-spin' : ''}`} />
               <span>{reanalyzing ? 'SYNTHESIZING...' : 'AI RE-ANALYZE'}</span>
@@ -183,9 +183,9 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({ eventId, onC
               </span>
             </div>
 
-            <h1 className="text-lg sm:text-xl font-bold text-[var(--text-primary)] leading-snug mb-2 font-display">
+            <h2 className="text-lg sm:text-xl font-bold text-[var(--text-primary)] leading-snug mb-2 font-display">
               {event.title}
-            </h1>
+            </h2>
             <p className="text-sm text-[var(--text-secondary)] leading-relaxed bg-[var(--bg-section-alt)] p-3.5 rounded border border-[var(--border-subtle)] font-sans">
               {event.summary}
             </p>

@@ -10,6 +10,7 @@ import { analyzeAssetRelationships } from '../relationships/assetMapper.js';
 import { DeduplicationEngine } from '../deduplication/engine.js';
 import { sseBroker } from '../realtime/sse.js';
 import { analyzeMarketEventWithGemini } from '../intelligence/gemini.js';
+import { truncateText } from '../text.js';
 
 export async function processNewsThroughPipeline(rawNews: NewsItem): Promise<{
   newsItem: NewsItem;
@@ -24,7 +25,7 @@ export async function processNewsThroughPipeline(rawNews: NewsItem): Promise<{
   if (!titleStr || titleStr.length < 5) {
     if (contentStr.length >= 5) {
       const firstLine = contentStr.split('\n').map(l => l.trim()).find(l => l.length >= 5);
-      titleStr = firstLine ? firstLine.substring(0, 160).trim() : contentStr.substring(0, 120).trim();
+      titleStr = firstLine ? truncateText(firstLine, 160).trim() : truncateText(contentStr, 120).trim();
       rawNews.title = titleStr;
     }
   }
@@ -53,7 +54,7 @@ export async function processNewsThroughPipeline(rawNews: NewsItem): Promise<{
   rawNews.status = 'NORMALIZED';
 
   // 4. DEDUPLICATE & MATCH EVENT
-  const existingEvents = db.getAllEvents(40);
+  const existingEvents = await db.getAllEvents(40);
   const dedup = DeduplicationEngine.evaluateDuplicate(rawNews, existingEvents);
 
   let targetEvent: MarketEvent;
@@ -66,7 +67,7 @@ export async function processNewsThroughPipeline(rawNews: NewsItem): Promise<{
     rawNews.event_id = targetEvent.id;
     rawNews.status = 'EVENT_LINKED';
 
-    db.insertNewsItem(rawNews);
+    await db.insertNewsItem(rawNews);
     DeduplicationEngine.linkNewsToEvent(rawNews, targetEvent, dedup.matchReason, dedup.similarityScore);
     console.log(`[Pipeline] DEDUPLICATED: "${rawNews.title}" -> Event [${targetEvent.id}] (${dedup.matchReason})`);
   } else {
@@ -75,7 +76,7 @@ export async function processNewsThroughPipeline(rawNews: NewsItem): Promise<{
     targetEvent = {
       id: eventId,
       title: cleanTitle,
-      summary: cleanContent.length > 250 ? cleanContent.substring(0, 250) + '...' : cleanContent,
+      summary: cleanContent.length > 250 ? truncateText(cleanContent, 250) + '...' : cleanContent,
       primary_category: mapping.primary_category,
       impact_level: mapping.impact_level,
       first_detected_at: rawNews.published_at || new Date().toISOString(),
@@ -92,8 +93,8 @@ export async function processNewsThroughPipeline(rawNews: NewsItem): Promise<{
     rawNews.event_id = eventId;
     rawNews.status = 'EVENT_LINKED';
 
-    db.insertEvent(targetEvent);
-    db.insertNewsItem(rawNews);
+    await db.insertEvent(targetEvent);
+    await db.insertNewsItem(rawNews);
 
     DeduplicationEngine.linkNewsToEvent(rawNews, targetEvent, 'Canonical initial source for event', 1.0);
     console.log(`[Pipeline] NEW EVENT CREATED: [${eventId}] "${targetEvent.title}"`);

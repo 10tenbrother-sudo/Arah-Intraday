@@ -45,28 +45,28 @@ export function calculatePairImpacts(
     let bias: 'BULLISH' | 'BEARISH' | 'NEUTRAL' = 'BULLISH';
     let strength: 'CRITICAL' | 'HIGH' | 'MODERATE' | 'MILD' = 'HIGH';
     let mechanism = 'Safe-Haven Capital Inflow';
-    let rationale = 'Eskalasi ketegangan dan premi risiko global mendorong arus modal safe-haven ke emas batangan.';
+    let rationale = 'Escalating tensions and a global risk premium push safe-haven capital flows into bullion.';
 
     if (isGeopolitical || isBankingRisk) {
       bias = 'BULLISH';
       strength = 'CRITICAL';
       mechanism = 'Geopolitical / Counterparty Risk Hedge';
-      rationale = 'Emas diburu sebagai aset lindung nilai utama dari eskalasi militer dan risiko gagal bayar perbankan.';
+      rationale = 'Gold is bid as the primary hedge against military escalation and bank default risk.';
     } else if (isDovish) {
       bias = 'BULLISH';
       strength = 'HIGH';
       mechanism = 'Real Yield Compression';
-      rationale = 'Ekspektasi pemangkasan suku bunga Fed dan pelemahan USD memangkas opportunity cost memegang emas.';
+      rationale = 'Expectations of Fed rate cuts and a softer dollar reduce the opportunity cost of holding gold.';
     } else if (isHawkish && !isGeopolitical) {
       bias = 'BEARISH';
       strength = 'HIGH';
       mechanism = 'Real Yield Expansion';
-      rationale = 'Suku bunga acuan AS yang tinggi dan penguatan DXY menekan daya tarik aset tanpa imbal hasil seperti emas.';
+      rationale = 'High US policy rates and a firm DXY curb the appeal of non-yielding assets such as gold.';
     } else {
       bias = 'BULLISH';
       strength = 'MODERATE';
       mechanism = 'Central Bank Allocation Demand';
-      rationale = 'Akumulasi cadangan emas bank sentral global memberikan bantalan tren naik struktural.';
+      rationale = 'Continued central-bank gold accumulation cushions the structural uptrend.';
     }
 
     impacts.push({
@@ -85,28 +85,28 @@ export function calculatePairImpacts(
     let bias: 'BULLISH' | 'BEARISH' | 'NEUTRAL' = 'NEUTRAL';
     let strength: 'CRITICAL' | 'HIGH' | 'MODERATE' | 'MILD' = 'MODERATE';
     let mechanism = 'Fed-ECB Rate Spread';
-    let rationale = 'Sentimen makro mempengaruhi selisih suku bunga kebijakan antara ECB dan The Fed.';
+    let rationale = 'Macro sentiment shapes the policy rate differential between the ECB and the Fed.';
 
     if (isEcbHawkish) {
       bias = 'BULLISH';
       strength = 'HIGH';
       mechanism = 'ECB Tightening Differential';
-      rationale = 'Retorika ketat ECB mempersempit selisih suku bunga dengan The Fed, memberikan dorongan bullish bagi Euro.';
+      rationale = 'Hawkish ECB rhetoric narrows the rate gap with the Fed, giving the euro a bullish push.';
     } else if (isDovish) {
       bias = 'BULLISH';
       strength = 'HIGH';
       mechanism = 'USD Liquidity Easing';
-      rationale = 'Pelemahan indeks Dolar AS akibat prospek pemangkasan suku bunga Fed mengangkat kurs EUR/USD.';
+      rationale = 'A softer dollar index, driven by Fed rate-cut prospects, lifts EUR/USD.';
     } else if (isHawkish) {
       bias = 'BEARISH';
       strength = 'HIGH';
       mechanism = 'USD Yield Dominance';
-      rationale = 'Keunggulan imbal hasil obligasi AS menopang arus modal masuk ke USD, menekan pasangan EUR/USD.';
+      rationale = 'Superior US Treasury yields pull capital into the dollar, pressuring EUR/USD.';
     } else if (isGeopolitical) {
       bias = 'BEARISH';
       strength = 'MODERATE';
       mechanism = 'European Risk-Off Drag';
-      rationale = 'Ketidakpastian geopolitik global memicu flight-to-safety ke Dolar AS dibanding mata uang Euro.';
+      rationale = 'Global geopolitical uncertainty triggers a flight to safety into the dollar over the euro.';
     }
 
     impacts.push({
@@ -125,23 +125,23 @@ export function calculatePairImpacts(
     let bias: 'BULLISH' | 'BEARISH' | 'NEUTRAL' = 'NEUTRAL';
     let strength: 'CRITICAL' | 'HIGH' | 'MODERATE' | 'MILD' = 'MODERATE';
     let mechanism = 'BoE Monetary Policy Divergence';
-    let rationale = 'Pergerakan GBP dipandu oleh arah suku bunga Bank of England vs Federal Reserve.';
+    let rationale = 'GBP direction is guided by the Bank of England rate path versus the Federal Reserve.';
 
     if (isBoeHawkish) {
       bias = 'BULLISH';
       strength = 'HIGH';
       mechanism = 'Gilt Yield Support';
-      rationale = 'Inflasi Inggris yang membandel memaksa BoE mempertahankan sikap hawkish, menopang Cable (GBP/USD).';
+      rationale = 'Sticky UK inflation forces the BoE to stay hawkish, supporting Cable (GBP/USD).';
     } else if (isDovish) {
       bias = 'BULLISH';
       strength = 'MODERATE';
       mechanism = 'USD Softness';
-      rationale = 'Pelemahan Dolar AS secara luas memberikan ruang dorongan apresiasi bagi poundsterling.';
+      rationale = 'Broad dollar weakness gives the pound room to appreciate.';
     } else if (isHawkish || isBankingRisk) {
       bias = 'BEARISH';
       strength = 'MODERATE';
       mechanism = 'USD Superiority & Bank Scrutiny';
-      rationale = 'Pengawasan risiko perbankan dan keperkasaan dolar AS menekan valuasi GBP/USD.';
+      rationale = 'Banking risk scrutiny and a robust dollar weigh on the GBP/USD valuation.';
     }
 
     impacts.push({
@@ -160,28 +160,28 @@ export function calculatePairImpacts(
     let bias: 'BULLISH' | 'BEARISH' | 'NEUTRAL' = 'NEUTRAL';
     let strength: 'CRITICAL' | 'HIGH' | 'MODERATE' | 'MILD' = 'MODERATE';
     let mechanism = 'US-Japan Bond Yield Gap';
-    let rationale = 'Sensitivitas spread suku bunga US-Japan 10-year Treasury mengatur dinamika pasangan USD/JPY.';
+    let rationale = 'Sensitivity to the US-Japan 10-year Treasury spread drives USD/JPY dynamics.';
 
     if (isBojHawkish) {
       bias = 'BEARISH';
       strength = 'CRITICAL';
       mechanism = 'Carry Trade Unwind / BoJ Normalization';
-      rationale = 'Peluang kenaikan suku bunga BoJ atau intervensi valas memicu likuidasi carry trade, Yen menguat tajam (USDJPY turun).';
+      rationale = 'Prospects of a BoJ hike or FX intervention trigger carry-trade liquidation, sharply strengthening the yen (USDJPY falls).';
     } else if (isGeopolitical) {
       bias = 'BEARISH';
       strength = 'HIGH';
       mechanism = 'Yen Safe-Haven Inflow';
-      rationale = 'Sentimen penghindaran risiko global memicu repatriasi modal institusi Jepang ke mata uang domestik Yen.';
+      rationale = 'Global risk aversion drives Japanese institutional capital back into the yen.';
     } else if (isDovish) {
       bias = 'BEARISH';
       strength = 'HIGH';
       mechanism = 'Narrowing Yield Spread';
-      rationale = 'Penurunan yield obligasi AS menyempitkan selisih suku bunga AS-Jepang, menekan pergerakan USD/JPY.';
+      rationale = 'Falling US yields narrow the US-Japan rate gap, capping USD/JPY.';
     } else if (isHawkish) {
       bias = 'BULLISH';
       strength = 'HIGH';
       mechanism = 'Carry Trade Widening';
-      rationale = 'Suku bunga Fed yang tinggi memperlebar keuntungan carry trade Dolar AS terhadap Yen yang berbunga rendah.';
+      rationale = 'High Fed rates widen the carry advantage of the dollar over the low-yielding yen.';
     }
 
     impacts.push({
@@ -205,8 +205,8 @@ export function calculatePairImpacts(
       strength: isGeopolitical ? 'HIGH' : 'MODERATE',
       mechanism: isGeopolitical ? 'Swiss Safe-Haven Allocation' : 'Rate Differential',
       rationale: isGeopolitical
-        ? 'Franc Swiss diburu sebagai aset aman krisis geopolitik Eropa, menekan pasangan USD/CHF ke bawah.'
-        : 'Perbedaan kebijakan moneter Fed dan SNB mengarahkan fluktuasi nilai tukar USD terhadap Franc.',
+        ? 'The Swiss franc is bid as a haven for European geopolitical crises, pushing USD/CHF lower.'
+        : 'Divergence between Fed and SNB policy drives USD/CHF swings.',
       confidence: 0.86,
     });
   }
@@ -221,8 +221,8 @@ export function calculatePairImpacts(
       strength: 'MODERATE',
       mechanism: 'Commodity Growth Proxy',
       rationale: isAudBullish
-        ? 'Pelonggaran moneter The Fed menaikkan selera risiko dan prospek permintaan ekspor komoditas Australia.'
-        : 'Sentimen risk-off dan penguatan USD menekan mata uang pro-siklikal seperti Dollar Australia.',
+        ? 'Fed easing lifts risk appetite and the outlook for Australian commodity exports.'
+        : 'Risk-off sentiment and a firmer dollar pressure pro-cyclical currencies such as the Australian dollar.',
       confidence: 0.84,
     });
   }
@@ -232,20 +232,20 @@ export function calculatePairImpacts(
     const isOilPlunge = /slid|lowest|plunge|drop|fall|tumble|turun|anjlok/i.test(text);
     const isOilSurge = /surge|spike|jump|soar|rally|naik|melonjak/i.test(text);
     let cadBias: 'BULLISH' | 'BEARISH' | 'NEUTRAL' = 'NEUTRAL';
-    let cadRationale = 'Sentimen Dolar AS dan stabilitas harga minyak mentah mengendalikan rentang gerak pasangan USDCAD.';
+    let cadRationale = 'Dollar sentiment and crude oil price stability govern the USDCAD trading range.';
 
     if (isOilPlunge) {
       cadBias = 'BULLISH'; // USDCAD rises because CAD weakens
-      cadRationale = 'Pelemahan tajam harga minyak mentah menekan neraca perdagangan Kanada, memicu depresiasi CAD dan kenaikan USDCAD.';
+      cadRationale = 'A sharp crude oil decline hurts Canada\'s trade balance, driving CAD depreciation and USDCAD higher.';
     } else if (isOilSurge) {
       cadBias = 'BEARISH'; // USDCAD falls because CAD strengthens
-      cadRationale = 'Lonjakan harga energi memperkuat neraca perdagangan Kanada, mendorong penguatan CAD dan penekanan kurs USDCAD.';
+      cadRationale = 'An energy price spike strengthens Canada\'s trade balance, boosting CAD and pushing USDCAD down.';
     } else if (isDovish) {
       cadBias = 'BEARISH';
-      cadRationale = 'Pelemahan DXY akibat prospek penurunan suku bunga The Fed memberikan tekanan turun pada USDCAD.';
+      cadRationale = 'A softer DXY on Fed rate-cut prospects pressures USDCAD lower.';
     } else if (isHawkish) {
       cadBias = 'BULLISH';
-      cadRationale = 'Kekuatan DXY dan tingginya imbal hasil US Treasury menopang penguatan pasangan USDCAD.';
+      cadRationale = 'DXY strength and high US Treasury yields support USDCAD upside.';
     }
 
     impacts.push({
@@ -264,23 +264,23 @@ export function calculatePairImpacts(
     let eqBias: 'BULLISH' | 'BEARISH' | 'NEUTRAL' = 'NEUTRAL';
     let eqStrength: 'CRITICAL' | 'HIGH' | 'MODERATE' | 'MILD' = 'MODERATE';
     let eqMech = 'Discount Rate & Earnings Multiples';
-    let eqRat = 'Valuasi saham bereaksi terhadap ekspektasi biaya modal dan suku bunga diskonto.';
+    let eqRat = 'Equity valuations react to expected capital costs and discount rates.';
 
     if (isDovish) {
       eqBias = 'BULLISH';
       eqStrength = 'HIGH';
       eqMech = 'Cost of Capital Compression';
-      eqRat = 'Suku bunga yang lebih rendah menopang ekspansi valuasi rasio P/E dan likuiditas emiten teknologi.';
+      eqRat = 'Lower rates support P/E multiple expansion and liquidity for technology issuers.';
     } else if (isGeopolitical || isBankingRisk) {
       eqBias = 'BEARISH';
       eqStrength = 'HIGH';
       eqMech = 'Equity Risk Premium Shock';
-      eqRat = 'Ketidakpastian geopolitik dan pengetatan risiko perbankan memicu aksi ambil untung saham indeks.';
+      eqRat = 'Geopolitical uncertainty and tighter banking risk controls trigger profit-taking in index equities.';
     } else if (isHawkish) {
       eqBias = 'BEARISH';
       eqStrength = 'HIGH';
       eqMech = 'Multiple Compression';
-      eqRat = 'Yield US Treasury yang tinggi memberikan alternatif investasi berisiko rendah, menekan bursa saham.';
+      eqRat = 'High Treasury yields offer a low-risk alternative, weighing on equities.';
     }
 
     impacts.push({
@@ -301,7 +301,7 @@ export function calculatePairImpacts(
         strength: isBankingRisk ? 'HIGH' : eqStrength,
         mechanism: isBankingRisk ? 'Financial Sector Headwind' : eqMech,
         rationale: isBankingRisk
-          ? 'Sorotan risiko sektor perbankan dan meja trading membebani emiten perbankan konstituen Dow Jones.'
+          ? 'Banking-sector and trading-desk risk headlines weigh on the Dow Jones bank constituents.'
           : eqRat,
         confidence: 0.88,
       });
@@ -313,23 +313,23 @@ export function calculatePairImpacts(
     let btcBias: 'BULLISH' | 'BEARISH' | 'NEUTRAL' = 'NEUTRAL';
     let btcStrength: 'CRITICAL' | 'HIGH' | 'MODERATE' | 'MILD' = 'MODERATE';
     let btcMech = 'Global Monetary Liquidity Flow';
-    let btcRat = 'Bitcoin bertindak sebagai barometer likuiditas global dan selera risiko institusional.';
+    let btcRat = 'Bitcoin acts as a barometer of global liquidity and institutional risk appetite.';
 
     if (isCryptoBullish || isDovish) {
       btcBias = 'BULLISH';
       btcStrength = 'HIGH';
       btcMech = 'Fiat Debasement & Liquidity Injection';
-      btcRat = 'Pelonggaran moneter global dan adopsi institusional memacu momentum kenaikan harga Bitcoin.';
+      btcRat = 'Global monetary easing and institutional adoption fuel Bitcoin\'s upside momentum.';
     } else if (isCryptoBearish || isHawkish) {
       btcBias = 'BEARISH';
       btcStrength = 'HIGH';
       btcMech = 'Liquidity Drain';
-      btcRat = 'Tingginya yield instrumen bebas risiko menahan aliran modal spekulatif ke pasar aset digital.';
+      btcRat = 'High risk-free yields hold back speculative flows into digital assets.';
     } else if (isBankingRisk) {
       btcBias = 'BULLISH';
       btcStrength = 'MODERATE';
       btcMech = 'Decentralized Sovereign Alternative';
-      btcRat = 'Kerapuhan perbankan tradisional mendorong rotasi sebagian dana ke aset digital non-kastodian.';
+      btcRat = 'Fragility in traditional banking drives some funds to rotate into non-custodial digital assets.';
     }
 
     impacts.push({

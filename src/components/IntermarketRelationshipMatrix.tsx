@@ -21,6 +21,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { Tooltip } from './Tooltip';
+import { PageHeader } from './shared/PageHeader';
 
 export interface IntermarketRelationshipMatrixProps {
   prices: MarketPrice[];
@@ -301,35 +302,35 @@ export const IntermarketRelationshipMatrix: React.FC<IntermarketRelationshipMatr
       return {
         regime: 'PRO-CYCLICAL RISK-ON',
         description: 'Equity expansion & commodity carry demand dominating; safe-havens subdued.',
-        badgeColor: 'bg-emerald-950/80 text-emerald-400 border-emerald-700/60',
+        badgeColor: 'bg-[var(--bullish-bg)] text-[var(--bullish)] border-[var(--bullish-border)]',
         sentiment: 'RISK_ON',
       };
     } else if (goldChg > 0.3 && dxyChg > 0.2) {
       return {
         regime: 'SOVEREIGN SAFE-HAVEN ACCUMULATION',
         description: 'Gold & US Dollar surging together; indicates acute geopolitical tension or systemic liquidity caution.',
-        badgeColor: 'bg-amber-950/80 text-amber-400 border-amber-700/60',
+        badgeColor: 'bg-[var(--warning-bg)] text-[var(--warning)] border-[var(--warning-border)]',
         sentiment: 'DEFENSIVE_FLIGHT',
       };
     } else if (riskBeta < -0.3 || (jpyScore > 65 && spxChg < -0.2)) {
       return {
         regime: 'DEFENSIVE RISK-OFF & DELEVERAGING',
         description: 'Capital fleeing to JPY and treasuries; risk assets and carry currencies under pressure.',
-        badgeColor: 'bg-rose-950/80 text-rose-400 border-rose-700/60',
+        badgeColor: 'bg-[var(--bearish-bg)] text-[var(--bearish)] border-[var(--bearish-border)]',
         sentiment: 'RISK_OFF',
       };
     } else if (dxyChg > 0.35 && goldChg < -0.3) {
       return {
         regime: 'DOLLAR SUPREMACY TIGHTENING',
         description: 'Higher yield and dollar demand suppressing global asset prices and emerging flows.',
-        badgeColor: 'bg-cyan-950/80 text-cyan-400 border-cyan-700/60',
+        badgeColor: 'bg-[var(--accent-subtle)] text-[var(--accent)] border-[var(--accent)]',
         sentiment: 'USD_DOMINANCE',
       };
     } else {
       return {
         regime: 'CONSOLIDATION / BALANCED FLOWS',
         description: 'Intermarket cross-currents neutral; awaiting catalyst from central bank speeches or upcoming macro tier-1 data.',
-        badgeColor: 'bg-slate-800 text-slate-300 border-slate-700',
+        badgeColor: 'bg-[var(--bg-section-alt)] text-[var(--text-secondary)] border-[var(--border-subtle)]',
         sentiment: 'BALANCED',
       };
     }
@@ -353,52 +354,46 @@ export const IntermarketRelationshipMatrix: React.FC<IntermarketRelationshipMatr
   return (
     <div className="space-y-4 font-sans">
       {/* 1. HEADER & INTERMARKET REGIME BANNER */}
-      <div className="terminal-panel p-4">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 bg-[var(--accent)] rounded-xs" />
-              <h1 className="section-title text-sm sm:text-base text-[var(--text-primary)]">
-                INTERMARKET RELATIONSHIP MATRIX
-              </h1>
-              <span className="badge-neutral text-[9.5px]">
-                MURPHY MACRO MODEL
-              </span>
-            </div>
-            <p className="text-xs text-[var(--text-secondary)] font-mono max-w-2xl">
-              Cross-asset transmission channels: Currencies (DXY, G8), Commodities (Gold), Benchmark Yields (US10Y), and Equities (S&P 500, Nasdaq).
-            </p>
-          </div>
+      <PageHeader
+        eyebrow="RESEARCH · INTERMARKET FLOWS"
+        accentNote={
+          <span className="flex items-center gap-1.5">
+            <span className={`inline-block w-1.5 h-1.5 rounded-full ${macroRegime.sentiment === 'RISK_ON' ? 'bg-[var(--bullish)]' : macroRegime.sentiment === 'RISK_OFF' ? 'bg-[var(--bearish)]' : 'bg-[var(--accent)]'}`} />
+            {macroRegime.regime} regime
+          </span>
+        }
+        title="Intermarket relationship matrix"
+        titleAdornment={
+          <span className="badge-neutral text-[9.5px]">MURPHY MACRO MODEL</span>
+        }
+        description="Cross-asset transmission channels: currencies (DXY, G8), commodities (gold), benchmark yields (US10Y), and equities (S&P 500, Nasdaq)."
+        actions={
+          onRefresh && (
+            <button
+              onClick={onRefresh}
+              disabled={isRefreshing}
+              className="px-3 h-8 rounded-md border border-[var(--border-subtle)] text-xs font-medium text-[var(--text-primary)] bg-[var(--bg-section-alt)] hover:border-[var(--border-strong)] transition cursor-pointer flex items-center gap-1.5"
+              title="Refresh intermarket live feeds"
+            >
+              <RefreshCw className={`w-3 h-3 ${isRefreshing ? 'animate-spin text-[var(--accent)]' : ''}`} />
+              <span>Sync cross-asset</span>
+            </button>
+          )
+        }
+      />
 
-          <div className="flex items-center gap-3">
-            {onRefresh && (
-              <button
-                onClick={onRefresh}
-                disabled={isRefreshing}
-                className="px-2.5 py-1.5 rounded border border-[var(--border-subtle)] text-xs font-mono font-medium text-[var(--text-primary)] bg-[var(--bg-section-alt)] hover:border-[var(--text-primary)] transition cursor-pointer flex items-center gap-1.5"
-                title="Refresh Intermarket Live Feeds"
-              >
-                <RefreshCw className={`w-3 h-3 ${isRefreshing ? 'animate-spin text-[var(--accent)]' : ''}`} />
-                <span>SYNC CROSS-ASSET</span>
-              </button>
-            )}
-
-            <div className="px-3 py-1.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] text-right">
-              <div className="metadata-label text-[9.5px] text-[var(--text-muted)]">
-                INTERMARKET REGIME
-              </div>
-              <div className="flex items-center justify-end gap-1.5 mt-0.5 font-mono">
-                <span className={`inline-block w-1.5 h-1.5 rounded-full ${macroRegime.sentiment === 'RISK_ON' ? 'bg-[var(--bullish)]' : macroRegime.sentiment === 'RISK_OFF' ? 'bg-[var(--bearish)]' : 'bg-[var(--accent)]'}`} />
-                <span className="text-xs font-bold text-[var(--text-primary)]">
-                  {macroRegime.regime}
-                </span>
-              </div>
-            </div>
-          </div>
+      {/* Quick Cross-Asset Anchor Tickers */}
+      <div className="terminal-panel p-4 space-y-3">
+        <div className="section-head flex-wrap gap-y-2">
+          <span className="metadata-label text-[10px] text-[var(--text-muted)]">
+            Cross-asset anchors
+          </span>
+          <span className="metadata-label text-[9.5px] text-[var(--text-muted)]">
+            {macroRegime.regime}
+          </span>
         </div>
 
-        {/* Quick Cross-Asset Anchor Tickers */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mt-4 pt-3 border-t" style={{ borderColor: 'var(--border-subtle)' }}>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
           {/* US Dollar (DXY) */}
           <div className="p-2.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)]">
             <div className="flex items-center justify-between text-[10.5px] font-mono text-[var(--text-muted)]">
@@ -514,7 +509,7 @@ export const IntermarketRelationshipMatrix: React.FC<IntermarketRelationshipMatr
         {/* LEFT COLUMN: INTERDEPENDENCY MATRIX (7 COLS) */}
         <div className="lg:col-span-7 space-y-3">
           <div className="terminal-panel p-4">
-            <div className="flex items-center justify-between pb-3 border-b" style={{ borderColor: 'var(--border-subtle)' }}>
+            <div className="flex flex-wrap items-center justify-between gap-y-2 pb-3 border-b" style={{ borderColor: 'var(--border-subtle)' }}>
               <div className="flex items-center gap-2">
                 <BarChart3 className="w-3.5 h-3.5 text-[var(--accent)]" />
                 <h2 className="section-title text-xs text-[var(--text-primary)]">
@@ -552,7 +547,7 @@ export const IntermarketRelationshipMatrix: React.FC<IntermarketRelationshipMatr
                     onClick={() => setSelectedRelIndex(idx)}
                     className={`p-3 rounded border cursor-pointer transition ${
                       isSelected
-                        ? 'bg-[var(--bg-section-alt)] border-[var(--text-primary)] font-medium'
+                        ? 'bg-[var(--active-bg)] border-[var(--active-border)] font-medium text-[var(--active-text)]'
                         : 'bg-[var(--bg-surface)] border-[var(--border-subtle)] hover:border-[var(--text-secondary)]'
                     }`}
                   >

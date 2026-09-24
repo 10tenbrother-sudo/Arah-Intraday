@@ -49,11 +49,11 @@ export class MacroDataService {
           const mapped = this.normalizeTradingViewEvents(rawEvents, now);
 
           // Update database with 100% real events
-          db.setEconomicEvents(mapped);
-          db.updateSourceStatus('src_macro_calendar', 'LIVE');
+          await db.setEconomicEvents(mapped);
+          await db.updateSourceStatus('src_macro_calendar', 'LIVE');
 
           // Broadcast real calendar data over SSE (prioritizing upcoming & recent releases)
-          const prioritizedForSSE = db.getEconomicEvents(120);
+          const prioritizedForSSE = await db.getEconomicEvents(120);
           sseBroker.broadcast('economic_calendar', prioritizedForSSE);
           return mapped;
         }
@@ -78,8 +78,8 @@ export class MacroDataService {
         const rawEvents = await res.json();
         if (Array.isArray(rawEvents) && rawEvents.length > 0) {
           const mapped = this.normalizeFairEconomyEvents(rawEvents, now);
-          db.setEconomicEvents(mapped);
-          db.updateSourceStatus('src_macro_calendar', 'LIVE');
+          await db.setEconomicEvents(mapped);
+          await db.updateSourceStatus('src_macro_calendar', 'LIVE');
           sseBroker.broadcast('economic_calendar', mapped.slice(0, 50));
           return mapped;
         }
@@ -89,10 +89,10 @@ export class MacroDataService {
     }
 
     // If both providers failed, mark source status UNAVAILABLE
-    db.updateSourceStatus('src_macro_calendar', 'ERROR', 'Economic Calendar providers unreachable');
+    await db.updateSourceStatus('src_macro_calendar', 'ERROR', 'Economic Calendar providers unreachable');
 
     // Return existing events marked as UNAVAILABLE rather than masquerading as fresh live
-    const existing = db.getEconomicEvents(50).map(e => ({
+    const existing = (await db.getEconomicEvents(50)).map(e => ({
       ...e,
       data_status: 'UNAVAILABLE' as const,
       source: `${e.source} (Provider Unreachable)`,

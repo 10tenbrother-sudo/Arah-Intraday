@@ -6,12 +6,12 @@ import { db } from '../db/database.js';
 export const streamRouter = Router();
 
 // GET /api/stream - Server-Sent Events real-time broadcast channel
-streamRouter.get('/', (req: Request, res: Response) => {
+streamRouter.get('/', async (req: Request, res: Response) => {
   const queryToken = req.query.token as string | undefined;
   let userId: string | undefined;
 
   if (queryToken) {
-    const payload = AuthService.verifyToken(queryToken);
+    const payload = await AuthService.verifyToken(queryToken);
     if (payload) {
       userId = payload.userId;
     }
@@ -22,12 +22,12 @@ streamRouter.get('/', (req: Request, res: Response) => {
 
   // Send current live snapshot immediately to the newly connected client
   try {
-    const currentPrices = db.getAllMarketPrices();
+    const currentPrices = await db.getAllMarketPrices();
     if (currentPrices.length > 0) {
       res.write(`event: market_prices\ndata: ${JSON.stringify(currentPrices)}\n\n`);
     }
 
-    const currentEvents = db.getEconomicEvents(60);
+    const currentEvents = await db.getEconomicEvents(60);
     if (currentEvents.length > 0) {
       res.write(`event: economic_calendar\ndata: ${JSON.stringify(currentEvents)}\n\n`);
     }

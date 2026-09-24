@@ -462,7 +462,7 @@ export const TradingViewChartModal: React.FC<TradingViewChartModalProps> = ({
               href={`https://www.tradingview.com/chart/?symbol=${encodeURIComponent(selectedMeta.tvSymbol)}`}
               target="_blank"
               rel="noreferrer"
-              className="px-2.5 py-1 rounded border border-[var(--border-subtle)] text-xs font-mono bg-[var(--bg-section-alt)] text-[var(--text-primary)] hover:border-[var(--text-primary)] flex items-center gap-1.5 transition cursor-pointer"
+              className="px-2.5 py-1 rounded border border-[var(--border-subtle)] text-xs font-mono bg-[var(--bg-section-alt)] text-[var(--text-primary)] hover:border-[var(--border-strong)] flex items-center gap-1.5 transition cursor-pointer"
               title={`Open ${selectedMeta.label} on TradingView`}
             >
               <ExternalLink className="w-3.5 h-3.5 text-[var(--accent)]" />

@@ -83,8 +83,8 @@ export const CurrencyStrengthWidget: React.FC<CurrencyStrengthWidgetProps> = Rea
         <div>
           <div className="flex items-center gap-1.5">
             <TrendingUp className="w-3.5 h-3.5 text-[var(--accent)]" />
-            <h2 className="metadata-label text-[10.5px] text-[var(--text-primary)]">
-              CURRENCY STRENGTH G8
+            <h2 className="section-title text-[13px] text-[var(--text-primary)]">
+              Currency strength · G8
             </h2>
             <MetricInfoIcon term="CURRENCY_STRENGTH" position="bottom" />
           </div>
@@ -180,7 +180,7 @@ export const CurrencyStrengthWidget: React.FC<CurrencyStrengthWidgetProps> = Rea
               <div
                 key={item.currency}
                 onClick={() => onSelectCurrency?.(item.currency)}
-                className="p-2 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] hover:border-[var(--text-primary)] transition cursor-pointer space-y-1.5"
+                className="p-2 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] hover:border-[var(--border-strong)] transition cursor-pointer space-y-1.5"
               >
                 <div className="flex items-center justify-between text-xs tabular-nums">
                   <div className="flex items-center gap-1.5">
