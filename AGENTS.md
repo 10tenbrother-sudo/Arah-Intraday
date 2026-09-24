@@ -59,6 +59,16 @@ opening PRs, and creating issues do not. Produce a patch with
   (see `components.json`); shared composites in `src/components/shared/`.
 - Class merging goes through `cn()` from `src/lib/utils.ts` (clsx + tailwind-merge).
 - Design skills from the taste-skill bundle are installed under `.agents/skills/`.
+- The UI reads in one language: English. Server-generated strings
+  (`server/intelligence/arahMarketEngine.ts`, report/modal builders, log and
+  error messages) count as UI copy. Indonesian text is only acceptable as
+  ingested third-party news content, never as authored product strings.
+- `IntradayMarketMapEngine` prose fields (drivers, catalysts) are not rendered
+  anywhere; only `overall_bias` and `confidence` reach the client via
+  `MarketDataGrid`. Do not spend time translating unrendered prose.
+- Persistence is SQLite via Prisma. `DATABASE_URL` defaults to
+  `file:../data/market_intelligence.sqlite`; `data/market_intelligence.db.json`
+  is the legacy store kept only as a fallback when Prisma is unreachable.
 
 ## Market Bias vs Overview (single-source rule)
 The server dossier (`/api/intelligence/arah-market` -> `ArahMarketTodayData`)

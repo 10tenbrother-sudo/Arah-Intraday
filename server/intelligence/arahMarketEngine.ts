@@ -177,7 +177,7 @@ export class ArahMarketEngine {
       marketRotationRegime = 'TECH_LEADERSHIP';
       regimeDescription = 'Tech mega-caps and AI hyperscalers lead the equity advance. US100 outperforms US30 (Dow Jones) as discount yields stay stable.';
       preferredAsset = 'US100';
-      playbookReason = 'Momentum beli terkonsentrasi di sektor semikonduktor & software; defensif industrials di US30 tertinggal.';
+      playbookReason = 'Buying momentum is concentrated in semis and software; defensive industrials in US30 lag.';
       yieldConditionTrigger = 'US10Y stable or easing below 4.25% validates the expanding US100/US30 ratio.';
     } else if (us30Change > 0.08 && us100Change < -0.05) {
       marketRotationRegime = 'FLIGHT_TO_VALUE';
@@ -315,7 +315,7 @@ export class ArahMarketEngine {
       anomalyAlerts.push({
         id: 'confluence-alignment-ok',
         severity: 'OPPORTUNITY',
-        title: 'Konfirmasi Intermarket Selaras Normal',
+        title: 'Intermarket Transmission In Step',
         description:
           'The transmission between the dollar, US Treasury yields, the majors, and equity indices is currently in step, with no structural anomaly.',
         affectedPairs: ['EURUSD', 'USDJPY', 'XAUUSD', 'US100', 'US30'],
@@ -431,7 +431,7 @@ export class ArahMarketEngine {
       let paScore = 0;
 
       let recommendedAction: 'LOOK_FOR_BUY' | 'LOOK_FOR_SELL' | 'WAIT_ON_SUPPORT' | 'CAUTION_NO_TRADE' = 'WAIT_ON_SUPPORT';
-      let invalidation = 'Penutupan candle H1 di luar level acuan';
+      let invalidation = 'An H1 close outside the reference level';
 
       if (tp.pair === 'XAUUSD') {
         fundBias = usdVsBasket > 1.0 ? 'BEARISH' : usdVsBasket < -1.0 ? 'BULLISH' : 'NEUTRAL';
@@ -439,7 +439,7 @@ export class ArahMarketEngine {
         fundScore = fundBias === 'BULLISH' ? 45 : fundBias === 'BEARISH' ? -40 : 0;
 
         interBias = realYield10y > 1.9 ? 'BEARISH' : realYield10y < 1.8 ? 'BULLISH' : (dxyBiasVsOpen === 'BELOW_OPEN' ? 'BULLISH' : 'BEARISH');
-        interSymptom = realYield10y > 1.9 ? `Real Yield 10Y tinggi (${realYield10y}%) menaikkan beban emas` : `Real Yield melandai (${realYield10y}%) membuka reli safe-haven`;
+        interSymptom = realYield10y > 1.9 ? `High 10Y real yield (${realYield10y}%) adds weight on gold` : `Easing real yield (${realYield10y}%) opens a safe-haven bid`;
         interScore = interBias === 'BULLISH' ? 40 : -40;
 
         paBias = chg > 0.2 ? 'BULLISH' : chg < -0.2 ? 'BEARISH' : 'NEUTRAL';
@@ -460,16 +460,16 @@ export class ArahMarketEngine {
       } else if (tp.pair === 'EURUSD') {
         const eurScore = strengthMap.get('EUR')?.strength_score || 5.0;
         fundBias = eurScore > usdScore + 0.1 ? 'BULLISH' : eurScore < usdScore - 0.1 ? 'BEARISH' : 'NEUTRAL';
-        fundDriver = 'Divergensi prospek moneter Bank Sentral Eropa (ECB) vs The Fed';
+        fundDriver = 'ECB versus Fed monetary policy outlook divergence';
         fundScore = fundBias === 'BULLISH' ? 40 : fundBias === 'BEARISH' ? -45 : 0;
 
         interBias = dxyBiasVsOpen === 'ABOVE_OPEN' ? 'BEARISH' : 'BULLISH';
-        interSymptom = `Spread US-DE di ${usDeSpread}% ${usDeSpread > 1.7 ? 'supports dollar dominance' : 'supportive for the euro'}`;
+        interSymptom = `US-DE spread at ${usDeSpread}% ${usDeSpread > 1.7 ? 'supports dollar dominance' : 'is supportive for the euro'}`;
         interScore = interBias === 'BULLISH' ? 40 : -50;
 
         paBias = chg > 0.1 ? 'BULLISH' : chg < -0.1 ? 'BEARISH' : 'NEUTRAL';
         paStructure = chg < -0.2 ? 'SESSION_BREAKOUT' : chg > 0.2 ? 'SESSION_BREAKOUT' : 'CHOP_RANGE';
-        actionableZone = chg < 0 ? 'Sell on rally di resisten terdekat' : 'Buy the dip at session support';
+        actionableZone = chg < 0 ? 'Sell on a rally into nearby resistance' : 'Buy the dip at session support';
         paScore = chg > 0.1 ? 30 : chg < -0.1 ? -35 : 0;
 
         recommendedAction = interBias === 'BEARISH' ? 'LOOK_FOR_SELL' : 'LOOK_FOR_BUY';
@@ -481,7 +481,7 @@ export class ArahMarketEngine {
         fundScore = fundBias === 'BULLISH' ? 40 : fundBias === 'BEARISH' ? -40 : 0;
 
         interBias = dxyBiasVsOpen === 'BELOW_OPEN' ? 'BULLISH' : 'BEARISH';
-        interSymptom = `Korelasi terbalik dengan DXY (${dxyBiasVsOpen === 'BELOW_OPEN' ? 'DXY melemah menopang Cable' : 'DXY menguat menekan Cable'})`;
+        interSymptom = `Inverse correlation with DXY (${dxyBiasVsOpen === 'BELOW_OPEN' ? 'a softer DXY supports Cable' : 'a firmer DXY weighs on Cable'})`;
         interScore = interBias === 'BULLISH' ? 35 : -35;
 
         paBias = chg > 0.15 ? 'BULLISH' : chg < -0.15 ? 'BEARISH' : 'NEUTRAL';
@@ -499,7 +499,7 @@ export class ArahMarketEngine {
 
         // USDJPY berkorelasi POSITIF dengan DXY dan US-JP Yield Spread
         interBias = usJpSpread > 3.0 && dxyBiasVsOpen !== 'BELOW_OPEN' ? 'BULLISH' : (dxyBiasVsOpen === 'BELOW_OPEN' ? 'BEARISH' : 'NEUTRAL');
-        interSymptom = `Yield spread AS-Jepang (${usJpSpread}%) & DXY ${dxyBiasVsOpen === 'ABOVE_OPEN' ? 'menguat' : 'tertekan'} memandu insentif carry trade`;
+        interSymptom = `US-Japan yield spread (${usJpSpread}%) and a ${dxyBiasVsOpen === 'ABOVE_OPEN' ? 'firmer' : 'softer'} DXY drive the carry incentive`;
         interScore = interBias === 'BULLISH' ? 50 : -40;
 
         paBias = chg > 0.1 ? 'BULLISH' : chg < -0.1 ? 'BEARISH' : 'NEUTRAL';
@@ -517,12 +517,12 @@ export class ArahMarketEngine {
         fundScore = fundBias === 'BULLISH' ? 45 : fundBias === 'BEARISH' ? -45 : 0;
 
         interBias = realYield10y > 1.95 ? 'BEARISH' : realYield10y < 1.85 ? 'BULLISH' : (dxyBiasVsOpen === 'BELOW_OPEN' ? 'BULLISH' : 'BEARISH');
-        interSymptom = `Real Yield 10Y di ${realYield10y}% ${realYield10y > 1.95 ? 'menekan P/E multiples teknologi' : 'supportive for growth-stock valuations'}`;
+        interSymptom = `10Y real yield at ${realYield10y}% ${realYield10y > 1.95 ? 'compresses technology P/E multiples' : 'is supportive for growth-stock valuations'}`;
         interScore = interBias === 'BULLISH' ? 40 : -40;
 
         paBias = isUp ? 'BULLISH' : isDown ? 'BEARISH' : 'NEUTRAL';
         paStructure = chg > 0.3 ? 'SESSION_BREAKOUT' : chg < -0.3 ? 'RETEST_RESISTANCE' : 'CHOP_RANGE';
-        actionableZone = isUp ? 'Breakout demand area at the New York session open' : 'Support kunci intraday Nasdaq';
+        actionableZone = isUp ? 'Breakout demand area at the New York session open' : 'Key intraday Nasdaq support';
         paScore = isUp ? 35 : isDown ? -35 : 0;
 
         if (fundBias === 'BULLISH' && interBias === 'BULLISH') {
@@ -547,7 +547,7 @@ export class ArahMarketEngine {
         fundScore = fundBias === 'BULLISH' ? 40 : fundBias === 'BEARISH' ? -40 : 15;
 
         interBias = usDeSpread > 1.7 ? 'BEARISH' : 'BULLISH';
-        interSymptom = `Spread US-DE di ${usDeSpread}% memandu ekspektasi suku bunga sektor finansial Dow`;
+        interSymptom = `US-DE spread at ${usDeSpread}% guides rate expectations for the Dow financial sector`;
         interScore = interBias === 'BULLISH' ? 35 : -35;
 
         paBias = isUp ? 'BULLISH' : isDown ? 'BEARISH' : 'NEUTRAL';
@@ -565,7 +565,7 @@ export class ArahMarketEngine {
         fundScore = isUp ? 40 : isDown ? -40 : 0;
 
         interBias = dxyBiasVsOpen === 'BELOW_OPEN' && us10yChange <= 0.2 ? 'BULLISH' : (dxyBiasVsOpen === 'ABOVE_OPEN' && us10yChange > 0.2 ? 'BEARISH' : 'NEUTRAL');
-        interSymptom = `DXY ${dxyBiasVsOpen === 'BELOW_OPEN' ? 'melemah menopang ekuitas' : 'menguat menekan laba multinasional'} & yield 10Y di ${us10yPrice}%`;
+        interSymptom = `DXY ${dxyBiasVsOpen === 'BELOW_OPEN' ? 'softer, supporting equities' : 'firmer, weighing on multinational earnings'} and 10Y yield at ${us10yPrice}%`;
         interScore = interBias === 'BULLISH' ? 35 : interBias === 'BEARISH' ? -35 : 0;
 
         paBias = isUp ? 'BULLISH' : isDown ? 'BEARISH' : 'NEUTRAL';
@@ -583,7 +583,7 @@ export class ArahMarketEngine {
 
         // AUDUSD berbanding terbalik dengan DXY dan searah dengan sentimen komoditas/risk-on
         interBias = dxyBiasVsOpen === 'BELOW_OPEN' ? 'BULLISH' : 'BEARISH';
-        interSymptom = `Korelasi terbalik dengan DXY & transmisi sentimen selera risiko (Risk-On/Off) komoditas`;
+        interSymptom = `Inverse correlation with DXY and transmission of commodity risk-on/risk-off sentiment`;
         interScore = interBias === 'BULLISH' ? 35 : -35;
 
         paBias = chg > 0.15 ? 'BULLISH' : chg < -0.15 ? 'BEARISH' : 'NEUTRAL';
@@ -602,7 +602,7 @@ export class ArahMarketEngine {
 
         // USDCAD berkorelasi SEARAH/POSITIF dengan DXY! (Dolar naik -> USDCAD naik)
         interBias = dxyBiasVsOpen === 'ABOVE_OPEN' ? 'BULLISH' : 'BEARISH';
-        interSymptom = `Korelasi langsung dengan DXY (USD Base) & transmisi nilai tukar petro-currency CAD`;
+        interSymptom = `Direct correlation with DXY (USD base) and petro-currency CAD transmission`;
         interScore = interBias === 'BULLISH' ? 35 : -35;
 
         paBias = chg > 0.1 ? 'BULLISH' : chg < -0.1 ? 'BEARISH' : 'NEUTRAL';
@@ -621,7 +621,7 @@ export class ArahMarketEngine {
 
         // BTC berkorelasi TERBALIK dengan DXY & Real Yields, searah dengan saham teknologi US100
         interBias = dxyBiasVsOpen === 'BELOW_OPEN' && realYield10y < 1.9 ? 'BULLISH' : (dxyBiasVsOpen === 'ABOVE_OPEN' ? 'BEARISH' : 'NEUTRAL');
-        interSymptom = `Aset likuiditas beta tinggi (korelasi terbalik terhadap DXY & searah dengan sentimen US100)`;
+        interSymptom = `High-beta liquidity asset (inverse to DXY, aligned with US100 sentiment)`;
         interScore = interBias === 'BULLISH' ? 40 : interBias === 'BEARISH' ? -40 : 0;
 
         paBias = isUp ? 'BULLISH' : isDown ? 'BEARISH' : 'NEUTRAL';
@@ -641,7 +641,7 @@ export class ArahMarketEngine {
         fundScore = isUp ? 30 : isDown ? -30 : 0;
 
         interBias = dxyBiasVsOpen === 'BELOW_OPEN' ? 'BULLISH' : 'BEARISH';
-        interSymptom = `DXY berada ${dxyBiasVsOpen === 'ABOVE_OPEN' ? 'above' : 'below'} harga buka sesi`;
+        interSymptom = `DXY is ${dxyBiasVsOpen === 'ABOVE_OPEN' ? 'above' : 'below'} the session open`;
         interScore = interBias === 'BULLISH' ? 25 : -25;
 
         paBias = isUp ? 'BULLISH' : isDown ? 'BEARISH' : 'NEUTRAL';
@@ -701,7 +701,7 @@ export class ArahMarketEngine {
       }
 
       const csWarning = hasCsDivergence
-        ? `Waspada Divergensi CS: Aksi harga tidak didukung oleh selisih kekuatan mata uang (${currencyStrengthConfluence?.advantageLabel}). Potensi Fakeout!`
+        ? `CS divergence alert: price action is not backed by the currency strength spread (${currencyStrengthConfluence?.advantageLabel}). Possible fakeout.`
         : undefined;
 
       // Descriptive-not-predictive disclosure, surfaced in the UI so a neat 3/3

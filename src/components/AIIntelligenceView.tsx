@@ -18,6 +18,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { api } from '../lib/api';
+import { PageHeader } from './shared/PageHeader';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   AIAnalysis,
@@ -129,6 +130,12 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
 
   return (
     <div className="space-y-4 font-sans">
+      <PageHeader
+        eyebrow="MAIN · AI ANALYSIS"
+        title="AI analysis"
+        description="Model-driven reads of the market regime, central-bank language, G8 macro conditions, and the unified cross-asset context."
+      />
+
       {/* Sub-Navigation Tabs for Intelligence Layer */}
       <div className="flex items-center gap-1.5 border-b pb-2 overflow-x-auto" style={{ borderColor: 'var(--border-subtle)' }}>
         <button

@@ -5,9 +5,12 @@ interface PageHeaderProps {
   /** Small uppercase context line above the title, e.g. the desk or module name. */
   eyebrow?: string;
   /** Short accent marker rendered beside the eyebrow, e.g. a regime or status. */
-  accentNote?: string;
+  accentNote?: React.ReactNode;
   title: string;
-  description?: string;
+  /** Sits inline after the title, for an info affordance or a live counter. */
+  titleAdornment?: React.ReactNode;
+  /** Support copy. Passing a node renders a status line instead of a sentence. */
+  description?: React.ReactNode;
   /** Primary controls. Pushed to the trailing edge on wide viewports. */
   actions?: React.ReactNode;
   /** Full-width row below the title, for navigation strips or filter bars. */
@@ -24,6 +27,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   eyebrow,
   accentNote,
   title,
+  titleAdornment,
   description,
   actions,
   children,
@@ -44,12 +48,15 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
           </div>
         )}
 
-        <h1 className="headline-h2 mt-1.5 text-[var(--text-primary)]">{title}</h1>
+        <div className="flex items-center gap-2.5 flex-wrap mt-1.5">
+          <h1 className="headline-h2 text-[var(--text-primary)]">{title}</h1>
+          {titleAdornment}
+        </div>
 
         {description && (
-          <p className="mt-1.5 text-xs sm:text-[13px] leading-relaxed text-[var(--text-secondary)]">
+          <div className="mt-1.5 text-xs sm:text-[13px] leading-relaxed text-[var(--text-secondary)]">
             {description}
-          </p>
+          </div>
         )}
 
         {children && <div className="mt-3">{children}</div>}

@@ -21,6 +21,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { Tooltip } from './Tooltip';
+import { PageHeader } from './shared/PageHeader';
 
 export interface IntermarketRelationshipMatrixProps {
   prices: MarketPrice[];
@@ -353,52 +354,46 @@ export const IntermarketRelationshipMatrix: React.FC<IntermarketRelationshipMatr
   return (
     <div className="space-y-4 font-sans">
       {/* 1. HEADER & INTERMARKET REGIME BANNER */}
-      <div className="terminal-panel p-4">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 bg-[var(--accent)] rounded-xs" />
-              <h1 className="section-title text-sm sm:text-base text-[var(--text-primary)]">
-                INTERMARKET RELATIONSHIP MATRIX
-              </h1>
-              <span className="badge-neutral text-[9.5px]">
-                MURPHY MACRO MODEL
-              </span>
-            </div>
-            <p className="text-xs text-[var(--text-secondary)] font-mono max-w-2xl">
-              Cross-asset transmission channels: Currencies (DXY, G8), Commodities (Gold), Benchmark Yields (US10Y), and Equities (S&P 500, Nasdaq).
-            </p>
-          </div>
+      <PageHeader
+        eyebrow="RESEARCH · INTERMARKET FLOWS"
+        accentNote={
+          <span className="flex items-center gap-1.5">
+            <span className={`inline-block w-1.5 h-1.5 rounded-full ${macroRegime.sentiment === 'RISK_ON' ? 'bg-[var(--bullish)]' : macroRegime.sentiment === 'RISK_OFF' ? 'bg-[var(--bearish)]' : 'bg-[var(--accent)]'}`} />
+            {macroRegime.regime} regime
+          </span>
+        }
+        title="Intermarket relationship matrix"
+        titleAdornment={
+          <span className="badge-neutral text-[9.5px]">MURPHY MACRO MODEL</span>
+        }
+        description="Cross-asset transmission channels: currencies (DXY, G8), commodities (gold), benchmark yields (US10Y), and equities (S&P 500, Nasdaq)."
+        actions={
+          onRefresh && (
+            <button
+              onClick={onRefresh}
+              disabled={isRefreshing}
+              className="px-3 h-8 rounded-md border border-[var(--border-subtle)] text-xs font-medium text-[var(--text-primary)] bg-[var(--bg-section-alt)] hover:border-[var(--border-strong)] transition cursor-pointer flex items-center gap-1.5"
+              title="Refresh intermarket live feeds"
+            >
+              <RefreshCw className={`w-3 h-3 ${isRefreshing ? 'animate-spin text-[var(--accent)]' : ''}`} />
+              <span>Sync cross-asset</span>
+            </button>
+          )
+        }
+      />
 
-          <div className="flex items-center gap-3">
-            {onRefresh && (
-              <button
-                onClick={onRefresh}
-                disabled={isRefreshing}
-                className="px-2.5 py-1.5 rounded border border-[var(--border-subtle)] text-xs font-mono font-medium text-[var(--text-primary)] bg-[var(--bg-section-alt)] hover:border-[var(--border-strong)] transition cursor-pointer flex items-center gap-1.5"
-                title="Refresh Intermarket Live Feeds"
-              >
-                <RefreshCw className={`w-3 h-3 ${isRefreshing ? 'animate-spin text-[var(--accent)]' : ''}`} />
-                <span>SYNC CROSS-ASSET</span>
-              </button>
-            )}
-
-            <div className="px-3 py-1.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] text-right">
-              <div className="metadata-label text-[9.5px] text-[var(--text-muted)]">
-                INTERMARKET REGIME
-              </div>
-              <div className="flex items-center justify-end gap-1.5 mt-0.5 font-mono">
-                <span className={`inline-block w-1.5 h-1.5 rounded-full ${macroRegime.sentiment === 'RISK_ON' ? 'bg-[var(--bullish)]' : macroRegime.sentiment === 'RISK_OFF' ? 'bg-[var(--bearish)]' : 'bg-[var(--accent)]'}`} />
-                <span className="text-xs font-bold text-[var(--text-primary)]">
-                  {macroRegime.regime}
-                </span>
-              </div>
-            </div>
-          </div>
+      {/* Quick Cross-Asset Anchor Tickers */}
+      <div className="terminal-panel p-4 space-y-3">
+        <div className="section-head flex-wrap gap-y-2">
+          <span className="metadata-label text-[10px] text-[var(--text-muted)]">
+            Cross-asset anchors
+          </span>
+          <span className="metadata-label text-[9.5px] text-[var(--text-muted)]">
+            {macroRegime.regime}
+          </span>
         </div>
 
-        {/* Quick Cross-Asset Anchor Tickers */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mt-4 pt-3 border-t" style={{ borderColor: 'var(--border-subtle)' }}>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
           {/* US Dollar (DXY) */}
           <div className="p-2.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)]">
             <div className="flex items-center justify-between text-[10.5px] font-mono text-[var(--text-muted)]">

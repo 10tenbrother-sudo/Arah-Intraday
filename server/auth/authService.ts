@@ -20,8 +20,8 @@ function resolveSecret(): string {
 
   if (process.env.NODE_ENV === 'production') {
     throw new Error(
-      '[FATAL] APP_SECRET tidak diset (atau kurang dari 32 karakter). ' +
-      'Set di environment variable sebelum menjalankan production.'
+      '[FATAL] APP_SECRET is not set (or is shorter than 32 characters). ' +
+      'Set it in the environment before starting production.'
     );
   }
 
@@ -29,8 +29,8 @@ function resolveSecret(): string {
   // instance, since the constant is published in the repository. Mint a random
   // one instead: sessions stop surviving a restart, which is the safe trade.
   console.warn(
-    '[Auth] APP_SECRET belum diset — memakai secret acak per-proses. ' +
-    'Sesi akan hangus setiap server restart. Set APP_SECRET untuk sesi persisten.'
+    '[Auth] APP_SECRET is not set - using a random per-process secret. ' +
+    'Sessions will not survive a server restart. Set APP_SECRET for persistent sessions.'
   );
   return crypto.randomBytes(48).toString('hex');
 }

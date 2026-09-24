@@ -9,6 +9,7 @@ import {
   LineChart,
 } from 'lucide-react';
 import { Tooltip, MetricTooltip } from './Tooltip';
+import { PageHeader } from './shared/PageHeader';
 
 interface MarketDataGridProps {
   prices: MarketPrice[];
@@ -19,6 +20,8 @@ interface MarketDataGridProps {
   isRefreshing: boolean;
   onSelectSymbol: (symbol: string) => void;
   onOpenChart?: (symbol: string) => void;
+  /** 'page' owns the view title; 'embedded' renders a section header instead. */
+  variant?: 'page' | 'embedded';
 }
 
 export const MarketDataGrid: React.FC<MarketDataGridProps> = React.memo(({
@@ -30,6 +33,7 @@ export const MarketDataGrid: React.FC<MarketDataGridProps> = React.memo(({
   isRefreshing,
   onSelectSymbol,
   onOpenChart,
+  variant = 'page',
 }) => {
   const [filterType, setFilterType] = useState<string>('ALL');
 
@@ -64,65 +68,95 @@ export const MarketDataGrid: React.FC<MarketDataGridProps> = React.memo(({
     }
   };
 
+  const chartAndRefresh = (
+    <>
+      {onOpenChart && (
+        <button
+          onClick={() => onOpenChart('US30')}
+          className="h-8 px-3 rounded-md text-[11px] font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-section-alt)] flex items-center gap-1.5 transition cursor-pointer"
+        >
+          <LineChart className="w-3.5 h-3.5" />
+          <span>Chart</span>
+        </button>
+      )}
+
+      <button
+        onClick={onRefresh}
+        disabled={isRefreshing}
+        title="Refresh prices"
+        className="h-8 w-8 rounded-md text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-section-alt)] flex items-center justify-center transition cursor-pointer disabled:opacity-50"
+        id="refresh-surveillance-btn"
+      >
+        <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-[var(--accent)]' : ''}`} />
+      </button>
+    </>
+  );
+
+  const assetClassFilter = (
+    <div className="flex items-center gap-0.5 p-0.5 rounded-md bg-[var(--bg-section-alt)]">
+      {['ALL', 'COMMODITIES', 'CRYPTO', 'INDICES', 'FOREX', 'BONDS'].map(f => (
+        <button
+          key={f}
+          onClick={() => setFilterType(f)}
+          className={`h-7 px-2.5 rounded text-[11px] font-medium transition cursor-pointer ${
+            filterType === f
+              ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm'
+              : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+          }`}
+        >
+          {f === 'ALL' ? 'All' : f.charAt(0) + f.slice(1).toLowerCase()}
+        </button>
+      ))}
+    </div>
+  );
+
   return (
     <section className="space-y-4 font-sans" id="market-data-grid-root">
-      {/* Header & Asset Class Filters */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 pb-3 border-b" style={{ borderColor: 'var(--border-hairline)' }}>
-        <div className="space-y-1">
+      {variant === 'page' ? (
+        <PageHeader
+          eyebrow="MAIN · MARKET SURVEILLANCE"
+          title="Market surveillance"
+          description="Live quotes across FX, commodities, indices, crypto and yields, with intraday bias read straight from the feed."
+          actions={chartAndRefresh}
+        />
+      ) : (
+        <div className="section-head flex-wrap gap-y-2">
           <div className="flex items-center gap-2">
-            <h2 className="headline-h3 text-[var(--text-primary)]">
+            <h2 className="section-title text-base text-[var(--text-primary)]">
               Market surveillance
             </h2>
-            <span className="text-[11px] text-[var(--text-muted)] tabular-nums">
+            <span className="num text-[11px] text-[var(--text-muted)]">
               {filteredPrices.length} of {prices.length}
             </span>
-          </div>
-          <div className="flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-[var(--bullish)]" />
             <span className="metadata-label text-[9px] text-[var(--text-muted)]">
               Streaming
             </span>
           </div>
-        </div>
-
-        <div className="flex items-center gap-2 flex-wrap">
-          {onOpenChart && (
-            <button
-              onClick={() => onOpenChart('US30')}
-              className="h-8 px-3 rounded-md text-[11px] font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-section-alt)] flex items-center gap-1.5 transition cursor-pointer"
-            >
-              <LineChart className="w-3.5 h-3.5" />
-              <span>Chart</span>
-            </button>
-          )}
-
-          <div className="flex items-center gap-0.5 p-0.5 rounded-md bg-[var(--bg-section-alt)]">
-            {['ALL', 'COMMODITIES', 'CRYPTO', 'INDICES', 'FOREX', 'BONDS'].map(f => (
-              <button
-                key={f}
-                onClick={() => setFilterType(f)}
-                className={`h-7 px-2.5 rounded text-[11px] font-medium transition cursor-pointer ${
-                  filterType === f
-                    ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm'
-                    : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
-                }`}
-              >
-                {f === 'ALL' ? 'All' : f.charAt(0) + f.slice(1).toLowerCase()}
-              </button>
-            ))}
+          <div className="flex items-center gap-2 flex-wrap">
+            {chartAndRefresh}
+            {assetClassFilter}
           </div>
-
-          <button
-            onClick={onRefresh}
-            disabled={isRefreshing}
-            title="Refresh prices"
-            className="h-8 w-8 rounded-md text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-section-alt)] flex items-center justify-center transition cursor-pointer disabled:opacity-50"
-            id="refresh-surveillance-btn"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-[var(--accent)]' : ''}`} />
-          </button>
         </div>
-      </div>
+      )}
+
+      {variant === 'page' && (
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-2">
+            <span className="metadata-label text-[10px] text-[var(--text-muted)]">
+              Instruments
+            </span>
+            <span className="num text-[11px] text-[var(--text-muted)]">
+              {filteredPrices.length} of {prices.length}
+            </span>
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--bullish)]" />
+            <span className="metadata-label text-[9px] text-[var(--text-muted)]">
+              Streaming
+            </span>
+          </div>
+          {assetClassFilter}
+        </div>
+      )}
 
       {/* Grid of Market Instrument Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5">

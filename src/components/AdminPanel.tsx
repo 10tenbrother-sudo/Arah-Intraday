@@ -23,6 +23,7 @@ import { api } from '../lib/api';
 import { TelegramChannel, User } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { AdminUserManagement } from './AdminUserManagement';
+import { PageHeader } from './shared/PageHeader';
 import { AdminSmtpTester } from './AdminSmtpTester';
 
 interface AdminPanelProps {
@@ -169,45 +170,38 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser }) => {
   };
 
   return (
-    <div className="bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-xl p-5 space-y-5">
-      {/* Admin Title & Master Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[var(--border-subtle)]">
-        <div>
-          <div className="flex items-center gap-2">
-            <Shield className="w-5 h-5 text-[var(--accent)]" />
-            <h1 className="text-sm font-mono font-bold text-[var(--text-primary)] uppercase tracking-wider">
-              ADMIN CONTROL CENTER
-            </h1>
-          </div>
-          <p className="text-[10px] font-mono text-[var(--text-muted)] mt-0.5">
-            Ingestion Pipeline Management • Deduplication Engine • Source Registry
-          </p>
-        </div>
+    <div className="space-y-4 font-sans">
+      <PageHeader
+        eyebrow="TOOLS · SYSTEM & FEEDS"
+        title="Admin control center"
+        description="Ingestion pipeline management · deduplication engine · source registry."
+        actions={
+          <>
+            {errorMessage && (
+              <span className="text-xs font-mono text-[var(--bearish)] bg-[var(--bearish-bg)] px-2.5 py-1 rounded border border-[var(--bearish-border)] animate-fade">
+                {errorMessage}
+              </span>
+            )}
 
-        <div className="flex items-center gap-2">
-          {errorMessage && (
-            <span className="text-xs font-mono text-[var(--bearish)] bg-[var(--bearish-bg)] px-2.5 py-1 rounded border border-[var(--bearish-border)] animate-fade">
-              {errorMessage}
-            </span>
-          )}
+            {actionNotice && (
+              <span className="text-xs font-mono text-[var(--accent-strong)] bg-[var(--accent-subtle)] px-2.5 py-1 rounded border border-[var(--accent-border)] animate-fade">
+                {actionNotice}
+              </span>
+            )}
 
-          {actionNotice && (
-            <span className="text-xs font-mono text-[var(--accent)] bg-[var(--accent-subtle)] px-2.5 py-1 rounded border border-[var(--accent)] animate-fade">
-              {actionNotice}
-            </span>
-          )}
+            <button
+              onClick={handleRunAllIngest}
+              disabled={loading}
+              className="btn-primary-institutional flex items-center gap-1.5 px-3 h-8 rounded-md text-xs transition cursor-pointer disabled:opacity-50"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+              <span>Run all ingestion</span>
+            </button>
+          </>
+        }
+      />
 
-          <button
-            onClick={handleRunAllIngest}
-            disabled={loading}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-[var(--accent-subtle)] hover:bg-[var(--accent-subtle)] border border-[var(--accent)] text-[var(--accent)] text-xs font-mono font-semibold transition cursor-pointer"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-            <span>Run All Ingestion</span>
-          </button>
-        </div>
-      </div>
-
+      <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-lg p-5 space-y-5">
       {/* Admin Subtabs */}
       <div className="flex items-center gap-1 border-b border-[var(--border-subtle)] pb-2 text-xs font-mono overflow-x-auto">
         {[
@@ -599,6 +593,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser }) => {
       )}
         </motion.div>
       </AnimatePresence>
+      </div>
     </div>
   );
 };

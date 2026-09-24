@@ -18,6 +18,7 @@ import { NavTabId } from './Sidebar';
 import { getCurrencyFlagUrl } from '../lib/assets';
 import { EmptyState } from './shared/EmptyState';
 import { LoadingState } from './shared/LoadingState';
+import { PageHeader } from './shared/PageHeader';
 
 interface ArahMarketViewProps {
   data: ArahMarketTodayData | null;
@@ -112,37 +113,27 @@ export const ArahMarketView: React.FC<ArahMarketViewProps> = React.memo(({
     <div className="space-y-4" id="arah-market-dossier-view">
       {/* 1. TOP HEADER & SESSION BAROMETER */}
       <section className="space-y-5">
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-3 pb-3 border-b" style={{ borderColor: 'var(--border-hairline)' }}>
-          <div className="space-y-1 max-w-3xl">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="metadata-label text-[9px] text-[var(--accent)]">
-                Triple-confluence dossier
-              </span>
-              <span className="text-[var(--border-strong)]">·</span>
-              <span className="text-[11px] text-[var(--text-muted)] flex items-center gap-1">
-                <Clock className="w-3 h-3 text-[var(--accent)]" />
-                <span>{activeSession.charAt(0).toUpperCase() + activeSession.slice(1)} session active</span>
-              </span>
-            </div>
-
-            <h1 className="headline-h2 text-[var(--text-primary)]">
-              Market bias and confluence
-            </h1>
-
-            <p className="text-xs sm:text-[13px] text-[var(--text-muted)] leading-relaxed">
-              {sessionStatusText} — macro catalysts, intermarket transmission through US10Y and DXY, and intraday auction structure, read together.
-            </p>
-          </div>
-
-          <button
-            onClick={onRefresh}
-            disabled={isRefreshing}
-            className="h-9 px-3.5 rounded-md text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-section-alt)] flex items-center gap-1.5 transition cursor-pointer shrink-0 disabled:opacity-50"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-[var(--accent)]' : ''}`} />
-            <span>Sync session</span>
-          </button>
-        </div>
+        <PageHeader
+          eyebrow="RESEARCH · MARKET BIAS"
+          accentNote={
+            <span className="flex items-center gap-1">
+              <Clock className="w-3 h-3" />
+              <span>{activeSession.charAt(0).toUpperCase() + activeSession.slice(1)} session active</span>
+            </span>
+          }
+          title="Market bias and confluence"
+          description={`${sessionStatusText} — macro catalysts, intermarket transmission through US10Y and DXY, and intraday auction structure, read together.`}
+          actions={
+            <button
+              onClick={onRefresh}
+              disabled={isRefreshing}
+              className="h-9 px-3.5 rounded-md text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-section-alt)] flex items-center gap-1.5 transition cursor-pointer shrink-0 disabled:opacity-50"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-[var(--accent)]' : ''}`} />
+              <span>Sync session</span>
+            </button>
+          }
+        />
 
         {/* Global Regime & DXY Position Bar */}
         <div className="pt-3 border-t grid grid-cols-1 md:grid-cols-3 gap-3" style={{ borderColor: 'var(--border-hairline)' }}>

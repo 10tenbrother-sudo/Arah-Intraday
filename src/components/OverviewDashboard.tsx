@@ -10,6 +10,7 @@ import {
   Clock,
   ChevronRight,
   Target,
+  BarChart2,
 } from 'lucide-react';
 import {
   MarketPrice,
@@ -21,8 +22,6 @@ import {
   TodayCatalyst,
   ArahMarketTodayData,
 } from '../types';
-import { CurrencyStrengthWidget } from './CurrencyStrengthWidget';
-import { MarketDataGrid } from './MarketDataGrid';
 import { ExecutiveMarketBrief } from './ExecutiveMarketBrief';
 import { NavTabId } from './Sidebar';
 import { EmptyState } from './shared/EmptyState';
@@ -36,18 +35,10 @@ interface OverviewDashboardProps {
   events: MarketEvent[];
   calendar: EconomicEvent[];
   overview: AIAnalysis | null;
-  watchlistSymbols: string[];
-  selectedSymbol: string | null;
-  onSelectSymbol: (symbol: string | null) => void;
   onNavigateTab: (tab: NavTabId) => void;
   globalRegime: ArahMarketTodayData['globalRegime'] | null;
-  onToggleWatchlist: (symbol: string, assetType: string) => void;
   onOpenChart: (symbol: string) => void;
   onSelectEvent: (eventId: string) => void;
-  onRefreshPrices: () => Promise<void>;
-  isRefreshingPrices: boolean;
-  onRefreshCS: () => Promise<void>;
-  isRefreshingCS: boolean;
   onSyncWire: () => Promise<void>;
   isSyncingWire: boolean;
 }
@@ -60,18 +51,10 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
   events,
   calendar,
   overview,
-  watchlistSymbols,
-  selectedSymbol,
-  onSelectSymbol,
   onNavigateTab,
   globalRegime,
-  onToggleWatchlist,
   onOpenChart,
   onSelectEvent,
-  onRefreshPrices,
-  isRefreshingPrices,
-  onRefreshCS,
-  isRefreshingCS,
   onSyncWire,
   isSyncingWire,
 }) => {
@@ -147,7 +130,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
         id="editorial-market-overview"
       >
         <PageHeader
-          eyebrow="MARKET INTELLIGENCE · SURVEILLANCE DESK"
+          eyebrow="MAIN · OVERVIEW"
           accentNote="INTRADAY REGIME"
           title={`Today's market regime: ${kpiStats.overallRegime}`}
           description="Cross-asset analysis across G8 currencies, US benchmark yields, technology equities, and gold. High-conviction setups prioritized based on intermarket yield differentials and liquidity flows."
@@ -669,33 +652,53 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
       </div>
 
       {/* ======================================================== */}
-      {/* 5. MARKET SURVEILLANCE & G8 CURRENCY FLOW MATRIX         */}
+      {/* 5. DEPTH MAP — Overview stays a summary; the grids live   */}
+      {/*    on their own tabs so this surface is not a second copy  */}
       {/* ======================================================== */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        {/* Left Column: Live 13 Assets Surveillance Grid (8 Columns) */}
-        <div className="lg:col-span-8">
-          <MarketDataGrid
-            prices={prices}
-            watchlistSymbols={watchlistSymbols}
-            intradayMap={intradayMap}
-            onToggleWatchlist={onToggleWatchlist}
-            onRefresh={onRefreshPrices}
-            isRefreshing={isRefreshingPrices}
-            onSelectSymbol={onSelectSymbol}
-            onOpenChart={onOpenChart}
-          />
-        </div>
-
-        {/* Right Column: Currency Strength Widget (4 Columns) */}
-        <div className="lg:col-span-4">
-          <CurrencyStrengthWidget
-            strengths={strengths}
-            onRefresh={onRefreshCS}
-            isRefreshing={isRefreshingCS}
-            onSelectCurrency={cur => onSelectSymbol(cur === selectedSymbol ? null : cur)}
-            initialTab="CHART"
-          />
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+        {[
+          {
+            id: 'markets' as const,
+            icon: BarChart2,
+            label: 'Market surveillance',
+            hint: 'Full quote grid · 14 instruments',
+          },
+          {
+            id: 'currency' as const,
+            icon: TrendingUp,
+            label: 'Currency G8 matrix',
+            hint: 'Strength chart · pair opportunity matrix',
+          },
+          {
+            id: 'intermarket' as const,
+            icon: Zap,
+            label: 'Intermarket flows',
+            hint: 'Cross-asset correlations & divergences',
+          },
+          {
+            id: 'history' as const,
+            icon: Clock,
+            label: 'Historical memory',
+            hint: 'Session archive · multi-day deltas',
+          },
+        ].map(({ id, icon: Icon, label, hint }) => (
+          <button
+            key={id}
+            onClick={() => onNavigateTab(id)}
+            className="press text-left rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3.5 flex items-start gap-3 transition hover:border-[var(--border-strong)] hover:bg-[var(--bg-section-alt)] cursor-pointer"
+          >
+            <Icon className="w-4 h-4 text-[var(--accent)] mt-0.5 shrink-0" />
+            <span className="min-w-0 space-y-0.5">
+              <span className="block text-[13px] font-semibold text-[var(--text-primary)]">
+                {label}
+              </span>
+              <span className="block text-[11px] text-[var(--text-muted)] leading-snug">
+                {hint}
+              </span>
+            </span>
+            <ArrowRight className="w-3.5 h-3.5 text-[var(--text-muted)] ml-auto mt-0.5 shrink-0" />
+          </button>
+        ))}
       </div>
     </div>
   );
