@@ -227,6 +227,15 @@ Verified state as of the last rotation audit: all eight accounts still carried
 the leaked hash, so all eight are compromised, and all ten leaked verification
 tokens had already been consumed, so no takeover was live through that path.
 
+Rotation was then applied (2026-09-24): all eight accounts now carry a fresh
+hash and salt, so none of them match the leak any more, and the audit reports
+zero still-compromised accounts. The one-time reset links issued by that run are
+deliberately not recorded here. Note that `APP_BASE_URL` was unset at the time,
+so the links printed by the script pointed at `http://localhost:3000`; set it to
+the public origin before rotating again, otherwise the printed links are only
+usable from the server itself. SMTP is also unconfigured in this environment, so
+the script prints links instead of mailing them.
+
 ## Pushing to this repository
 
 The `GITHUB_TOKEN` supplied to agents is write-capable for this repo, so
