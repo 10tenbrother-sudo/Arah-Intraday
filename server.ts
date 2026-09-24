@@ -263,7 +263,14 @@ async function startServer() {
     console.error('[System] Error during server initialization:', err);
   }
 
-  // 3. Vite Middleware (SPA handling)
+  // 3. Unmatched API paths must 404 as JSON, not fall through to the SPA.
+  // Without this an unknown /api/* route returned index.html with HTTP 200,
+  // so a client typo looked like a successful call with a broken body.
+  app.use('/api', (req, res) => {
+    res.status(404).json({ error: 'Not found', path: req.originalUrl });
+  });
+
+  // 4. Vite Middleware (SPA handling)
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
       server: { middlewareMode: true },
