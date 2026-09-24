@@ -33,15 +33,16 @@ public URL returns 502 while local port 3000 still answers.
   roughly three quarters of `AIAnalysis` rows carry the deterministic template
   rather than a Gemini summary. That is a billing/quota limit on the key, not a
   code defect: raise the plan or swap in a key with headroom to restore coverage.
-- Storage is SQLite via Prisma at `data/market_intelligence.sqlite` (data layer
+- Storage is PostgreSQL via Prisma at `arah_market` on port 5432 (data layer
   `server/db/database.ts`, client singleton `server/db/prisma.ts`, JSON codec
   `server/db/codec.ts`). Schema lives in `prisma/schema.prisma`; push changes
   with `npm run db:push`. The data layer is fully async - every call site awaits.
+- The legacy SQLite store at `data/market_intelligence.sqlite` is kept read-only
+  as a rollback source; nothing writes it.
 - `data/market_intelligence.db.json` is the retired file store. It is kept
-  read-only for provenance; nothing writes it. Migrate it into SQLite with
-  `npm run seed:sqlite` (add `--force` to overwrite an existing database). The
-  migration dedupes ids and repairs dangling foreign keys, because the old file
-  was pruned over time and contained orphans.
+  read-only for provenance; nothing writes it. It was migrated into the store by
+  the one-time seed script; the migration dedupes ids and repairs dangling
+  foreign keys, because the old file was pruned over time and contained orphans.
 - The demo trader account is `trader@marketintel.pro`. Its password is seeded
   from `DEMO_USER_PASSWORD`, or a random one printed once when unset — the repo
   deliberately hardcodes no password. The account that already exists predates
