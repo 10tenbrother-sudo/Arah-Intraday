@@ -1,0 +1,336 @@
+// Prisma schema for the Market Intelligence platform.
+//
+// Postgres now backs this schema (migrated from the original JSON file store,
+// then SQLite). List/object fields are still persisted as JSON-encoded TEXT and
+// converted in one place (server/db/codec.ts) rather than as native `Json`
+// columns: the codec is the single boundary that guarantees an array never
+// reaches the API layer as a string, and moving to `Json` would require
+// auditing every reader for the changed runtime type. Do not hand-edit those
+// columns.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                      String   @id
+  email                   String   @unique
+  password_hash           String
+  salt                    String
+  name                    String
+  role                    String
+  is_verified             Boolean  @default(false)
+  verification_status     String?
+  avatar_url              String?
+  plan                    String?
+  subscription_status     String?
+  subscription_expires_at String?
+  last_order_id           String?
+  payment_method          String?
+  billing_cycle           String?
+  created_at              String?
+  updated_at              String?
+
+  tokens      VerificationToken[]
+  preferences UserPreferences?
+  watchlist   UserWatchlist[]
+  alerts      UserAlert[]
+}
+
+model VerificationToken {
+  id         String  @id
+  user_id    String
+  email      String
+  token      String  @unique
+  code       String?
+  expires_at String
+  created_at String
+  used_at    String?
+  type       String?
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([email])
+}
+
+model UserPreferences {
+  user_id             String  @id
+  timezone            String
+  language            String
+  theme               String
+  default_market_view String
+  density             String
+  audio_alerts        Boolean @default(true)
+  created_at          String
+  updated_at          String
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model UserWatchlist {
+  id         String  @id
+  user_id    String
+  symbol     String
+  asset_type String
+  notes      String?
+  added_at   String
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+}
+
+model UserAlert {
+  id           String  @id
+  user_id      String
+  symbol       String
+  condition    String
+  target_value Float?
+  is_active    Boolean @default(true)
+  triggered_at String?
+  created_at   String
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+}
+
+model Source {
+  id                 String  @id
+  name               String
+  type               String
+  endpoint_url       String
+  is_enabled         Boolean @default(true)
+  status             String
+  last_success_at    String?
+  last_error_at      String?
+  last_error_message String?
+  error_count        Int     @default(0)
+  interval_seconds   Int
+  metadata           String?
+  created_at         String
+  updated_at         String
+
+  channels TelegramChannel[]
+  news     NewsItem[]
+}
+
+model TelegramChannel {
+  id               String  @id
+  handle           String  @unique
+  title            String
+  source_id        String
+  is_enabled       Boolean @default(true)
+  language         String
+  last_ingested_at String?
+  status           String
+  error_count      Int     @default(0)
+
+  source Source @relation(fields: [source_id], references: [id], onDelete: Cascade)
+}
+
+model NewsItem {
+  id                  String  @id
+  title               String
+  content             String
+  source_id           String
+  source_name         String
+  source_url          String
+  language            String
+  published_at        String
+  received_at         String
+  updated_at          String
+  event_id            String?
+  affected_assets     String
+  affected_currencies String
+  category            String
+  status              String
+  raw_payload         String?
+  entities_extracted  String?
+
+  source Source       @relation(fields: [source_id], references: [id], onDelete: Cascade)
+  event  MarketEvent? @relation(fields: [event_id], references: [id])
+  links  EventSource[]
+
+  @@index([event_id])
+  @@index([source_id])
+}
+
+model MarketEvent {
+  id                    String  @id
+  title                 String
+  summary               String
+  primary_category      String
+  impact_level          String
+  first_detected_at     String
+  last_updated_at       String
+  source_count          Int     @default(0)
+  source_names          String
+  affected_assets       String
+  affected_currencies   String
+  key_facts             String
+  image_url             String?
+  ai_analysis_id        String?
+  is_duplicate_resolved Boolean?
+
+  news     NewsItem[]
+  sources  EventSource[]
+  analyses AIAnalysis[]
+}
+
+model EventSource {
+  id               String  @id
+  event_id         String
+  news_id          String
+  source_name      String
+  source_url       String
+  language         String
+  original_title   String
+  original_content String
+  published_at     String
+  matched_reason   String
+  similarity_score Float
+  created_at       String
+
+  event MarketEvent @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  news  NewsItem    @relation(fields: [news_id], references: [id], onDelete: Cascade)
+
+  @@index([event_id])
+}
+
+model EventAsset {
+  id                    String @id
+  event_id              String
+  asset_symbol          String
+  correlation_rationale String
+
+  @@index([event_id])
+}
+
+model EventCurrency {
+  id               String @id
+  event_id         String
+  currency_code    String
+  impact_direction String
+
+  @@index([event_id])
+}
+
+model MarketPrice {
+  seq             Int     @id @default(autoincrement())
+  symbol          String  @unique
+  display_name    String
+  asset_type      String
+  price           Float
+  change_24h      Float
+  change_24h_pct  Float
+  high_24h        Float
+  low_24h         Float
+  volume_24h      Float
+  source          String
+  timestamp       String
+  last_updated    String
+  status          String
+  sparkline_1h    String
+  tv_symbol       String?
+  tradingview_url String?
+  is_delayed      Boolean?
+}
+
+model CurrencyStrength {
+  currency         String @id
+  strength_score   Float
+  change_direction String
+  rank             Int
+  source           String
+  timestamp        String
+  last_updated     String
+  status           String
+  raw_delta        Float?
+}
+
+model CurrencyStrengthHistory {
+  id             String @id
+  currency       String
+  strength_score Float
+  timestamp      String
+
+  @@index([currency])
+  @@index([timestamp])
+}
+
+model EconomicEvent {
+  id                      String  @id
+  event_name              String
+  country_code            String
+  currency                String
+  impact                  String
+  date_time_utc           String
+  actual                  String?
+  forecast                String?
+  previous                String?
+  status                  String
+  source                  String
+  last_updated            String
+  data_status             String?
+  surprise                String?
+  change                  String?
+  confidence              Int?
+  freshness               String?
+  market_reaction         String?
+  fundamental_implication String?
+  actual_market_reaction  String?
+
+  @@index([date_time_utc])
+}
+
+model MarketTheme {
+  id              String  @id
+  title           String
+  description     String
+  sentiment       String
+  primary_assets  String?
+  evidence_events String?
+  active_since    String?
+}
+
+model AIAnalysis {
+  id                      String  @id
+  event_id                String?
+  analysis_type           String
+  title                   String
+  summary                 String
+  context_data_used       String
+  key_implications        String
+  affected_assets_outlook String
+  confidence              Int
+  disclaimer              String
+  created_at              String
+  is_insufficient_data    Boolean @default(false)
+
+  event MarketEvent? @relation(fields: [event_id], references: [id])
+
+  @@index([event_id])
+}
+
+model DailySnapshot {
+  id                      String @id
+  date                    String @unique
+  timestamp               String
+  title                   String
+  market_biases           String
+  currency_strength       String
+  major_catalysts         String
+  market_reaction_summary String
+  ai_summary              String
+  ai_why                  String
+  ai_risk                 String
+  ai_context              String
+  historical_insights     String
+  created_at              String
+}

@@ -1,0 +1,22 @@
+{
+  "telegramBotToken": "8812006256:AAE87ZSrwpBp_rh_3njI8mUtprWRDrQzMTM",
+  "telegramChatId": "6296313157",
+  "whatsappPhone": "",
+  "whatsappApiKey": "",
+  "enabled": true,
+  "minConfirmations": 2,
+  "instruments": [
+    "XAUUSD",
+    "EURUSD",
+    "GBPUSD",
+    "USDJPY",
+    "AUDUSD",
+    "USDCAD",
+    "US100",
+    "US30",
+    "US500",
+    "BTC"
+  ],
+  "cooldownMinutes": 120,
+  "lastAlertsSent": {}
+}

@@ -1,90 +1,29 @@
-import React, { useState, useMemo } from 'react';
-import {
-  CurrencyStrength,
-  IntradayAssetBias,
-  TodayCatalyst,
-  MarketPrice,
-  EconomicEvent,
-} from '../types';
-import {
-  Sparkles,
-  TrendingUp,
-  Compass,
-  Zap,
-  Target,
-  LineChart,
-  ArrowUpRight,
-  ArrowDownRight,
-  CheckCircle2,
-  AlertTriangle,
-  Minus,
-  Activity,
-} from 'lucide-react';
-import { getCurrencyFlagUrl } from '../lib/assets';
+import React, { useMemo } from 'react';
+import { ArahMarketTodayData, CurrencyStrength, MarketPrice } from '../types';
+import { Compass, Zap, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { D3Sparkline } from './ui/D3Sparkline';
 
 interface ExecutiveMarketBriefProps {
   strengths: CurrencyStrength[];
-  intradayMap: IntradayAssetBias[];
-  todayCatalysts: TodayCatalyst[];
   prices: MarketPrice[];
-  calendar: EconomicEvent[];
+  globalRegime: ArahMarketTodayData['globalRegime'] | null;
   onOpenChart: (symbol: string) => void;
-  onSelectSymbol: (symbol: string | null) => void;
-}
-
-interface TradeSuggestion {
-  id: string;
-  symbol: string;
-  name: string;
-  category: 'FX_CROSS' | 'FX_MAJOR' | 'COMMODITY' | 'INDEX' | 'BOND';
-  action: 'STRONG_BUY' | 'BUY' | 'STRONG_SELL' | 'SELL' | 'AVOID_CHOP';
-  actionLabel: string;
-  biasConfidence: number;
-  deltaOrScore?: string;
-  tradeStyle: string;
-  entryZone: string;
-  invalidationLevel: string;
-  targetProjection: string;
-  fundamentalDriver: string;
-  riskNote: string;
-  tier: 'PRIME_A' | 'HIGH' | 'SPECULATIVE' | 'AVOID';
+  onNavigateMarketBias: () => void;
 }
 
 export const ExecutiveMarketBrief: React.FC<ExecutiveMarketBriefProps> = ({
   strengths,
-  intradayMap,
-  todayCatalysts,
   prices,
-  calendar,
+  globalRegime,
   onOpenChart,
-  onSelectSymbol,
+  onNavigateMarketBias,
 }) => {
-  const [filterCategory, setFilterCategory] = useState<
-    'ALL' | 'PRIME' | 'INDICES' | 'COMMODITIES' | 'BONDS' | 'CROSSES' | 'MAJORS' | 'AVOID'
-  >('ALL');
-
-  // Currency score lookup
-  const curScoreMap = useMemo(() => {
-    const map: Record<string, number> = {};
-    strengths.forEach(s => {
-      map[s.currency] = s.strength_score;
-    });
-    return map;
-  }, [strengths]);
-
   // Price lookup
   const priceMap = useMemo(() => {
     const map = new Map<string, MarketPrice>();
     prices.forEach(p => map.set(p.symbol.toUpperCase(), p));
     return map;
   }, [prices]);
-
-  // Intraday bias lookup
-  const biasMap = useMemo(() => {
-    const map = new Map<string, IntradayAssetBias>();
-    intradayMap.forEach(item => map.set(item.symbol.toUpperCase(), item));
-    return map;
-  }, [intradayMap]);
 
   // 1. DYNAMIC MARKET SYNTHESIS CALCULATION
   const marketSynthesis = useMemo(() => {
@@ -104,21 +43,22 @@ export const ExecutiveMarketBrief: React.FC<ExecutiveMarketBriefProps> = ({
     const us10yPrice = priceMap.get('US10Y')?.price || 4.085;
     const us10yChange = priceMap.get('US10Y')?.change_24h_pct || -0.32;
 
-    const bullishCount = intradayMap.filter(a => a.overall_bias === 'BULLISH').length;
-    const bearishCount = intradayMap.filter(a => a.overall_bias === 'BEARISH').length;
+    // Regime is owned by the server dossier; deriving a second one here let
+    // Overview and Market Bias publish conflicting labels for the same market.
+    const regimeTitle = globalRegime?.title ?? 'AWAITING REGIME DATA';
+    const regimeBadgeClass = globalRegime
+      ? globalRegime.riskScore < 0
+        ? 'badge-bearish'
+        : 'badge-bullish'
+      : 'badge-warning';
 
-    let regimeTitle = 'BALANCED ROTATION';
-    let regimeBadgeClass = 'badge-warning';
-
-    if (bullishCount >= 7) {
-      regimeTitle = 'RISK-ON DOMINANT';
-      regimeBadgeClass = 'badge-bullish';
-    } else if (bearishCount >= 7) {
-      regimeTitle = 'DEFENSIVE / RISK-OFF';
-      regimeBadgeClass = 'badge-bearish';
-    }
-
-    const summaryText = `Pasar berada dalam rezim ${regimeTitle}. Indeks Wall Street dipimpin oleh reli US100 didukung kinerja emiten teknologi dan imbal hasil obligasi AS US10Y yang stabil di kisaran ${us10yPrice.toFixed(3)}%. Di pasar mata uang, ${strongest.currency} memimpin disparitas tertinggi (+${strongest.strength_score.toFixed(1)}pt), sementara ${weakest.currency} terlemah (${weakest.strength_score.toFixed(1)}pt). Emas (XAU/USD) tetap diburu sebagai lindung nilai makro di atas $${Math.round(goldPrice)}.`;
+    // The dossier title already ends in "REGIME" for some regimes, so stripping
+    // it here keeps "balanced / rotational regime" from reading as
+    // "balanced / rotational regime regime".
+    const regimeRead = globalRegime
+      ? regimeTitle.replace(/\s*regime\s*$/i, '').toLowerCase() || 'undetermined'
+      : 'undetermined';
+    const summaryText = `Markets are trading in a ${regimeRead} regime. Wall Street is led by the US100 ${us100Change >= 0 ? 'higher' : 'lower'} at ${us100Change >= 0 ? '+' : ''}${us100Change.toFixed(2)}%, with the US 10Y yield ${us10yChange >= 0 ? 'up' : 'down'} at ${us10yPrice.toFixed(3)}%. In FX, ${strongest.currency} carries the widest dispersion (+${strongest.strength_score.toFixed(1)}pt) while ${weakest.currency} is the weakest leg (${weakest.strength_score.toFixed(1)}pt). Gold (XAU/USD) is trading ${goldChange >= 0 ? 'higher' : 'lower'} at $${Math.round(goldPrice)}.`;
 
     return {
       strongest,
@@ -135,225 +75,8 @@ export const ExecutiveMarketBrief: React.FC<ExecutiveMarketBriefProps> = ({
       regimeBadgeClass,
       summaryText,
     };
-  }, [strengths, priceMap, intradayMap]);
+  }, [strengths, priceMap, globalRegime]);
 
-  // 2. PAIR ENTRY OPPORTUNITIES CALCULATION
-  const tradeSuggestions = useMemo(() => {
-    const list: TradeSuggestion[] = [];
-
-    const currencyPairs = [
-      {
-        symbol: 'USDJPY',
-        base: 'USD',
-        quote: 'JPY',
-        category: 'FX_MAJOR' as const,
-        name: 'US Dollar / Japanese Yen',
-        catalyst: 'Perbedaan yield US-Japan & divergensi suku bunga Fed-BoJ',
-        entryLogic: 'Pullback ke EMA21 M15 atau support H1',
-        invalidation: 'Break di bawah support pivot',
-        target: 'Resistensi swing high intraday',
-      },
-      {
-        symbol: 'EURUSD',
-        base: 'EUR',
-        quote: 'USD',
-        category: 'FX_MAJOR' as const,
-        name: 'Euro / US Dollar',
-        catalyst: 'Ekspektasi pelonggaran ECB vs ketahanan ekonomi AS',
-        entryLogic: 'Sell rally di area suplai H1',
-        invalidation: 'Penutupan H1 di atas resistance suplai',
-        target: 'Target likuiditas swing low sebelumnya',
-      },
-      {
-        symbol: 'GBPUSD',
-        base: 'GBP',
-        quote: 'USD',
-        category: 'FX_MAJOR' as const,
-        name: 'British Pound / US Dollar',
-        catalyst: 'Data inflasi BoE & selisih suku bunga Bank of England',
-        entryLogic: 'Konfirmasi rejection pada zona orderblock H1',
-        invalidation: 'Break struktur swing H1',
-        target: 'Target zona demand discount H4',
-      },
-      {
-        symbol: 'AUDJPY',
-        base: 'AUD',
-        quote: 'JPY',
-        category: 'FX_CROSS' as const,
-        name: 'Australian Dollar / Japanese Yen',
-        catalyst: 'Risk sentiment barometer & carry trade appetite',
-        entryLogic: 'Long pada retest pivot intraday',
-        invalidation: 'Break struktur support M30',
-        target: 'Resistensi R1 / R2 harian',
-      },
-      {
-        symbol: 'EURJPY',
-        base: 'EUR',
-        quote: 'JPY',
-        category: 'FX_CROSS' as const,
-        name: 'Euro / Japanese Yen',
-        catalyst: 'Divergensi imbal hasil Eropa vs Jepang',
-        entryLogic: 'Breakout konfirmasi volume pada sesi London',
-        invalidation: 'False breakout reversal',
-        target: 'High sesi sebelumnya',
-      },
-      {
-        symbol: 'GBPJPY',
-        base: 'GBP',
-        quote: 'JPY',
-        category: 'FX_CROSS' as const,
-        name: 'British Pound / Japanese Yen',
-        catalyst: 'Momentum volatilitas sesi London & carry flow',
-        entryLogic: 'Dip buying pada EMA50 H1',
-        invalidation: 'Break swing low 40 pips',
-        target: 'High tahunan / weekly high',
-      },
-      {
-        symbol: 'USDCHF',
-        base: 'USD',
-        quote: 'CHF',
-        category: 'FX_MAJOR' as const,
-        name: 'US Dollar / Swiss Franc',
-        catalyst: 'Pelonggaran suku bunga SNB vs yield AS',
-        entryLogic: 'Buy limit pada zona discount H1',
-        invalidation: 'Breakout support SNB',
-        target: 'Zona suplai 0.9000+',
-      },
-    ];
-
-    for (const p of currencyPairs) {
-      const baseScore = curScoreMap[p.base] ?? 5.0;
-      const quoteScore = curScoreMap[p.quote] ?? 5.0;
-      const delta = baseScore - quoteScore;
-      const absDelta = Math.abs(delta);
-
-      let action: TradeSuggestion['action'] = 'AVOID_CHOP';
-      let actionLabel = 'HINDARI (FLAT BASKET)';
-      let tier: TradeSuggestion['tier'] = 'AVOID';
-      let tradeStyle = 'Sideways';
-
-      if (delta >= 3.0) {
-        action = 'STRONG_BUY';
-        actionLabel = 'STRONG BUY (LONG)';
-        tier = 'PRIME_A';
-        tradeStyle = 'Strong Trend Flow';
-      } else if (delta >= 1.6) {
-        action = 'BUY';
-        actionLabel = 'BUY ON PULLBACK';
-        tier = 'HIGH';
-        tradeStyle = 'Dip Buying';
-      } else if (delta <= -3.0) {
-        action = 'STRONG_SELL';
-        actionLabel = 'STRONG SELL (SHORT)';
-        tier = 'PRIME_A';
-        tradeStyle = 'Strong Downtrend Flow';
-      } else if (delta <= -1.6) {
-        action = 'SELL';
-        actionLabel = 'SELL ON RALLY';
-        tier = 'HIGH';
-        tradeStyle = 'Rally Shorting';
-      }
-
-      const confidence = Math.min(94, Math.max(50, Math.round(55 + absDelta * 11)));
-
-      list.push({
-        id: p.symbol,
-        symbol: p.symbol,
-        name: p.name,
-        category: p.category,
-        action,
-        actionLabel,
-        biasConfidence: confidence,
-        deltaOrScore: `Δ ${delta > 0 ? '+' : ''}${delta.toFixed(1)}pt`,
-        tradeStyle,
-        entryZone: p.entryLogic,
-        invalidationLevel: p.invalidation,
-        targetProjection: p.target,
-        fundamentalDriver: p.catalyst,
-        riskNote: tier === 'PRIME_A' ? 'High conviction intermarket alignment' : 'Watch high-impact calendar releases',
-        tier,
-      });
-    }
-
-    // Gold Setup
-    const goldPrice = priceMap.get('XAUUSD');
-    const goldBias = biasMap.get('XAUUSD');
-    if (goldPrice) {
-      const isBull = (goldBias?.overall_bias ?? 'BULLISH') === 'BULLISH';
-      list.push({
-        id: 'XAUUSD',
-        symbol: 'XAUUSD',
-        name: 'Gold / US Dollar',
-        category: 'COMMODITY',
-        action: isBull ? 'STRONG_BUY' : 'SELL',
-        actionLabel: isBull ? 'STRONG BUY (BUY THE DIP)' : 'SELL ON RALLY',
-        biasConfidence: goldBias?.confidence ?? 78,
-        deltaOrScore: `Bias: ${goldBias?.overall_bias ?? 'BULLISH'} (${goldPrice.change_24h_pct >= 0 ? '+' : ''}${goldPrice.change_24h_pct.toFixed(2)}%)`,
-        tradeStyle: 'Safe-Haven Momentum / Dip Buying',
-        entryZone: `Demand zone $${(goldPrice.price - 8.5).toFixed(1)} - $${(goldPrice.price - 3.0).toFixed(1)}`,
-        invalidationLevel: goldBias?.conditions_to_change_bias || `Break below $${(goldPrice.price - 22.0).toFixed(1)}`,
-        targetProjection: `$${(goldPrice.price + 25.0).toFixed(1)} / ATH Resistance`,
-        fundamentalDriver: goldBias?.top_drivers?.[0] || 'Geopolitical hedge & real yield pressure.',
-        riskNote: 'High volatility during New York opening (19:30 WIB)',
-        tier: 'PRIME_A',
-      });
-    }
-
-    // US100 Setup
-    const us100Price = priceMap.get('US100');
-    const us100Bias = biasMap.get('US100');
-    if (us100Price) {
-      const isBull = (us100Bias?.overall_bias ?? 'BULLISH') === 'BULLISH' || us100Price.change_24h_pct >= 0;
-      list.push({
-        id: 'US100',
-        symbol: 'US100',
-        name: 'Nasdaq 100 Tech Index',
-        category: 'INDEX',
-        action: isBull ? 'STRONG_BUY' : 'BUY',
-        actionLabel: isBull ? 'STRONG BUY (MOMENTUM LONG)' : 'BUY ON PULLBACK',
-        biasConfidence: Math.max(86, us100Bias?.confidence ?? 88),
-        deltaOrScore: `Tech Bias: ${us100Bias?.overall_bias ?? 'BULLISH'} (${us100Price.change_24h_pct >= 0 ? '+' : ''}${us100Price.change_24h_pct.toFixed(2)}%)`,
-        tradeStyle: 'Tech Super-Trend & Pullback Dip',
-        entryZone: `Discount H1 demand ${Math.round(us100Price.price - 85)} - ${Math.round(us100Price.price - 25)}`,
-        invalidationLevel: `Breakdown under support ${Math.round(us100Price.price - 190)}`,
-        targetProjection: `ATH expansion ${Math.round(us100Price.price + 260)}+ (RR 1:2.8)`,
-        fundamentalDriver: 'AI hyperscaler capex & stable semiconductor revenues.',
-        riskNote: 'High volume spike at Wall Street opening (20:30 WIB)',
-        tier: 'PRIME_A',
-      });
-    }
-
-    return list.sort((a, b) => {
-      const order = { PRIME_A: 1, HIGH: 2, SPECULATIVE: 3, AVOID: 4 };
-      return order[a.tier] - order[b.tier];
-    });
-  }, [curScoreMap, biasMap, priceMap]);
-
-  // Filtered trade list
-  const filteredSuggestions = useMemo(() => {
-    if (filterCategory === 'PRIME') {
-      return tradeSuggestions.filter(t => t.tier === 'PRIME_A');
-    }
-    if (filterCategory === 'INDICES') {
-      return tradeSuggestions.filter(t => t.category === 'INDEX');
-    }
-    if (filterCategory === 'COMMODITIES') {
-      return tradeSuggestions.filter(t => t.category === 'COMMODITY');
-    }
-    if (filterCategory === 'BONDS') {
-      return tradeSuggestions.filter(t => t.category === 'BOND');
-    }
-    if (filterCategory === 'MAJORS') {
-      return tradeSuggestions.filter(t => t.category === 'FX_MAJOR' && t.tier !== 'AVOID');
-    }
-    if (filterCategory === 'CROSSES') {
-      return tradeSuggestions.filter(t => t.category === 'FX_CROSS' && t.tier !== 'AVOID');
-    }
-    if (filterCategory === 'AVOID') {
-      return tradeSuggestions.filter(t => t.tier === 'AVOID');
-    }
-    return tradeSuggestions;
-  }, [tradeSuggestions, filterCategory]);
 
   return (
     <div className="terminal-panel p-4 space-y-4 font-sans" id="market-summary-and-entry-brief">
@@ -362,15 +85,15 @@ export const ExecutiveMarketBrief: React.FC<ExecutiveMarketBriefProps> = ({
         <div>
           <div className="flex items-center gap-2">
             <span className="metadata-label text-[10px] text-[var(--accent)] font-mono">
-              SYNTHESIS & TRADE DIRECTIVES
+              SYNTHESIS & MACRO DIRECTIVES
             </span>
             <span className="text-[var(--border-subtle)]">·</span>
             <h2 className="text-xs sm:text-sm font-mono font-bold text-[var(--text-primary)] uppercase tracking-wider">
-              MARKET CONCLUSION & RECOMMENDED ENTRY SETUPS
+              MARKET CONCLUSION & MACRO SUMMARY
             </h2>
           </div>
           <p className="text-xs text-[var(--text-secondary)] mt-0.5 font-sans leading-relaxed">
-            Consensus macro telemetry and high-probability trade setups ranked by currency divergence, yield curve anchor, and asset sentiment.
+            Consensus macro telemetry from currency divergence, the yield curve anchor, and asset sentiment. Per-pair entry plans live in Market Bias.
           </p>
         </div>
 
@@ -379,6 +102,12 @@ export const ExecutiveMarketBrief: React.FC<ExecutiveMarketBriefProps> = ({
           <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${marketSynthesis.regimeBadgeClass}`}>
             {marketSynthesis.regimeTitle}
           </span>
+          <button
+            onClick={onNavigateMarketBias}
+            className="ml-1 px-2 py-0.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-[10.5px] font-semibold transition cursor-pointer"
+          >
+            ENTRY PLANS →
+          </button>
         </div>
       </div>
 
@@ -420,22 +149,48 @@ export const ExecutiveMarketBrief: React.FC<ExecutiveMarketBriefProps> = ({
 
             <div
               onClick={() => onOpenChart('US100')}
-              className="p-1.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-surface)] hover:border-[var(--text-primary)] transition cursor-pointer"
+              className="p-1.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-surface)] hover:border-[var(--border-strong)] transition cursor-pointer flex items-center justify-between"
             >
-              <span className="text-[9.5px] text-[var(--text-muted)] block">NASDAQ (US100)</span>
-              <span className={`font-bold mt-0.5 block ${marketSynthesis.us100Change >= 0 ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}`}>
-                {marketSynthesis.us100Price.toLocaleString(undefined, { maximumFractionDigits: 0 })} ({marketSynthesis.us100Change >= 0 ? '+' : ''}{marketSynthesis.us100Change.toFixed(2)}%)
-              </span>
+              <div>
+                <span className="text-[9.5px] text-[var(--text-muted)] block">NASDAQ (US100)</span>
+                <span className={`font-bold mt-0.5 block ${marketSynthesis.us100Change >= 0 ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}`}>
+                  {marketSynthesis.us100Price.toLocaleString(undefined, { maximumFractionDigits: 0 })} ({marketSynthesis.us100Change >= 0 ? '+' : ''}{marketSynthesis.us100Change.toFixed(2)}%)
+                </span>
+              </div>
+              {priceMap.get('US100')?.sparkline_1h && (
+                <D3Sparkline
+                  data={priceMap.get('US100')?.sparkline_1h}
+                  width={38}
+                  height={16}
+                  isPositive={marketSynthesis.us100Change >= 0}
+                  showArea={true}
+                  showEndDot={false}
+                  className="opacity-80 shrink-0 ml-1.5"
+                />
+              )}
             </div>
 
             <div
               onClick={() => onOpenChart('XAUUSD')}
-              className="p-1.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-surface)] hover:border-[var(--text-primary)] transition cursor-pointer"
+              className="p-1.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-surface)] hover:border-[var(--border-strong)] transition cursor-pointer flex items-center justify-between"
             >
-              <span className="text-[9.5px] text-[var(--text-muted)] block">GOLD (XAU)</span>
-              <span className={`font-bold mt-0.5 block ${marketSynthesis.goldChange >= 0 ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}`}>
-                ${marketSynthesis.goldPrice.toFixed(1)} ({marketSynthesis.goldChange >= 0 ? '+' : ''}{marketSynthesis.goldChange.toFixed(2)}%)
-              </span>
+              <div>
+                <span className="text-[9.5px] text-[var(--text-muted)] block">GOLD (XAU)</span>
+                <span className={`font-bold mt-0.5 block ${marketSynthesis.goldChange >= 0 ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}`}>
+                  ${marketSynthesis.goldPrice.toFixed(1)} ({marketSynthesis.goldChange >= 0 ? '+' : ''}{marketSynthesis.goldChange.toFixed(2)}%)
+                </span>
+              </div>
+              {priceMap.get('XAUUSD')?.sparkline_1h && (
+                <D3Sparkline
+                  data={priceMap.get('XAUUSD')?.sparkline_1h}
+                  width={38}
+                  height={16}
+                  isPositive={marketSynthesis.goldChange >= 0}
+                  showArea={true}
+                  showEndDot={false}
+                  className="opacity-80 shrink-0 ml-1.5"
+                />
+              )}
             </div>
           </div>
         </div>
@@ -456,7 +211,7 @@ export const ExecutiveMarketBrief: React.FC<ExecutiveMarketBriefProps> = ({
                 1
               </span>
               <p className="text-[var(--text-secondary)] leading-snug">
-                <strong className="text-[var(--text-primary)] font-semibold">Tech Leadership:</strong> Nasdaq (US100) continues expanding high-momentum demand supported by corporate capex.
+                <strong className="text-[var(--text-primary)] font-semibold">Tech Leadership:</strong> Nasdaq (US100) is {marketSynthesis.us100Change >= 0 ? 'holding gains' : 'under pressure'} at {marketSynthesis.us100Change >= 0 ? '+' : ''}{marketSynthesis.us100Change.toFixed(2)}%, {marketSynthesis.us100Change >= 0 ? 'supported by corporate capex flows' : 'as high-multiple tech de-rates against the yield backdrop'}.
               </p>
             </div>
 
@@ -474,189 +229,19 @@ export const ExecutiveMarketBrief: React.FC<ExecutiveMarketBriefProps> = ({
                 3
               </span>
               <p className="text-[var(--text-secondary)] leading-snug">
-                <strong className="text-[var(--text-primary)] font-semibold">Treasury Yield Anchor:</strong> US10Y stability around {marketSynthesis.us10yPrice.toFixed(3)}% provides valuation stability for risk assets.
+                <strong className="text-[var(--text-primary)] font-semibold">Treasury Yield Anchor:</strong> US10Y at {marketSynthesis.us10yPrice.toFixed(3)}% is {marketSynthesis.us10yChange >= 0 ? 'rising, tightening valuation support for risk assets' : 'easing, loosening the discount-rate pressure on risk assets'}.
               </p>
             </div>
           </div>
 
           <div className="pt-2 border-t text-[11px] text-[var(--text-muted)] flex items-center justify-between font-mono" style={{ borderColor: 'var(--border-hairline)' }}>
             <span>BIAS FOCUS:</span>
-            <span className="font-bold text-[var(--bullish)]">Long US100 & G8 Divergence Pairs</span>
+            <span className={`font-bold ${globalRegime && globalRegime.riskScore < 0 ? 'text-[var(--bearish)]' : 'text-[var(--bullish)]'}`}>
+              {globalRegime && globalRegime.riskScore < 0
+                ? `Defensive ${marketSynthesis.strongest.currency} vs ${marketSynthesis.weakest.currency}`
+                : `Long ${marketSynthesis.strongest.currency} vs ${marketSynthesis.weakest.currency}`}
+            </span>
           </div>
-        </div>
-      </div>
-
-      {/* Part 2: Trade Opportunities Grid */}
-      <div className="space-y-3 pt-2">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <Target className="w-4 h-4 text-[var(--accent)]" />
-            <h3 className="metadata-label text-[11px] text-[var(--text-primary)]">
-              HIGH-PROBABILITY TRADE SETUPS ({filteredSuggestions.length})
-            </h3>
-          </div>
-
-          {/* Filter Bar */}
-          <div className="flex items-center gap-1 border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] p-0.5 rounded text-[10.5px] font-mono shrink-0 overflow-x-auto">
-            {(['ALL', 'PRIME', 'INDICES', 'COMMODITIES', 'CROSSES', 'MAJORS', 'AVOID'] as const).map(cat => (
-              <button
-                key={cat}
-                onClick={() => setFilterCategory(cat as any)}
-                className={`px-2 py-0.5 rounded transition cursor-pointer ${
-                  filterCategory === cat
-                    ? 'bg-[var(--active-bg)] text-[var(--active-text)] border border-[var(--active-border)] font-bold shadow-xs'
-                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Setups Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {filteredSuggestions.map(item => {
-            const isPrime = item.tier === 'PRIME_A';
-            const isBuy = item.action.includes('BUY');
-            const isSell = item.action.includes('SELL');
-            const isAvoid = item.action === 'AVOID_CHOP';
-
-            return (
-              <div
-                key={item.id}
-                className={`terminal-panel p-3.5 flex flex-col justify-between space-y-3 transition ${
-                  isPrime ? 'border-[var(--text-primary)]' : ''
-                }`}
-              >
-                <div>
-                  {/* Card Header: Symbol & Flags */}
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      {item.symbol.length === 6 && !item.symbol.startsWith('US') && !item.symbol.startsWith('XA') ? (
-                        <div className="flex items-center -space-x-1 shrink-0">
-                          <img
-                            src={getCurrencyFlagUrl(item.symbol.slice(0, 3))}
-                            alt={item.symbol.slice(0, 3)}
-                            referrerPolicy="no-referrer"
-                            className="w-4 h-3 object-cover rounded-xs border border-[var(--border-subtle)]"
-                          />
-                          <img
-                            src={getCurrencyFlagUrl(item.symbol.slice(3, 6))}
-                            alt={item.symbol.slice(3, 6)}
-                            referrerPolicy="no-referrer"
-                            className="w-4 h-3 object-cover rounded-xs border border-[var(--border-subtle)]"
-                          />
-                        </div>
-                      ) : (
-                        <span className="w-5 h-4 rounded text-[9px] font-mono font-bold flex items-center justify-center border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] text-[var(--text-primary)]">
-                          {item.symbol.slice(0, 2)}
-                        </span>
-                      )}
-
-                      <span className="font-mono font-bold text-sm text-[var(--text-primary)]">
-                        {item.symbol}
-                      </span>
-
-                      {isPrime && (
-                        <span className="text-[8.5px] font-mono font-bold px-1 py-0 rounded badge-accent">
-                          PRIME A+
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="text-right font-mono tabular-nums">
-                      <span className="text-[11px] font-bold text-[var(--text-primary)]">
-                        {item.biasConfidence}% CONVICTION
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Name & Delta */}
-                  <div className="flex items-center justify-between text-[11px] text-[var(--text-muted)] font-mono pb-2 border-b" style={{ borderColor: 'var(--border-hairline)' }}>
-                    <span className="truncate pr-2 font-sans">{item.name}</span>
-                    <span className="shrink-0">{item.deltaOrScore}</span>
-                  </div>
-
-                  {/* Action Directive Strip */}
-                  <div className="my-2.5">
-                    <div
-                      className={`py-1.5 px-2.5 rounded text-xs font-mono font-bold flex items-center justify-between border ${
-                        isBuy
-                          ? 'badge-bullish'
-                          : isSell
-                          ? 'badge-bearish'
-                          : 'badge-warning'
-                      }`}
-                    >
-                      <span className="flex items-center gap-1.5">
-                        {isBuy ? (
-                          <ArrowUpRight className="w-3.5 h-3.5" />
-                        ) : isSell ? (
-                          <ArrowDownRight className="w-3.5 h-3.5" />
-                        ) : (
-                          <Minus className="w-3.5 h-3.5" />
-                        )}
-                        <span>{item.actionLabel}</span>
-                      </span>
-                      <span className="text-[9.5px] font-normal opacity-80">
-                        {item.tradeStyle}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Fundamental Driver */}
-                  <div className="text-[11px] text-[var(--text-secondary)] font-sans p-2 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)]">
-                    <strong className="text-[var(--text-primary)] font-mono text-[10px] block uppercase tracking-wider mb-0.5">
-                      RATIONALE:
-                    </strong>
-                    <p className="leading-snug">{item.fundamentalDriver}</p>
-                  </div>
-                </div>
-
-                {/* Levels & Controls */}
-                <div className="space-y-2 pt-1 font-mono text-[10px]">
-                  {!isAvoid ? (
-                    <div className="grid grid-cols-2 gap-1.5 p-2 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] tabular-nums">
-                      <div>
-                        <span className="text-[var(--text-muted)] block">ENTRY ZONE</span>
-                        <span className="text-[var(--text-primary)] font-semibold block truncate" title={item.entryZone}>
-                          {item.entryZone}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-[var(--text-muted)] block">INVALIDATION (SL)</span>
-                        <span className="text-[var(--bearish)] font-semibold block truncate" title={item.invalidationLevel}>
-                          {item.invalidationLevel}
-                        </span>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="p-2 rounded border border-[var(--warning-border)] bg-[var(--warning-bg)] text-[10.5px] text-[var(--warning)] font-sans">
-                      Divergence near parity. Range chop expected; avoid breakout entries.
-                    </div>
-                  )}
-
-                  <div className="flex items-center gap-1.5 pt-1">
-                    <button
-                      onClick={() => onOpenChart(item.symbol)}
-                      className="flex-1 py-1.5 px-2 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-primary)] text-[11px] font-mono font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer"
-                    >
-                      <LineChart className="w-3 h-3 text-[var(--accent)]" />
-                      <span>TRADINGVIEW CHART</span>
-                    </button>
-                    <button
-                      onClick={() => onSelectSymbol(item.symbol)}
-                      className="py-1.5 px-2 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-[11px] font-mono transition cursor-pointer"
-                      title="Inspect symbol"
-                    >
-                      SURVEILLANCE →
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
         </div>
       </div>
     </div>

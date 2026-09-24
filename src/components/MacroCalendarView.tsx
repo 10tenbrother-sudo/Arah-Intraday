@@ -21,6 +21,7 @@ import {
   ChevronRight as ChevronRightIcon,
 } from 'lucide-react';
 import { Tooltip, MetricTooltip, MetricInfoIcon } from './Tooltip';
+import { PageHeader } from './shared/PageHeader';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
@@ -32,9 +33,9 @@ interface MacroCalendarViewProps {
 }
 
 const TIMEZONES = [
-  { value: 'Asia/Jakarta', label: 'WIB (Jakarta UTC+7) [Waktu Default]' },
+  { value: 'Asia/Jakarta', label: 'WIB (Jakarta UTC+7) [Default]' },
   { value: 'UTC', label: 'UTC (Universal Coordinated Time)' },
-  { value: 'LOCAL', label: 'Local (Waktu Perangkat Anda)' },
+  { value: 'LOCAL', label: 'Local (your device time)' },
   { value: 'America/New_York', label: 'New York (EDT/EST)' },
   { value: 'Europe/London', label: 'London (BST/GMT)' },
   { value: 'Asia/Tokyo', label: 'Tokyo (JST)' },
@@ -69,7 +70,7 @@ export const MacroCalendarView: React.FC<MacroCalendarViewProps> = React.memo(({
 
   // Format live WIB clock for calendar header
   const currentWibTime = useMemo(() => {
-    return new Date(currentTimeMs).toLocaleTimeString('id-ID', {
+    return new Date(currentTimeMs).toLocaleTimeString('en-GB', {
       timeZone: 'Asia/Jakarta',
       hour12: false,
       hour: '2-digit',
@@ -79,7 +80,7 @@ export const MacroCalendarView: React.FC<MacroCalendarViewProps> = React.memo(({
   }, [currentTimeMs]);
 
   const currentWibDate = useMemo(() => {
-    return new Date(currentTimeMs).toLocaleDateString('id-ID', {
+    return new Date(currentTimeMs).toLocaleDateString('en-GB', {
       timeZone: 'Asia/Jakarta',
       weekday: 'long',
       day: 'numeric',
@@ -201,7 +202,7 @@ export const MacroCalendarView: React.FC<MacroCalendarViewProps> = React.memo(({
     if (events.length === 0) return null;
     const dates = events.map(e => new Date(e.last_updated || e.date_time_utc).getTime()).filter(d => !isNaN(d));
     if (dates.length === 0) return null;
-    return new Date(Math.max(...dates)).toLocaleTimeString('id-ID', {
+    return new Date(Math.max(...dates)).toLocaleTimeString('en-GB', {
       timeZone: 'Asia/Jakarta',
       hour12: false,
       hour: '2-digit',
@@ -239,16 +240,16 @@ export const MacroCalendarView: React.FC<MacroCalendarViewProps> = React.memo(({
         : selectedTimezone.split('/')[1] || selectedTimezone;
 
       // Indonesian localized day name and date
-      const dayName = d.toLocaleDateString(isWib ? 'id-ID' : 'en-US', {
+      const dayName = d.toLocaleDateString(isWib ? 'en-GB' : 'en-US', {
         weekday: 'short',
         timeZone: tzOption,
       });
-      const dateStr = d.toLocaleDateString(isWib ? 'id-ID' : 'en-US', {
+      const dateStr = d.toLocaleDateString(isWib ? 'en-GB' : 'en-US', {
         day: 'numeric',
         month: 'short',
         timeZone: tzOption,
       });
-      const timeStr = d.toLocaleTimeString('id-ID', {
+      const timeStr = d.toLocaleTimeString('en-GB', {
         hour: '2-digit',
         minute: '2-digit',
         hour12: false,
@@ -266,7 +267,7 @@ export const MacroCalendarView: React.FC<MacroCalendarViewProps> = React.memo(({
       const target = new Date(utcIso).getTime();
       const diff = target - currentTimeMs;
 
-      if (diff <= 0) return { text: 'Sudah Rilis', isUrgent: false, isNear: false };
+      if (diff <= 0) return { text: 'Released', isUrgent: false, isNear: false };
 
       const sec = Math.floor(diff / 1000);
       const min = Math.floor(sec / 60);
@@ -275,19 +276,19 @@ export const MacroCalendarView: React.FC<MacroCalendarViewProps> = React.memo(({
 
       if (min < 60) {
         return {
-          text: `dalam ${min}m ${sec % 60}s`,
+          text: `in ${min}m ${sec % 60}s`,
           isUrgent: min < 15,
           isNear: true,
         };
       } else if (hours < 24) {
         return {
-          text: `dalam ${hours}j ${min % 60}m`,
+          text: `in ${hours}h ${min % 60}m`,
           isUrgent: false,
           isNear: true,
         };
       } else {
         return {
-          text: `dalam ${days}h ${hours % 24}j`,
+          text: `in ${days}d ${hours % 24}h`,
           isUrgent: false,
           isNear: false,
         };
@@ -298,130 +299,132 @@ export const MacroCalendarView: React.FC<MacroCalendarViewProps> = React.memo(({
   };
 
   return (
-    <div className="terminal-panel p-3.5 sm:p-4 flex flex-col h-full space-y-3 font-sans" id="macro-calendar-root">
-      {/* Top Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2.5 pb-2.5 border-b" style={{ borderColor: 'var(--border-hairline)' }}>
-        <div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <Calendar className="w-3.5 h-3.5 text-[var(--accent)]" />
-            <h2 className="metadata-label text-[11px] text-[var(--text-primary)]">
-              ECONOMIC CALENDAR
-            </h2>
+    <section className="flex flex-col h-full space-y-5 font-sans" id="macro-calendar-root">
+      <PageHeader
+        eyebrow="MAIN · ECONOMIC CALENDAR"
+        title="Economic calendar"
+        titleAdornment={
+          <>
             <MetricInfoIcon term="MACRO_CALENDAR" position="bottom" />
-            <div className="flex items-center gap-1.5 ml-1">
+            <span className="text-[11px] text-[var(--text-muted)] tabular-nums">
+              {upcomingCount} scheduled
+            </span>
+          </>
+        }
+        description={
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="flex items-center gap-1.5">
               <span className={`w-1.5 h-1.5 rounded-full ${
                 liveStatus === 'LIVE' ? 'bg-[var(--bullish)]' :
                 liveStatus === 'DELAYED' ? 'bg-[var(--warning)]' : 'bg-[var(--bearish)]'
               }`} />
-              <span className="text-[9px] font-mono font-semibold px-1 py-0 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] text-[var(--text-secondary)]">
-                {liveStatus}
-              </span>
-              <span className="text-[9.5px] font-mono text-[var(--accent)] font-semibold">
-                {upcomingCount} SCHEDULED
-              </span>
+              <span>{liveStatus.charAt(0) + liveStatus.slice(1).toLowerCase()}</span>
+            </span>
+            <span className="text-[var(--border-strong)]">·</span>
+            <span>CME &amp; institutional wire</span>
+            <span className="text-[var(--border-strong)]">·</span>
+            <span>Synced {latestUpdated ? `${latestUpdated} WIB` : 'live'}</span>
+          </div>
+        }
+        actions={
+          <>
+            {/* Live WIB Reference Clock */}
+            <div className="flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5 text-[var(--accent)]" />
+              <span className="text-xs font-semibold tabular-nums text-[var(--text-primary)]">{currentWibTime}</span>
+              <span className="metadata-label text-[9px] text-[var(--text-muted)]">WIB</span>
             </div>
-          </div>
-          <div className="flex items-center gap-2 text-[10px] font-mono text-[var(--text-muted)] mt-0.5 flex-wrap">
-            <span>FEED: CME & INSTITUTIONAL WIRE</span>
-            <span>·</span>
-            <span>SYNC: {latestUpdated ? `${latestUpdated} WIB` : 'Live'}</span>
-          </div>
-        </div>
 
-        {/* Action Controls & Selectors */}
-        <div className="flex items-center gap-2 flex-wrap font-mono text-xs">
-          {/* Prominent Live WIB Reference Clock */}
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] text-xs text-[var(--text-primary)]">
-            <Clock className="w-3 h-3 text-[var(--accent)]" />
-            <span className="text-[10px] text-[var(--text-muted)] uppercase">WIB:</span>
-            <span className="font-bold tabular-nums text-xs">{currentWibTime}</span>
-          </div>
+            <span className="w-px h-5 bg-[var(--border-hairline)]" />
 
-          {/* Timezone Selector */}
-          <div className="flex items-center gap-1 border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] rounded px-2 py-1">
-            <Globe className="w-3 h-3 text-[var(--text-muted)]" />
-            <select
-              value={selectedTimezone}
-              onChange={(e) => setSelectedTimezone(e.target.value)}
-              className="bg-transparent text-[var(--text-primary)] text-[10.5px] font-mono outline-none cursor-pointer"
-            >
-              {TIMEZONES.map(tz => (
-                <option key={tz.value} value={tz.value} className="bg-[var(--bg-surface)] text-[var(--text-primary)]">
-                  {tz.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Currency Filter */}
-          <select
-            value={currencyFilter}
-            onChange={(e) => setCurrencyFilter(e.target.value)}
-            className="border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] text-[var(--text-primary)] text-[10.5px] font-mono rounded px-2 py-1 outline-none cursor-pointer"
-          >
-            <option value="ALL">All Currencies</option>
-            <option value="USD">USD</option>
-            <option value="EUR">EUR</option>
-            <option value="GBP">GBP</option>
-            <option value="JPY">JPY</option>
-            <option value="CAD">CAD</option>
-            <option value="AUD">AUD</option>
-            <option value="NZD">NZD</option>
-            <option value="CHF">CHF</option>
-          </select>
-
-          {/* Impact Filter */}
-          <div className="flex items-center border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] p-0.5 rounded text-[10.5px]">
-            {['ALL', 'CRITICAL', 'HIGH', 'MEDIUM'].map(f => (
-              <button
-                key={f}
-                onClick={() => setImpactFilter(f)}
-                className={`h-5 px-1.5 rounded font-semibold transition cursor-pointer ${
-                  impactFilter === f
-                    ? 'bg-[var(--active-bg)] text-[var(--active-text)] border border-[var(--active-border)] shadow-xs'
-                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-                }`}
+            {/* Timezone Selector */}
+            <div className="flex items-center gap-1.5 text-[var(--text-muted)]">
+              <Globe className="w-3.5 h-3.5" />
+              <select
+                value={selectedTimezone}
+                onChange={(e) => setSelectedTimezone(e.target.value)}
+                className="bg-transparent text-[var(--text-primary)] text-[11px] outline-none cursor-pointer"
               >
-                {f}
-              </button>
-            ))}
-          </div>
+                {TIMEZONES.map(tz => (
+                  <option key={tz.value} value={tz.value} className="bg-[var(--bg-surface)] text-[var(--text-primary)]">
+                    {tz.label}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          <button
-            onClick={onRefresh}
-            disabled={isRefreshing}
-            title="Refresh macro calendar"
-            className="h-6 px-2 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-primary)] text-[10.5px] font-semibold flex items-center gap-1 transition cursor-pointer disabled:opacity-50"
-          >
-            <RefreshCw className={`w-3 h-3 ${isRefreshing ? 'animate-spin text-[var(--accent)]' : ''}`} />
-            <span>SYNC</span>
-          </button>
-        </div>
-      </div>
+            {/* Currency Filter */}
+            <select
+              value={currencyFilter}
+              onChange={(e) => setCurrencyFilter(e.target.value)}
+              className="bg-transparent text-[var(--text-primary)] text-[11px] outline-none cursor-pointer"
+            >
+              <option value="ALL">All currencies</option>
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+              <option value="GBP">GBP</option>
+              <option value="JPY">JPY</option>
+              <option value="CAD">CAD</option>
+              <option value="AUD">AUD</option>
+              <option value="NZD">NZD</option>
+              <option value="CHF">CHF</option>
+            </select>
+
+            {/* Impact Filter */}
+            <div className="flex items-center gap-0.5 p-0.5 rounded-md bg-[var(--bg-section-alt)]">
+              {['ALL', 'CRITICAL', 'HIGH', 'MEDIUM'].map(f => (
+                <button
+                  key={f}
+                  onClick={() => setImpactFilter(f)}
+                  className={`h-7 px-2.5 rounded text-[11px] font-medium transition cursor-pointer ${
+                    impactFilter === f
+                      ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm'
+                      : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+                  }`}
+                >
+                  {f === 'ALL' ? 'All' : f.charAt(0) + f.slice(1).toLowerCase()}
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={onRefresh}
+              disabled={isRefreshing}
+              title="Refresh macro calendar"
+              className="h-8 w-8 rounded-md text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-section-alt)] flex items-center justify-center transition cursor-pointer disabled:opacity-50"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-[var(--accent)]' : ''}`} />
+            </button>
+          </>
+        }
+      />
 
       {/* Next Upcoming Event Spotlight Banner */}
       {nextEvent && (
-        <div className="p-3 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] flex flex-col md:flex-row md:items-center justify-between gap-3 font-mono">
-          <div className="flex items-start md:items-center gap-2.5">
-            <div className="p-1.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--accent)] shrink-0">
-              <Zap className="w-3.5 h-3.5" />
+        <div
+          className="p-3.5 rounded-lg flex flex-col md:flex-row md:items-center justify-between gap-3"
+          style={{ backgroundColor: 'var(--accent-subtle)' }}
+        >
+          <div className="flex items-start md:items-center gap-3">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center text-[var(--accent)] shrink-0" style={{ backgroundColor: 'var(--bg-surface)' }}>
+              <Zap className="w-4 h-4" />
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="metadata-label text-[10px] text-[var(--accent)]">
-                  NEXT CATALYST
+                <span className="metadata-label text-[9px] text-[var(--accent)]">
+                  Next catalyst
                 </span>
-                <span className="px-1 py-0 rounded text-[9.5px] font-bold border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-primary)]">
+                <span className="text-[10px] font-semibold text-[var(--text-secondary)]">
                   {nextEvent.currency}
                 </span>
-                <span className={`text-[9px] px-1 py-0 rounded font-bold uppercase ${getImpactBadge(nextEvent.impact)}`}>
+                <span className={`text-[9px] px-2 py-0.5 rounded-full font-semibold uppercase ${getImpactBadge(nextEvent.impact)}`}>
                   {nextEvent.impact}
                 </span>
               </div>
-              <div className="text-sm font-bold text-[var(--text-primary)] mt-0.5">
+              <div className="text-sm font-semibold text-[var(--text-primary)] mt-1">
                 {nextEvent.event_name}
               </div>
-              <div className="text-[10.5px] text-[var(--text-secondary)] flex items-center gap-2 mt-0.5 flex-wrap font-sans">
+              <div className="text-[11px] text-[var(--text-muted)] flex items-center gap-2 mt-1 flex-wrap">
                 <span>
                   Release: <strong className="text-[var(--text-primary)] font-mono">{formatEventDateTime(nextEvent.date_time_utc).dayName}, {formatEventDateTime(nextEvent.date_time_utc).date} · {formatEventDateTime(nextEvent.date_time_utc).time} {formatEventDateTime(nextEvent.date_time_utc).zoneLabel}</strong>
                 </span>
@@ -432,11 +435,11 @@ export const MacroCalendarView: React.FC<MacroCalendarViewProps> = React.memo(({
           </div>
 
           {/* Countdown Pill */}
-          <div className="flex items-center gap-2 self-start md:self-auto shrink-0 border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-2.5 py-1.5 rounded">
-            <Clock className="w-3.5 h-3.5 text-[var(--accent)]" />
-            <div className="text-right">
-              <div className="text-[9px] uppercase tracking-wider text-[var(--text-muted)]">COUNTDOWN</div>
-              <div className="text-xs font-bold text-[var(--text-primary)] tabular-nums">
+          <div className="flex items-center gap-2.5 self-start md:self-auto shrink-0">
+            <Clock className="w-4 h-4 text-[var(--accent)]" />
+            <div>
+              <div className="metadata-label text-[9px] text-[var(--text-muted)]">Countdown</div>
+              <div className="text-sm font-semibold text-[var(--text-primary)] tabular-nums">
                 {formatRelativeCountdown(nextEvent.date_time_utc).text}
               </div>
             </div>
@@ -446,25 +449,25 @@ export const MacroCalendarView: React.FC<MacroCalendarViewProps> = React.memo(({
 
       {/* Timing Navigation Tabs & Quick Search */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2.5 border-b" style={{ borderColor: 'var(--border-hairline)' }}>
-        <div className="flex items-center gap-1 flex-wrap font-mono text-xs">
+        <div className="flex items-center gap-0.5 p-0.5 rounded-md bg-[var(--bg-section-alt)] flex-wrap">
           {[
-            { id: 'UPCOMING', label: 'UPCOMING', count: upcomingCount },
-            { id: 'TODAY', label: 'TODAY', count: todayCount },
-            { id: 'TOMORROW', label: 'TOMORROW', count: tomorrowCount },
-            { id: 'RELEASED', label: 'RELEASED', count: releasedCount },
-            { id: 'ALL', label: 'ALL', count: events.length },
+            { id: 'UPCOMING', label: 'Upcoming', count: upcomingCount },
+            { id: 'TODAY', label: 'Today', count: todayCount },
+            { id: 'TOMORROW', label: 'Tomorrow', count: tomorrowCount },
+            { id: 'RELEASED', label: 'Released', count: releasedCount },
+            { id: 'ALL', label: 'All', count: events.length },
           ].map(tab => (
             <button
               key={tab.id}
               onClick={() => setTimingFilter(tab.id as any)}
-              className={`px-2.5 py-1 rounded text-[10.5px] font-semibold transition cursor-pointer border ${
+              className={`px-2.5 h-7 rounded text-[11px] font-medium transition cursor-pointer ${
                 timingFilter === tab.id
-                  ? 'bg-[var(--active-bg)] text-[var(--active-text)] border-[var(--active-border)] shadow-xs'
-                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] border-[var(--border-subtle)] bg-[var(--bg-section-alt)]'
+                  ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
               }`}
             >
               <span>{tab.label}</span>
-              <span className="ml-1 opacity-80">({tab.count})</span>
+              <span className="ml-1 tabular-nums opacity-70">{tab.count}</span>
             </button>
           ))}
         </div>
@@ -477,76 +480,76 @@ export const MacroCalendarView: React.FC<MacroCalendarViewProps> = React.memo(({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search indicator..."
-            className="w-full h-7 bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] focus:border-[var(--text-primary)] rounded pl-7 pr-2 text-xs font-mono text-[var(--text-primary)] placeholder-[var(--text-muted)] outline-none"
+            className="w-full h-8 bg-[var(--bg-section-alt)] border border-transparent focus:border-[var(--border-strong)] rounded-md pl-7 pr-2 text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] outline-none transition"
           />
         </div>
       </div>
 
       {/* Calendar Data Table */}
       <div className="overflow-x-auto flex-1">
-        <table className="w-full text-left text-xs font-mono">
+        <table className="terminal-table">
           <thead>
-            <tr className="table-header border-b" style={{ borderColor: 'var(--border-subtle)' }}>
-              <th className="py-2 px-2.5">
+            <tr>
+              <th>
                 <MetricTooltip term={selectedTimezone === 'Asia/Jakarta' ? 'WIB' : 'UTC'} underline={false}>
-                  <span>RELEASE ({selectedTimezone === 'Asia/Jakarta' ? 'WIB UTC+7' : selectedTimezone})</span>
+                  <span>Release ({selectedTimezone === 'Asia/Jakarta' ? 'WIB UTC+7' : selectedTimezone})</span>
                 </MetricTooltip>
               </th>
-              <th className="py-2 px-2.5">
+              <th>
                 <MetricTooltip term="COUNTDOWN" underline={false}>
-                  <span>STATUS</span>
+                  <span>Status</span>
                 </MetricTooltip>
               </th>
-              <th className="py-2 px-2.5">
+              <th>
                 <MetricTooltip term="CCY" underline={false}>
                   <span>CCY</span>
                 </MetricTooltip>
               </th>
-              <th className="py-2 px-2.5">
+              <th>
                 <MetricTooltip term="IMPACT" underline={false}>
-                  <span>IMPACT</span>
+                  <span>Impact</span>
                 </MetricTooltip>
               </th>
-              <th className="py-2 px-2.5">EVENT / INDICATOR</th>
-              <th className="py-2 px-2.5 text-right">
+              <th>EVENT / INDICATOR</th>
+              <th className="text-right">
                 <MetricTooltip term="ACTUAL" underline={false}>
-                  <span>ACTUAL</span>
+                  <span>Actual</span>
                 </MetricTooltip>
               </th>
-              <th className="py-2 px-2.5 text-right">
+              <th className="text-right">
                 <MetricTooltip term="FORECAST" underline={false}>
-                  <span>FORECAST</span>
+                  <span>Forecast</span>
                 </MetricTooltip>
               </th>
-              <th className="py-2 px-2.5 text-right">
+              <th className="text-right">
                 <MetricTooltip term="PREVIOUS" underline={false}>
-                  <span>PREVIOUS</span>
+                  <span>Previous</span>
                 </MetricTooltip>
               </th>
-              <th className="py-2 px-2.5 text-right">
+              <th className="text-right">
                 <MetricTooltip term="SURPRISE" underline={false}>
-                  <span>SURPRISE</span>
+                  <span>Surprise</span>
                 </MetricTooltip>
               </th>
-              <th className="py-2 px-2.5 text-right">
+              <th className="text-right">
                 <MetricTooltip term="CHANGE" underline={false}>
-                  <span>CHANGE</span>
+                  <span>Change</span>
                 </MetricTooltip>
               </th>
-              <th className="py-2 px-2.5 text-center">
+              <th className="text-center">
                 <MetricTooltip term="REACTION" underline={false}>
-                  <span>REACTION</span>
+                  <span>Reaction</span>
                 </MetricTooltip>
               </th>
-              <th className="py-2 px-2.5 text-right">
+              <th className="text-right">
                 <MetricTooltip term="SOURCE" underline={false}>
                   <span>SOURCE</span>
                 </MetricTooltip>
               </th>
-              <th className="py-2 px-2.5 text-center">
+              <th className="text-center">
                 <Tooltip
                   title="Macro & Fundamental Intel"
-                  content="Buka drawer detail untuk melihat skenario pasar, implikasi suku bunga, dan korelasi antar-aset."
+                  content="Open the detail drawer for market scenarios, rate implications, and cross-asset correlation."
                   position="top"
                 >
                   <span className="cursor-help">INTEL</span>
@@ -557,33 +560,33 @@ export const MacroCalendarView: React.FC<MacroCalendarViewProps> = React.memo(({
           <tbody className="divide-y" style={{ borderColor: 'var(--border-hairline)' }}>
             {filteredEvents.length === 0 ? (
               <tr>
-                <td colSpan={13} className="py-12 text-center text-slate-400 font-mono text-xs">
+                <td colSpan={13} className="py-12 text-center text-[var(--text-secondary)] font-mono text-xs">
                   {timingFilter === 'TODAY' ? (
                     <div className="space-y-3 py-4 max-w-md mx-auto">
-                      <div className="p-2.5 rounded-lg bg-amber-950/40 border border-amber-800/60 text-amber-300 font-medium">
-                        Tidak ada rilis makro berdampak signifikan pada sesi hari ini (Pasar tutup / Akhir Pekan).
+                      <div className="p-2.5 rounded-md bg-[var(--warning-bg)] border border-[var(--warning-border)] text-[var(--warning)] font-medium">
+                        No significant macro releases in today's session (market closed / weekend).
                       </div>
-                      <p className="text-slate-400 text-[11px]">
-                        Rilis terjadwal berikutnya dimulai pada sesi kerja aktif berikutnya (Waktu Indonesia Barat).
+                      <p className="text-[var(--text-secondary)] text-[11px]">
+                        The next scheduled release falls in the next active working session (Western Indonesian Time).
                       </p>
                       <div className="flex items-center justify-center gap-2 pt-1">
                         <button
                           onClick={() => setTimingFilter('UPCOMING')}
-                          className="px-3 py-1.5 rounded-lg bg-cyan-950 text-cyan-300 border border-cyan-800/80 font-bold hover:bg-cyan-900 transition cursor-pointer"
+                          className="px-3 py-1.5 rounded-md bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent)] font-bold hover:opacity-90 transition cursor-pointer"
                         >
-                          Lihat Rilis Akan Datang ({upcomingCount})
+                          View upcoming releases ({upcomingCount})
                         </button>
                         <button
                           onClick={() => setTimingFilter('ALL')}
-                          className="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-200 border border-slate-700 hover:bg-slate-700 transition cursor-pointer"
+                          className="px-3 py-1.5 rounded-md bg-[var(--bg-section-alt)] text-[var(--text-primary)] border border-[var(--border-strong)] hover:bg-[var(--border-subtle)] transition cursor-pointer"
                         >
-                          Semua Jadwal ({events.length})
+                          All scheduled ({events.length})
                         </button>
                       </div>
                     </div>
                   ) : (
                     <div className="py-6">
-                      Tidak ada event yang cocok dengan filter saat ini. Coba ubah pencarian atau filter mata uang.
+                      No events match the current filters. Try changing the search or currency filter.
                     </div>
                   )}
                 </td>
@@ -738,21 +741,21 @@ export const MacroCalendarView: React.FC<MacroCalendarViewProps> = React.memo(({
 
                     {/* Expandable Measurable Intelligence Drawer */}
                     {isExpanded && (
-                      <tr className="bg-[var(--bg-section-alt)] border-b" style={{ borderColor: 'var(--border-subtle)' }}>
+                      <tr className="bg-[var(--bg-section-alt)]">
                         <td colSpan={13} className="p-3.5">
-                          <div className="terminal-panel p-3.5 space-y-3">
+                          <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3.5 space-y-3">
                             {/* Intelligence Header */}
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-2" style={{ borderColor: 'var(--border-hairline)' }}>
                               <div className="flex items-center gap-2 flex-wrap font-mono text-xs">
                                 <Sparkles className="w-3.5 h-3.5 text-[var(--accent)]" />
-                                <span className="metadata-label text-[10.5px] text-[var(--text-primary)]">
-                                  MEASURABLE MACRO INTELLIGENCE
+                                <span className="text-[13px] font-semibold text-[var(--text-primary)]">
+                                  Macro intelligence
                                 </span>
-                                <span className="text-[9.5px] px-1.5 py-0 rounded font-bold border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-primary)]">
+                                <span className="text-[10px] font-semibold text-[var(--text-secondary)]">
                                   {item.currency}
                                 </span>
-                                <span className={`text-[9px] px-1.5 py-0 rounded font-bold border uppercase ${getImpactBadge(item.impact)}`}>
-                                  {item.impact} IMPACT
+                                <span className={`text-[9px] px-2 py-0.5 rounded-full font-semibold uppercase ${getImpactBadge(item.impact)}`}>
+                                  {item.impact}
                                 </span>
                                 <span className="text-[10px] text-[var(--text-muted)] flex items-center gap-1">
                                   <ShieldCheck className="w-3 h-3 text-[var(--bullish)]" />
@@ -833,8 +836,8 @@ export const MacroCalendarView: React.FC<MacroCalendarViewProps> = React.memo(({
                                 <p className="text-xs text-[var(--text-secondary)] leading-relaxed font-sans">
                                   {item.fundamental_implication ||
                                     (hasActual
-                                      ? `Rilis aktual ${item.actual} mengindikasikan pergeseran baseline fundamental terhadap ekspektasi konsensus (${item.forecast || 'N/A'}).`
-                                      : 'Menunggu rilis data resmi sebelum menetapkan implikasi transmisi kebijakan moneter.')}
+                                      ? `The actual print of ${item.actual} signals a fundamental baseline shift against the consensus estimate (${item.forecast || 'N/A'}).`
+                                      : 'Awaiting the official release before setting policy transmission implications.')}
                                 </p>
                               </div>
 
@@ -846,8 +849,8 @@ export const MacroCalendarView: React.FC<MacroCalendarViewProps> = React.memo(({
                                 <p className="text-xs text-[var(--text-secondary)] leading-relaxed font-sans">
                                   {item.actual_market_reaction ||
                                     (hasActual
-                                      ? `Volatilitas tercatat pada pasangan ${item.currency} segera setelah rilis dengan pergeseran bid-ask spread dan eksekusi algoritmik.`
-                                      : 'Likuiditas pasar berada dalam status pre-event positioning.')}
+                                      ? `Volatility was recorded on the ${item.currency} pair right after the release, with bid-ask spread shifts and algorithmic execution.`
+                                      : 'Market liquidity is in pre-event positioning.')}
                                 </p>
                               </div>
                             </div>
@@ -906,7 +909,7 @@ export const MacroCalendarView: React.FC<MacroCalendarViewProps> = React.memo(({
           </div>
         </div>
       )}
-    </div>
+    </section>
   );
 });
 

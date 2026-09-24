@@ -8,21 +8,21 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default:
-          'border-transparent bg-cyan-500 text-slate-950 font-bold',
+          'border-[var(--accent-border)] bg-[var(--accent-subtle)] text-[var(--accent-strong)] font-bold',
         secondary:
-          'border-slate-800 bg-slate-900 text-slate-300',
+          'border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-secondary)]',
         destructive:
-          'border-rose-800 bg-rose-950/80 text-rose-300',
+          'border-[var(--bearish-border)] bg-[var(--bearish-bg)] text-[var(--bearish)]',
         rose:
-          'border-rose-800 bg-rose-950/80 text-rose-300',
+          'border-[var(--bearish-border)] bg-[var(--bearish-bg)] text-[var(--bearish)]',
         outline:
-          'border-slate-800 text-slate-300',
+          'border-[var(--border-subtle)] text-[var(--text-secondary)]',
         cyan:
-          'border-cyan-800/80 bg-cyan-950/60 text-cyan-300',
+          'border-[var(--accent-border)] bg-[var(--accent-subtle)] text-[var(--accent-strong)]',
         emerald:
-          'border-emerald-800/80 bg-emerald-950/60 text-emerald-300',
+          'border-[var(--bullish-border)] bg-[var(--bullish-bg)] text-[var(--bullish)]',
         amber:
-          'border-amber-800/80 bg-amber-950/60 text-amber-300',
+          'border-[var(--warning-border)] bg-[var(--warning-bg)] text-[var(--warning-strong)]',
       },
     },
     defaultVariants: {

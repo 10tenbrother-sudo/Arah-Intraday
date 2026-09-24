@@ -20,15 +20,22 @@ export function hashPassword(password: string, salt?: string): { hash: string; s
   return { hash, salt: s };
 }
 
-export function seedDatabase(): void {
-  const stats = db.getDatabaseStats();
+export async function seedDatabase(): Promise<void> {
+  const stats = await db.getDatabaseStats();
 
   // 1. Seed Admin & Demo User if not present
   if (stats.users_count === 0) {
-    const adminPass = hashPassword('Admin123!@#');
+    // The bootstrap admin password must come from the environment. A password
+    // baked into the repository is public, so without ADMIN_INITIAL_PASSWORD we
+    // create a random one and print it once instead of shipping a known secret.
+    const configuredAdminPassword = process.env.ADMIN_INITIAL_PASSWORD;
+    const generatedPassword = !configuredAdminPassword;
+    const adminPassword = configuredAdminPassword || crypto.randomBytes(18).toString('base64url');
+    const adminPass = hashPassword(adminPassword);
+
     const adminUser: User = {
       id: 'usr_admin_001',
-      email: 'admin@marketintel.pro',
+      email: process.env.ADMIN_EMAIL || 'admin@marketintel.pro',
       password_hash: adminPass.hash,
       salt: adminPass.salt,
       name: 'Chief Market Officer',
@@ -39,9 +46,18 @@ export function seedDatabase(): void {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
-    db.insertUser(adminUser);
+    await db.insertUser(adminUser);
 
-    const traderPass = hashPassword('Trader123!');
+    if (generatedPassword) {
+      console.warn(
+        `[Seed] Bootstrap admin created: ${adminUser.email}\n` +
+        `[Seed] Generated password (shown once): ${adminPassword}\n` +
+        `[Seed] Set ADMIN_INITIAL_PASSWORD to control this value.`
+      );
+    }
+
+    const traderPassword = process.env.DEMO_USER_PASSWORD || crypto.randomBytes(18).toString('base64url');
+    const traderPass = hashPassword(traderPassword);
     const traderUser: User = {
       id: 'usr_trader_002',
       email: 'trader@marketintel.pro',
@@ -55,9 +71,17 @@ export function seedDatabase(): void {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
-    db.insertUser(traderUser);
+    await db.insertUser(traderUser);
 
-    db.upsertUserPreferences({
+    if (!process.env.DEMO_USER_PASSWORD) {
+      console.warn(
+        `[Seed] Demo account created: ${traderUser.email}\n` +
+        `[Seed] Generated password (shown once): ${traderPassword}\n` +
+        `[Seed] Set DEMO_USER_PASSWORD to control this value.`
+      );
+    }
+
+    await db.upsertUserPreferences({
       user_id: traderUser.id,
       timezone: 'UTC',
       language: 'en',
@@ -69,7 +93,7 @@ export function seedDatabase(): void {
       updated_at: new Date().toISOString(),
     });
 
-    db.addToWatchlist({
+    await db.addToWatchlist({
       id: 'wl_1',
       user_id: traderUser.id,
       symbol: 'XAUUSD',
@@ -77,7 +101,7 @@ export function seedDatabase(): void {
       notes: 'Key safe-haven & inflation hedge',
       added_at: new Date().toISOString(),
     });
-    db.addToWatchlist({
+    await db.addToWatchlist({
       id: 'wl_2',
       user_id: traderUser.id,
       symbol: 'BTC',
@@ -85,7 +109,7 @@ export function seedDatabase(): void {
       notes: 'High beta liquidity gauge',
       added_at: new Date().toISOString(),
     });
-    db.addToWatchlist({
+    await db.addToWatchlist({
       id: 'wl_3',
       user_id: traderUser.id,
       symbol: 'US100',
@@ -95,64 +119,33 @@ export function seedDatabase(): void {
     });
   }
 
-  // Ensure danwil028@gmail.com has ADMIN authority
-  const danwil = db.getUserByEmail('danwil028@gmail.com');
-  if (danwil) {
-    if (danwil.role !== 'ADMIN' || !danwil.is_verified || danwil.plan !== 'INSTITUTIONAL') {
-      db.updateUser(danwil.id, {
-        role: 'ADMIN',
-        plan: 'INSTITUTIONAL',
-        is_verified: true,
-        verification_status: 'verified',
-        subscription_status: 'active',
-      });
-    }
-  } else {
-    const adminPass = hashPassword('Trader123!');
-    db.insertUser({
-      id: 'usr_admin_danwil',
-      email: 'danwil028@gmail.com',
-      password_hash: adminPass.hash,
-      salt: adminPass.salt,
-      name: 'Danwil Administrator',
-      role: 'ADMIN',
-      is_verified: true,
-      verification_status: 'verified',
-      plan: 'INSTITUTIONAL',
-      subscription_status: 'active',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    });
-  }
+  // Grant ADMIN authority only to addresses listed in ADMIN_EMAILS. Previously
+  // three hardcoded addresses were promoted on every boot, and a missing account
+  // was created with a known password — anyone able to register one of those
+  // addresses could claim admin. Bootstrap is now opt-in and credential-free:
+  // an existing account is promoted, never created.
+  const adminEmails = (process.env.ADMIN_EMAILS || '')
+    .split(',')
+    .map(e => e.trim().toLowerCase())
+    .filter(Boolean);
 
-  // Ensure wildanmn1933@gmail.com has ADMIN authority
-  const wildanmn = db.getUserByEmail('wildanmn1933@gmail.com');
-  if (wildanmn) {
-    if (wildanmn.role !== 'ADMIN' || !wildanmn.is_verified || wildanmn.plan !== 'INSTITUTIONAL') {
-      db.updateUser(wildanmn.id, {
+  for (const adminEmail of adminEmails) {
+    const existing = await db.getUserByEmail(adminEmail);
+    if (!existing) {
+      console.warn(
+        `[Seed] ADMIN_EMAILS lists ${adminEmail} but no such account exists. ` +
+        'Register it first, then restart to promote it.'
+      );
+      continue;
+    }
+    if (existing.role !== 'ADMIN') {
+      await db.updateUser(existing.id, {
         role: 'ADMIN',
         plan: 'INSTITUTIONAL',
-        is_verified: true,
-        verification_status: 'verified',
         subscription_status: 'active',
       });
+      console.log(`[Seed] Promoted ${adminEmail} to ADMIN.`);
     }
-  } else {
-    const adminPass = hashPassword('Admin123!@#');
-    db.insertUser({
-      id: 'usr_admin_wildanmn',
-      email: 'wildanmn1933@gmail.com',
-      password_hash: adminPass.hash,
-      salt: adminPass.salt,
-      name: 'Wildan Administrator',
-      role: 'ADMIN',
-      is_verified: true,
-      verification_status: 'verified',
-      plan: 'INSTITUTIONAL',
-      subscription_status: 'active',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    });
   }
 
   // 2. Seed Sources
@@ -266,7 +259,7 @@ export function seedDatabase(): void {
     ];
 
     for (const s of sources) {
-      db.upsertSource(s);
+      await db.upsertSource(s);
     }
   }
 
@@ -345,10 +338,9 @@ export function seedDatabase(): void {
   ];
 
   for (const c of coreTelegramChannels) {
-    const existing = db.getTelegramChannel(c.handle);
+    const existing = await db.getTelegramChannel(c.handle);
     if (!existing) {
-      db.upsertTelegramChannel(c);
-      db.upsertSource({
+      await db.upsertSource({
         id: c.source_id,
         name: c.title,
         type: 'TELEGRAM',
@@ -363,13 +355,14 @@ export function seedDatabase(): void {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       });
+      await db.upsertTelegramChannel(c);
     }
   }
 
   // Deactivate obsolete / dead channels
-  const deadChannel = db.getTelegramChannel('@SM_News_24');
+  const deadChannel = await db.getTelegramChannel('@SM_News_24');
   if (deadChannel && deadChannel.is_enabled) {
-    db.upsertTelegramChannel({ ...deadChannel, is_enabled: false, status: 'ERROR' });
+    await db.upsertTelegramChannel({ ...deadChannel, is_enabled: false, status: 'ERROR' });
   }
 
   // 4. Market Prices are populated directly via real-time market data service (MarketDataService.updateMarketPrices())
@@ -458,7 +451,7 @@ export function seedDatabase(): void {
         status: 'LIVE',
       },
     ];
-    db.setCurrencyStrength(csList);
+    await db.setCurrencyStrength(csList);
   }
 
   // 6. Macroeconomic Releases & Economic Calendar are populated directly via real-time macro data service (MacroDataService.fetchEconomicCalendar())
@@ -496,9 +489,9 @@ export function seedDatabase(): void {
     ];
 
     for (const t of themes) {
-      db.upsertMarketTheme(t);
+      await db.upsertMarketTheme(t);
     }
   }
 
-  console.log('[DB] Seed completed successfully. Current stats:', db.getDatabaseStats());
+  console.log('[DB] Seed completed successfully. Current stats:', await db.getDatabaseStats());
 }

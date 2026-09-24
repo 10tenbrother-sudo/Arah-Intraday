@@ -12,13 +12,27 @@ import { mailService } from '../services/mailService.js';
 
 export const adminRouter = Router();
 
+// Telegram handles are stored as "@name". Operators paste plain names, "@name",
+// or full t.me links; accepting the link form unchallenged once produced a
+// channel keyed "@https://t.me/SM_News_24h" that never scraped successfully.
+function normalizeTelegramHandle(raw: unknown): string | null {
+  if (typeof raw !== 'string') return null;
+
+  let value = raw.trim();
+  const linkMatch = value.replace(/^@+/, '').match(/^(?:https?:\/\/)?(?:t\.me|telegram\.me)\/(?:s\/)?@?([A-Za-z0-9_]{4,})/i);
+  if (linkMatch) value = linkMatch[1];
+  else value = value.replace(/^@+/, '');
+
+  return /^[A-Za-z0-9_]{4,}$/.test(value) ? `@${value}` : null;
+}
+
 // Enforce ADMIN role authentication across all admin endpoints
 adminRouter.use(requireAdmin as any);
 
 // 1. GET System Health & Database Metrics
-adminRouter.get('/system-health', (req, res) => {
-  const stats = db.getDatabaseStats();
-  const sources = db.getAllSources();
+adminRouter.get('/system-health', async (req, res) => {
+  const stats = await db.getDatabaseStats();
+  const sources = await db.getAllSources();
   const errorSources = sources.filter(s => s.status === 'ERROR' || s.error_count > 0);
 
   res.json({
@@ -38,20 +52,20 @@ adminRouter.get('/system-health', (req, res) => {
 });
 
 // 2. Sources Management
-adminRouter.get('/sources', (req, res) => {
-  const sources = db.getAllSources();
+adminRouter.get('/sources', async (req, res) => {
+  const sources = await db.getAllSources();
   res.json({ sources, count: sources.length });
 });
 
-adminRouter.patch('/sources/:id', (req, res) => {
+adminRouter.patch('/sources/:id', async (req, res) => {
   const { id } = req.params;
   const { is_enabled, status } = req.body;
-  const src = db.getSourceById(id);
+  const src = await db.getSourceById(id);
   if (!src) {
     res.status(404).json({ error: 'Source not found.' });
     return;
   }
-  const updated = db.upsertSource({
+  const updated = await db.upsertSource({
     ...src,
     is_enabled: is_enabled !== undefined ? Boolean(is_enabled) : src.is_enabled,
     status: status || src.status,
@@ -60,20 +74,24 @@ adminRouter.patch('/sources/:id', (req, res) => {
 });
 
 // 3. Telegram Channels Management
-adminRouter.get('/telegram', (req, res) => {
-  const channels = db.getAllTelegramChannels();
+adminRouter.get('/telegram', async (req, res) => {
+  const channels = await db.getAllTelegramChannels();
   res.json({ channels, count: channels.length });
 });
 
-adminRouter.post('/telegram', (req, res) => {
+adminRouter.post('/telegram', async (req, res) => {
   const { handle, title, language } = req.body;
   if (!handle) {
     res.status(400).json({ error: 'Telegram channel handle (e.g. @channel_name) is required.' });
     return;
   }
 
-  const cleanHandle = handle.startsWith('@') ? handle : `@${handle}`;
-  const existing = db.getTelegramChannel(cleanHandle);
+  const cleanHandle = normalizeTelegramHandle(handle);
+  if (!cleanHandle) {
+    res.status(400).json({ error: 'Invalid Telegram channel handle. Use @channel_name or a t.me link.' });
+    return;
+  }
+  const existing = await db.getTelegramChannel(cleanHandle);
   if (existing) {
     res.status(400).json({ error: `Channel ${cleanHandle} already registered.` });
     return;
@@ -81,7 +99,7 @@ adminRouter.post('/telegram', (req, res) => {
 
   // Also create linked Source record
   const sourceId = `src_tg_${cleanHandle.replace('@', '').toLowerCase()}`;
-  db.upsertSource({
+  await db.upsertSource({
     id: sourceId,
     name: title || `Telegram: ${cleanHandle}`,
     type: 'TELEGRAM',
@@ -111,20 +129,20 @@ adminRouter.post('/telegram', (req, res) => {
     updated_at: new Date().toISOString(),
   };
 
-  db.upsertTelegramChannel(newChannel);
+  await db.upsertTelegramChannel(newChannel);
   res.json({ success: true, channel: newChannel });
 });
 
-adminRouter.patch('/telegram/:handle', (req, res) => {
+adminRouter.patch('/telegram/:handle', async (req, res) => {
   const cleanHandle = req.params.handle.startsWith('@') ? req.params.handle : `@${req.params.handle}`;
-  const channel = db.getTelegramChannel(cleanHandle);
+  const channel = await db.getTelegramChannel(cleanHandle);
   if (!channel) {
     res.status(404).json({ error: 'Telegram channel not found.' });
     return;
   }
 
   const { is_enabled, title, language } = req.body;
-  const updated = db.upsertTelegramChannel({
+  const updated = await db.upsertTelegramChannel({
     ...channel,
     is_enabled: is_enabled !== undefined ? Boolean(is_enabled) : channel.is_enabled,
     title: title || channel.title,
@@ -134,16 +152,16 @@ adminRouter.patch('/telegram/:handle', (req, res) => {
   res.json({ success: true, channel: updated });
 });
 
-adminRouter.delete('/telegram/:handle', (req, res) => {
+adminRouter.delete('/telegram/:handle', async (req, res) => {
   const cleanHandle = req.params.handle.startsWith('@') ? req.params.handle : `@${req.params.handle}`;
-  const deleted = db.deleteTelegramChannel(cleanHandle);
+  const deleted = await db.deleteTelegramChannel(cleanHandle);
   res.json({ success: deleted });
 });
 
 // Trigger manual scrape of specific channel
 adminRouter.post('/telegram/:handle/scrape', async (req, res) => {
   const cleanHandle = req.params.handle.startsWith('@') ? req.params.handle : `@${req.params.handle}`;
-  const channel = db.getTelegramChannel(cleanHandle);
+  const channel = await db.getTelegramChannel(cleanHandle);
   if (!channel) {
     res.status(404).json({ error: 'Channel not found.' });
     return;
@@ -158,12 +176,12 @@ adminRouter.post('/telegram/:handle/scrape', async (req, res) => {
 });
 
 // 4. Ingest & Duplicate Inspector
-adminRouter.get('/duplicates', (req, res) => {
-  const events = db.getAllEvents(50);
+adminRouter.get('/duplicates', async (req, res) => {
+  const events = await db.getAllEvents(50);
   const deduplicatedEvents = events.filter(e => e.source_count > 1 || e.is_duplicate_resolved);
 
-  const report = deduplicatedEvents.map(e => {
-    const sources = db.getEventSources(e.id);
+  const report = deduplicatedEvents.map(async e => {
+    const sources = await db.getEventSources(e.id);
     return {
       event_id: e.id,
       title: e.title,
@@ -249,9 +267,9 @@ adminRouter.post('/ingest/run-all', async (req, res) => {
 });
 
 // 7. User & Access Management (Admin Only)
-adminRouter.get('/users', (req: Request, res: Response) => {
+adminRouter.get('/users', async (req: Request, res: Response) => {
   const { search, role, plan, status, verified } = req.query;
-  let allUsers = db.getAllUsers();
+  let allUsers = await db.getAllUsers();
 
   const total = allUsers.length;
   const verifiedCount = allUsers.filter(u => u.is_verified).length;
@@ -315,7 +333,7 @@ adminRouter.get('/users', (req: Request, res: Response) => {
 });
 
 // Admin Create New User
-adminRouter.post('/users', (req: AuthenticatedRequest, res: Response) => {
+adminRouter.post('/users', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { name, email, password, role, plan, subscription_status, is_verified } = req.body;
     if (!email || !email.includes('@')) {
@@ -324,7 +342,7 @@ adminRouter.post('/users', (req: AuthenticatedRequest, res: Response) => {
     }
 
     const cleanEmail = email.toLowerCase().trim();
-    const existing = db.getUserByEmail(cleanEmail);
+    const existing = await db.getUserByEmail(cleanEmail);
     if (existing) {
       res.status(400).json({ error: `User with email ${cleanEmail} already exists.` });
       return;
@@ -349,9 +367,9 @@ adminRouter.post('/users', (req: AuthenticatedRequest, res: Response) => {
       updated_at: new Date().toISOString(),
     };
 
-    db.insertUser(newUser);
+    await db.insertUser(newUser);
 
-    db.upsertUserPreferences({
+    await db.upsertUserPreferences({
       user_id: userId,
       timezone: 'UTC',
       language: 'en',
@@ -384,11 +402,11 @@ adminRouter.post('/users', (req: AuthenticatedRequest, res: Response) => {
 });
 
 // Admin Update User Details & Access
-adminRouter.patch('/users/:id', (req: AuthenticatedRequest, res: Response) => {
+adminRouter.patch('/users/:id', async (req: AuthenticatedRequest, res: Response) => {
   const { id } = req.params;
   const { name, email, role, plan, subscription_status, is_verified } = req.body;
 
-  const target = db.getUserById(id);
+  const target = await db.getUserById(id);
   if (!target) {
     res.status(404).json({ error: 'User not found.' });
     return;
@@ -396,7 +414,7 @@ adminRouter.patch('/users/:id', (req: AuthenticatedRequest, res: Response) => {
 
   // Prevent demoting the last remaining admin
   if (target.role === 'ADMIN' && role === 'USER') {
-    const adminCount = db.getAllUsers().filter(u => u.role === 'ADMIN').length;
+    const adminCount = (await db.getAllUsers()).filter(u => u.role === 'ADMIN').length;
     if (adminCount <= 1) {
       res.status(400).json({ error: 'Cannot demote the only remaining administrator.' });
       return;
@@ -410,7 +428,7 @@ adminRouter.patch('/users/:id', (req: AuthenticatedRequest, res: Response) => {
   if (email && typeof email === 'string' && email.includes('@')) {
     const cleanEmail = email.toLowerCase().trim();
     if (cleanEmail !== target.email.toLowerCase()) {
-      const exists = db.getUserByEmail(cleanEmail);
+      const exists = await db.getUserByEmail(cleanEmail);
       if (exists) {
         res.status(400).json({ error: 'Another user already uses this email.' });
         return;
@@ -432,7 +450,7 @@ adminRouter.patch('/users/:id', (req: AuthenticatedRequest, res: Response) => {
     updates.verification_status = Boolean(is_verified) ? 'verified' : 'pending_verification';
   }
 
-  const updated = db.updateUser(id, updates);
+  const updated = await db.updateUser(id, updates);
   res.json({
     success: true,
     user: {
@@ -451,9 +469,9 @@ adminRouter.patch('/users/:id', (req: AuthenticatedRequest, res: Response) => {
 });
 
 // Admin Delete User
-adminRouter.delete('/users/:id', (req: AuthenticatedRequest, res: Response) => {
+adminRouter.delete('/users/:id', async (req: AuthenticatedRequest, res: Response) => {
   const { id } = req.params;
-  const target = db.getUserById(id);
+  const target = await db.getUserById(id);
 
   if (!target) {
     res.status(404).json({ error: 'User not found.' });
@@ -470,7 +488,7 @@ adminRouter.delete('/users/:id', (req: AuthenticatedRequest, res: Response) => {
 
   // Prevent deleting the last remaining admin
   if (target.role === 'ADMIN') {
-    const remainingAdmins = db.getAllUsers().filter(u => u.role === 'ADMIN' && u.id !== id);
+    const remainingAdmins = (await db.getAllUsers()).filter(u => u.role === 'ADMIN' && u.id !== id);
     if (remainingAdmins.length === 0) {
       res.status(400).json({
         error: 'Cannot delete the only remaining administrator account in the system.',
@@ -480,7 +498,7 @@ adminRouter.delete('/users/:id', (req: AuthenticatedRequest, res: Response) => {
   }
 
   const email = target.email;
-  const success = db.deleteUser(id);
+  const success = await db.deleteUser(id);
   if (!success) {
     res.status(500).json({ error: 'Failed to delete user from database.' });
     return;
@@ -494,11 +512,11 @@ adminRouter.delete('/users/:id', (req: AuthenticatedRequest, res: Response) => {
 });
 
 // Admin Force Password Reset
-adminRouter.post('/users/:id/reset-password', (req: AuthenticatedRequest, res: Response) => {
+adminRouter.post('/users/:id/reset-password', async (req: AuthenticatedRequest, res: Response) => {
   const { id } = req.params;
   const { new_password } = req.body;
 
-  const target = db.getUserById(id);
+  const target = await db.getUserById(id);
   if (!target) {
     res.status(404).json({ error: 'User not found.' });
     return;
@@ -509,7 +527,7 @@ adminRouter.post('/users/:id/reset-password', (req: AuthenticatedRequest, res: R
     : `Reset_${Math.random().toString(36).slice(-6)}!2026`;
 
   const { hash, salt } = AuthService.hashPassword(passToSet);
-  db.updateUser(id, {
+  await db.updateUser(id, {
     password_hash: hash,
     salt,
   });
@@ -522,15 +540,15 @@ adminRouter.post('/users/:id/reset-password', (req: AuthenticatedRequest, res: R
 });
 
 // Admin Generate Magic Login Link
-adminRouter.post('/users/:id/magic-link', (req: AuthenticatedRequest, res: Response) => {
+adminRouter.post('/users/:id/magic-link', async (req: AuthenticatedRequest, res: Response) => {
   const { id } = req.params;
-  const target = db.getUserById(id);
+  const target = await db.getUserById(id);
   if (!target) {
     res.status(404).json({ error: 'User not found.' });
     return;
   }
 
-  const tokenRecord = db.createVerificationToken(target.id, target.email, 48, 'magic_link');
+  const tokenRecord = await db.createVerificationToken(target.id, target.email, 48, 'magic_link');
   const protocol = req.protocol || 'https';
   const host = req.get('host') || 'localhost:3000';
   const magicLink = `${protocol}://${host}/magic-verify?token=${tokenRecord.token}`;
@@ -545,16 +563,16 @@ adminRouter.post('/users/:id/magic-link', (req: AuthenticatedRequest, res: Respo
 });
 
 // Admin Toggle Verification
-adminRouter.post('/users/:id/toggle-verification', (req: AuthenticatedRequest, res: Response) => {
+adminRouter.post('/users/:id/toggle-verification', async (req: AuthenticatedRequest, res: Response) => {
   const { id } = req.params;
-  const target = db.getUserById(id);
+  const target = await db.getUserById(id);
   if (!target) {
     res.status(404).json({ error: 'User not found.' });
     return;
   }
 
   const nextStatus = !target.is_verified;
-  const updated = db.updateUser(id, {
+  const updated = await db.updateUser(id, {
     is_verified: nextStatus,
     verification_status: nextStatus ? 'verified' : 'pending_verification',
   });
@@ -563,7 +581,7 @@ adminRouter.post('/users/:id/toggle-verification', (req: AuthenticatedRequest, r
     success: true,
     is_verified: updated?.is_verified,
     user: updated,
-    message: nextStatus ? `User ${target.email} telah diverifikasi.` : `Status verifikasi user ${target.email} dicabut.`,
+    message: nextStatus ? `User ${target.email} has been verified.` : `Verification status for user ${target.email} was revoked.`,
   });
 });
 
@@ -598,7 +616,7 @@ adminRouter.post('/smtp/test', async (req: AuthenticatedRequest, res: Response) 
       success: false,
       connected: false,
       testEmailSent: false,
-      message: `Terjadi kesalahan saat menguji SMTP: ${err.message || String(err)}`,
+      message: `Error occurred while testing SMTP: ${err.message || String(err)}`,
       config: mailService.getSmtpConfigSummary(),
     });
   }

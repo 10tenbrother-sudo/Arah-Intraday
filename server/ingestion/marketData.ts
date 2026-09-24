@@ -20,6 +20,7 @@ interface SymbolConfig {
   assetType: 'COMMODITY' | 'CRYPTO' | 'INDEX' | 'FOREX' | 'BOND';
   sourceName: string;
   tvSymbol: string;
+  scannerFallbacks?: string[];
   snapshotUrl?: string;
   isForex?: boolean;
 }
@@ -37,37 +38,42 @@ const TRACKED_SYMBOLS: SymbolConfig[] = [
   {
     symbol: 'XAUUSD',
     ySymbol: 'GC=F',
-    tvSymbol: 'TVC:GOLD',
-    displayName: 'Gold / US Dollar (Spot/Futures)',
+    tvSymbol: 'OANDA:XAUUSD',
+    scannerFallbacks: ['TVC:GOLD'],
+    displayName: 'Gold / US Dollar (Spot CFD)',
     assetType: 'COMMODITY',
-    sourceName: 'TVC:GOLD (Real-Time Feed)',
+    sourceName: 'OANDA:XAUUSD (Spot Gold CFD)',
+    snapshotUrl: 'https://www.tradingview.com/chart/?symbol=OANDA%3AXAUUSD',
   },
   {
     symbol: 'US30',
-    ySymbol: 'YM=F',
-    tvSymbol: 'FOREXCOM:US30',
-    displayName: 'Dow Jones 30 (Wall St 30)',
+    ySymbol: '^DJI',
+    tvSymbol: 'OANDA:US30USD',
+    scannerFallbacks: ['DJ:DJI'],
+    displayName: 'Dow Jones 30 (US30 CFD)',
     assetType: 'INDEX',
-    sourceName: 'FOREXCOM:US30 (Real-Time CFD)',
-    snapshotUrl: 'https://www.tradingview.com/x/McUWwa6F/',
+    sourceName: 'OANDA:US30USD (CFD Index)',
+    snapshotUrl: 'https://www.tradingview.com/chart/?symbol=OANDA%3AUS30USD',
   },
   {
     symbol: 'US500',
-    ySymbol: 'ES=F',
-    tvSymbol: 'CAPITALCOM:SPX500',
-    displayName: 'S&P 500 Index (US 500)',
+    ySymbol: '^GSPC',
+    tvSymbol: 'OANDA:SPX500USD',
+    scannerFallbacks: ['SP:SPX'],
+    displayName: 'S&P 500 Index (SPX500 CFD)',
     assetType: 'INDEX',
-    sourceName: 'CAPITALCOM:SPX500 (Real-Time CFD)',
-    snapshotUrl: 'https://www.tradingview.com/x/mMOtpRJZ/',
+    sourceName: 'OANDA:SPX500USD (CFD Index)',
+    snapshotUrl: 'https://www.tradingview.com/chart/?symbol=OANDA%3ASPX500USD',
   },
   {
     symbol: 'US100',
-    ySymbol: 'NQ=F',
-    tvSymbol: 'SKILLING:US100',
-    displayName: 'Nasdaq 100 (US Tech 100)',
+    ySymbol: '^NDX',
+    tvSymbol: 'OANDA:NAS100USD',
+    scannerFallbacks: ['NASDAQ:NDX'],
+    displayName: 'Nasdaq 100 (NAS100 CFD)',
     assetType: 'INDEX',
-    sourceName: 'SKILLING:US100 (Real-Time CFD)',
-    snapshotUrl: 'https://www.tradingview.com/x/pWHPW2sk/',
+    sourceName: 'OANDA:NAS100USD (CFD Index)',
+    snapshotUrl: 'https://www.tradingview.com/chart/?symbol=OANDA%3ANAS100USD',
   },
   {
     symbol: 'US10Y',
@@ -325,7 +331,14 @@ export class MarketDataService {
     try {
       const ctrl = new AbortController();
       const t = setTimeout(() => ctrl.abort(), 4500);
-      const tickers = TRACKED_SYMBOLS.map(s => s.tvSymbol);
+      const tickerSet = new Set<string>();
+      for (const s of TRACKED_SYMBOLS) {
+        tickerSet.add(s.tvSymbol);
+        if (s.scannerFallbacks) {
+          for (const fb of s.scannerFallbacks) tickerSet.add(fb);
+        }
+      }
+      const tickers = Array.from(tickerSet);
       const payload = JSON.stringify({
         symbols: { tickers },
         columns: ['close', 'change', 'change_abs', 'high', 'low', 'volume', 'update_mode'],
@@ -382,8 +395,17 @@ export class MarketDataService {
     // Query non-delayed feeds for all tracked instruments in parallel
     const results = await Promise.all(
       TRACKED_SYMBOLS.map(async cfg => {
-        const existing = db.getMarketPrice(cfg.symbol);
-        const tvQuote = tvMap.get(cfg.tvSymbol);
+        const existing = await db.getMarketPrice(cfg.symbol);
+        let tvQuote = tvMap.get(cfg.tvSymbol);
+        if (!tvQuote && cfg.scannerFallbacks) {
+          for (const fb of cfg.scannerFallbacks) {
+            const found = tvMap.get(fb);
+            if (found) {
+              tvQuote = found;
+              break;
+            }
+          }
+        }
 
         // 1. Direct TradingView Streaming quote if available (e.g. BITSTAMP:BTCUSD, TVC:DXY, TVC:GOLD, FX pairs)
         if (tvQuote) {
@@ -441,8 +463,13 @@ export class MarketDataService {
           return record;
         }
 
-        // 3. Continuous 24/5 CFD/Futures quote (YM=F for US30, ES=F for US500, NQ=F for US100)
-        const yQuote = await this.fetchYahooQuote(cfg.ySymbol);
+        // 3. Continuous CFD/Cash quote (^DJI, ^GSPC, ^NDX) with continuous backup
+        let yQuote = await this.fetchYahooQuote(cfg.ySymbol);
+        if (!yQuote) {
+          if (cfg.symbol === 'US30') yQuote = await this.fetchYahooQuote('YM=F');
+          else if (cfg.symbol === 'US500') yQuote = await this.fetchYahooQuote('ES=F');
+          else if (cfg.symbol === 'US100') yQuote = await this.fetchYahooQuote('NQ=F');
+        }
         if (yQuote) {
           const record: MarketPrice = {
             symbol: cfg.symbol,
@@ -510,18 +537,18 @@ export class MarketDataService {
 
     // Save all to database and prepare broadcast
     for (const item of results) {
-      db.upsertMarketPrice(item);
+      await db.upsertMarketPrice(item);
       updatedPrices.push(item);
     }
 
     // Update global market feed source status
     const unavailableCount = updatedPrices.filter(p => p.status === 'UNAVAILABLE').length;
     if (unavailableCount === 0) {
-      db.updateSourceStatus('src_market_feed', 'LIVE');
+      await db.updateSourceStatus('src_market_feed', 'LIVE');
     } else if (unavailableCount < updatedPrices.length) {
-      db.updateSourceStatus('src_market_feed', 'RECENT');
+      await db.updateSourceStatus('src_market_feed', 'RECENT');
     } else {
-      db.updateSourceStatus('src_market_feed', 'ERROR', 'Market providers unreachable');
+      await db.updateSourceStatus('src_market_feed', 'ERROR', 'Market providers unreachable');
     }
 
     // Broadcast live prices over real-time SSE stream

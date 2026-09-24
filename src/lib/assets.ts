@@ -55,7 +55,7 @@ export const ASSET_VISUAL_MAP: Record<string, AssetVisualMeta> = {
     category: 'FOREX',
     flagUrls: ['https://flagcdn.com/w40/eu.png', 'https://flagcdn.com/w40/us.png'],
     iconType: 'flag',
-    badgeColor: 'text-blue-400 bg-blue-950/60 border-blue-800/60',
+    badgeColor: 'text-blue-700 bg-blue-50 border-blue-200',
     thumbnailUrl: 'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&w=400&q=80',
   },
   GBPUSD: {
@@ -64,7 +64,7 @@ export const ASSET_VISUAL_MAP: Record<string, AssetVisualMeta> = {
     category: 'FOREX',
     flagUrls: ['https://flagcdn.com/w40/gb.png', 'https://flagcdn.com/w40/us.png'],
     iconType: 'flag',
-    badgeColor: 'text-indigo-400 bg-indigo-950/60 border-indigo-800/60',
+    badgeColor: 'text-indigo-700 bg-indigo-50 border-indigo-200',
     thumbnailUrl: 'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&w=400&q=80',
   },
   USDJPY: {
@@ -73,7 +73,7 @@ export const ASSET_VISUAL_MAP: Record<string, AssetVisualMeta> = {
     category: 'FOREX',
     flagUrls: ['https://flagcdn.com/w40/us.png', 'https://flagcdn.com/w40/jp.png'],
     iconType: 'flag',
-    badgeColor: 'text-rose-400 bg-rose-950/60 border-rose-800/60',
+    badgeColor: 'text-rose-700 bg-rose-50 border-rose-200',
     thumbnailUrl: 'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&w=400&q=80',
   },
   AUDUSD: {
@@ -82,7 +82,7 @@ export const ASSET_VISUAL_MAP: Record<string, AssetVisualMeta> = {
     category: 'FOREX',
     flagUrls: ['https://flagcdn.com/w40/au.png', 'https://flagcdn.com/w40/us.png'],
     iconType: 'flag',
-    badgeColor: 'text-emerald-400 bg-emerald-950/60 border-emerald-800/60',
+    badgeColor: 'text-emerald-700 bg-emerald-50 border-emerald-200',
     thumbnailUrl: 'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&w=400&q=80',
   },
   USDCHF: {
@@ -91,7 +91,7 @@ export const ASSET_VISUAL_MAP: Record<string, AssetVisualMeta> = {
     category: 'FOREX',
     flagUrls: ['https://flagcdn.com/w40/us.png', 'https://flagcdn.com/w40/ch.png'],
     iconType: 'flag',
-    badgeColor: 'text-red-400 bg-red-950/60 border-red-800/60',
+    badgeColor: 'text-red-700 bg-red-50 border-red-200',
     thumbnailUrl: 'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&w=400&q=80',
   },
   USDCAD: {
@@ -100,7 +100,7 @@ export const ASSET_VISUAL_MAP: Record<string, AssetVisualMeta> = {
     category: 'FOREX',
     flagUrls: ['https://flagcdn.com/w40/us.png', 'https://flagcdn.com/w40/ca.png'],
     iconType: 'flag',
-    badgeColor: 'text-amber-400 bg-amber-950/60 border-amber-800/60',
+    badgeColor: 'text-amber-700 bg-amber-50 border-amber-200',
     thumbnailUrl: 'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&w=400&q=80',
   },
   NZDUSD: {
@@ -109,7 +109,7 @@ export const ASSET_VISUAL_MAP: Record<string, AssetVisualMeta> = {
     category: 'FOREX',
     flagUrls: ['https://flagcdn.com/w40/nz.png', 'https://flagcdn.com/w40/us.png'],
     iconType: 'flag',
-    badgeColor: 'text-teal-400 bg-teal-950/60 border-teal-800/60',
+    badgeColor: 'text-teal-700 bg-teal-50 border-teal-200',
     thumbnailUrl: 'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&w=400&q=80',
   },
   GBPJPY: {
@@ -118,7 +118,7 @@ export const ASSET_VISUAL_MAP: Record<string, AssetVisualMeta> = {
     category: 'FOREX',
     flagUrls: ['https://flagcdn.com/w40/gb.png', 'https://flagcdn.com/w40/jp.png'],
     iconType: 'flag',
-    badgeColor: 'text-purple-400 bg-purple-950/60 border-purple-800/60',
+    badgeColor: 'text-purple-700 bg-purple-50 border-purple-200',
     thumbnailUrl: 'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&w=400&q=80',
   },
   EURGBP: {
@@ -127,7 +127,7 @@ export const ASSET_VISUAL_MAP: Record<string, AssetVisualMeta> = {
     category: 'FOREX',
     flagUrls: ['https://flagcdn.com/w40/eu.png', 'https://flagcdn.com/w40/gb.png'],
     iconType: 'flag',
-    badgeColor: 'text-cyan-400 bg-cyan-950/60 border-cyan-800/60',
+    badgeColor: 'text-cyan-700 bg-cyan-50 border-cyan-200',
     thumbnailUrl: 'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&w=400&q=80',
   },
   DXY: {
@@ -136,7 +136,7 @@ export const ASSET_VISUAL_MAP: Record<string, AssetVisualMeta> = {
     category: 'BOND',
     flagUrls: ['https://flagcdn.com/w40/us.png'],
     iconType: 'flag',
-    badgeColor: 'text-emerald-400 bg-emerald-950/60 border-emerald-800/60',
+    badgeColor: 'text-emerald-700 bg-emerald-50 border-emerald-200',
     thumbnailUrl: 'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&w=400&q=80',
   },
   XAUUSD: {
@@ -144,7 +144,7 @@ export const ASSET_VISUAL_MAP: Record<string, AssetVisualMeta> = {
     name: 'Spot Gold / US Dollar',
     category: 'COMMODITY',
     iconType: 'gold',
-    badgeColor: 'text-amber-300 bg-amber-950/60 border-amber-800/60',
+    badgeColor: 'text-amber-700 bg-amber-50 border-amber-200',
     thumbnailUrl: 'https://images.unsplash.com/photo-1610375461246-83df859d849d?auto=format&fit=crop&w=400&q=80',
   },
   BRENT: {
@@ -152,7 +152,7 @@ export const ASSET_VISUAL_MAP: Record<string, AssetVisualMeta> = {
     name: 'Brent Crude Oil',
     category: 'COMMODITY',
     iconType: 'oil',
-    badgeColor: 'text-orange-400 bg-orange-950/60 border-orange-800/60',
+    badgeColor: 'text-orange-700 bg-orange-50 border-orange-200',
     thumbnailUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=400&q=80',
   },
   US500: {
@@ -160,7 +160,7 @@ export const ASSET_VISUAL_MAP: Record<string, AssetVisualMeta> = {
     name: 'S&P 500 Index',
     category: 'INDEX',
     iconType: 'stock',
-    badgeColor: 'text-blue-400 bg-blue-950/60 border-blue-800/60',
+    badgeColor: 'text-blue-700 bg-blue-50 border-blue-200',
     thumbnailUrl: 'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?auto=format&fit=crop&w=400&q=80',
   },
   US100: {
@@ -168,7 +168,7 @@ export const ASSET_VISUAL_MAP: Record<string, AssetVisualMeta> = {
     name: 'Nasdaq 100 Index (Tech & Growth)',
     category: 'INDEX',
     iconType: 'stock',
-    badgeColor: 'text-cyan-400 bg-cyan-950/60 border-cyan-800/60',
+    badgeColor: 'text-cyan-700 bg-cyan-50 border-cyan-200',
     thumbnailUrl: 'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?auto=format&fit=crop&w=400&q=80',
   },
   US30: {
@@ -176,7 +176,7 @@ export const ASSET_VISUAL_MAP: Record<string, AssetVisualMeta> = {
     name: 'Dow Jones 30 Index (Industrials & Value)',
     category: 'INDEX',
     iconType: 'stock',
-    badgeColor: 'text-indigo-400 bg-indigo-950/60 border-indigo-800/60',
+    badgeColor: 'text-indigo-700 bg-indigo-50 border-indigo-200',
     thumbnailUrl: 'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?auto=format&fit=crop&w=400&q=80',
   },
   BTCUSD: {
@@ -184,7 +184,7 @@ export const ASSET_VISUAL_MAP: Record<string, AssetVisualMeta> = {
     name: 'Bitcoin / US Dollar',
     category: 'CRYPTO',
     iconType: 'crypto',
-    badgeColor: 'text-yellow-400 bg-yellow-950/60 border-yellow-800/60',
+    badgeColor: 'text-yellow-700 bg-yellow-50 border-yellow-200',
     thumbnailUrl: 'https://images.unsplash.com/photo-1621416894569-0f39ed31d247?auto=format&fit=crop&w=400&q=80',
   },
   US10Y: {
@@ -192,7 +192,7 @@ export const ASSET_VISUAL_MAP: Record<string, AssetVisualMeta> = {
     name: 'US 10-Year Treasury Yield',
     category: 'BOND',
     iconType: 'bond',
-    badgeColor: 'text-cyan-400 bg-cyan-950/60 border-cyan-800/60',
+    badgeColor: 'text-cyan-700 bg-cyan-50 border-cyan-200',
     thumbnailUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=400&q=80',
   },
 };

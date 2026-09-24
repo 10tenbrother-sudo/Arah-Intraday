@@ -7,10 +7,10 @@ import { UserWatchlist } from '../types.js';
 export const userRouter = Router();
 
 // GET watchlist
-userRouter.get('/watchlist', requireAuth, (req: AuthenticatedRequest, res: Response) => {
+userRouter.get('/watchlist', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.user!.id;
-  const list = db.getUserWatchlist(userId);
-  const prices = db.getAllMarketPrices();
+  const list = await db.getUserWatchlist(userId);
+  const prices = await db.getAllMarketPrices();
 
   // Enhance with live prices
   const enhanced = list.map(item => {
@@ -25,7 +25,7 @@ userRouter.get('/watchlist', requireAuth, (req: AuthenticatedRequest, res: Respo
 });
 
 // POST add to watchlist
-userRouter.post('/watchlist', requireAuth as any, (req: AuthenticatedRequest, res: Response) => {
+userRouter.post('/watchlist', requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
   const user = req.user!;
   const userId = user.id;
   const { symbol, asset_type, notes } = req.body;
@@ -36,7 +36,7 @@ userRouter.post('/watchlist', requireAuth as any, (req: AuthenticatedRequest, re
 
   // Server-side usage limit check
   const limits = EntitlementService.getUserLimits(user);
-  const currentList = db.getUserWatchlist(userId);
+  const currentList = await db.getUserWatchlist(userId);
   if (currentList.length >= limits.watchlistLimit) {
     res.status(403).json({
       error: `Watchlist limit reached: Your ${user.plan || 'FREE'} plan allows a maximum of ${limits.watchlistLimit} symbols. Upgrade to expand your watchlist capacity.`,
@@ -56,27 +56,27 @@ userRouter.post('/watchlist', requireAuth as any, (req: AuthenticatedRequest, re
     added_at: new Date().toISOString(),
   };
 
-  db.addToWatchlist(item);
+  await db.addToWatchlist(item);
   res.json({ success: true, item });
 });
 
 // DELETE remove from watchlist
-userRouter.delete('/watchlist/:symbol', requireAuth, (req: AuthenticatedRequest, res: Response) => {
+userRouter.delete('/watchlist/:symbol', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.user!.id;
   const symbol = req.params.symbol.toUpperCase();
-  const removed = db.removeFromWatchlist(userId, symbol);
+  const removed = await db.removeFromWatchlist(userId, symbol);
   res.json({ success: removed, symbol });
 });
 
 // GET user settings / preferences
-userRouter.get('/preferences', requireAuth, (req: AuthenticatedRequest, res: Response) => {
+userRouter.get('/preferences', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.user!.id;
-  const prefs = db.getUserPreferences(userId);
+  const prefs = await db.getUserPreferences(userId);
   res.json({ preferences: prefs });
 });
 
 // POST update user subscription plan
-userRouter.post('/subscription', requireAuth, (req: AuthenticatedRequest, res: Response) => {
+userRouter.post('/subscription', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.user!.id;
   const { plan } = req.body;
   if (!['FREE', 'PRO', 'INSTITUTIONAL'].includes(plan)) {
@@ -84,7 +84,7 @@ userRouter.post('/subscription', requireAuth, (req: AuthenticatedRequest, res: R
     return;
   }
 
-  const updated = db.updateUser(userId, {
+  const updated = await db.updateUser(userId, {
     plan,
     subscription_status: 'active',
   });
@@ -111,11 +111,11 @@ userRouter.post('/subscription', requireAuth, (req: AuthenticatedRequest, res: R
 });
 
 // GET current user entitlements & usage limits
-userRouter.get('/entitlements', requireAuth as any, (req: AuthenticatedRequest, res: Response) => {
+userRouter.get('/entitlements', requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
   const user = req.user!;
   const limits = EntitlementService.getUserLimits(user);
   const aiUsage = EntitlementService.getAIUsage(user.id, user);
-  const watchlist = db.getUserWatchlist(user.id);
+  const watchlist = await db.getUserWatchlist(user.id);
 
   res.json({
     plan: user.plan || 'FREE',

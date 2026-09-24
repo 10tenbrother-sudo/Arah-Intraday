@@ -75,7 +75,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
         year: 'numeric',
       }).toUpperCase();
 
-      const wibTime = now.toLocaleTimeString('id-ID', {
+      const wibTime = now.toLocaleTimeString('en-GB', {
         timeZone: 'Asia/Jakarta',
         hour12: false,
         hour: '2-digit',
@@ -100,35 +100,31 @@ export const Header: React.FC<HeaderProps> = React.memo(({
   const formatViewLabel = (tab: NavTabId): string => {
     switch (tab) {
       case 'terminal':
-        return 'OVERVIEW DASHBOARD';
+        return 'Overview';
       case 'arah_market':
-        return 'MARKET BIAS DOSSIER';
-      case 'intraday_map':
-        return 'INTRADAY MARKET MAP';
-      case 'today_catalysts':
-        return "TODAY'S CATALYSTS";
+        return 'Market bias';
       case 'intermarket':
-        return 'INTERMARKET FLOWS';
+        return 'Intermarket flows';
       case 'markets':
-        return 'MARKET SURVEILLANCE';
+        return 'Market surveillance';
       case 'currency':
-        return 'CURRENCY STRENGTH G8';
+        return 'Currency strength G8';
       case 'history':
-        return 'HISTORICAL MEMORY';
+        return 'Historical memory';
       case 'macro':
-        return 'ECONOMIC CALENDAR';
+        return 'Economic calendar';
       case 'events':
-        return 'CANONICAL NEWS WIRE';
+        return 'Canonical news wire';
       case 'intelligence':
-        return 'AI MARKET INTELLIGENCE';
+        return 'AI market intelligence';
       case 'watchlist':
-        return 'ACTIVE WATCHLIST';
+        return 'Active watchlist';
       case 'admin':
-        return 'SYSTEM & FEEDS';
+        return 'System & feeds';
       default:
         return String(tab)
           .replace(/_/g, ' ')
-          .toUpperCase();
+          .replace(/\b\w/g, c => c.toUpperCase());
     }
   };
 
@@ -146,16 +142,16 @@ export const Header: React.FC<HeaderProps> = React.memo(({
       className="border-b sticky top-0 z-30 shrink-0 transition-colors terminal-header"
       style={{
         background: 'var(--bg-header)',
-        borderColor: 'var(--border-subtle)',
+        borderColor: 'var(--border-hairline)',
       }}
       id="arah-market-header"
     >
-      <div className="h-12 px-3 sm:px-4 flex items-center justify-between gap-3">
+      <div className="h-14 px-4 sm:px-5 flex items-center justify-between gap-3">
         {/* Left Section: Mobile Menu + View Title + Live Status */}
         <div className="flex items-center gap-3 shrink-0">
           <button
             onClick={onToggleMobileMenu}
-            className="p-1.5 rounded bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-primary)] border border-[var(--border-subtle)] lg:hidden cursor-pointer transition"
+            className="p-1.5 rounded text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-section-alt)] lg:hidden cursor-pointer transition"
             title="Open Navigation"
             id="mobile-menu-toggle-btn"
           >
@@ -163,9 +159,9 @@ export const Header: React.FC<HeaderProps> = React.memo(({
           </button>
 
           <div className="flex items-center gap-2.5">
-            <h1 className="text-xs sm:text-[13px] font-mono font-bold tracking-tight text-[var(--text-primary)] uppercase">
+            <span className="text-xs font-medium text-[var(--text-secondary)] whitespace-nowrap">
               {formatViewLabel(activeTab)}
-            </h1>
+            </span>
 
             {/* Connection Live Indicator */}
             <Tooltip
@@ -184,14 +180,14 @@ export const Header: React.FC<HeaderProps> = React.memo(({
               whyItMatters="Guarantees actionable real-time signals without manual browser reloads."
               position="bottom"
             >
-              <div className="flex items-center gap-1.5 px-1.5 py-0.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] cursor-help">
+              <div className="flex items-center gap-1.5 cursor-help">
                 <span
                   className={`w-1.5 h-1.5 rounded-full ${
                     sseStatus === 'CONNECTED' ? 'bg-[var(--bullish)]' : 'bg-[var(--warning)] animate-ping'
                   }`}
                 />
-                <span className="text-[9.5px] font-mono font-semibold tracking-wider text-[var(--text-secondary)]">
-                  {sseStatus === 'CONNECTED' ? 'FEED LIVE' : 'SYNCING'}
+                <span className="metadata-label text-[9px] text-[var(--text-muted)]">
+                  {sseStatus === 'CONNECTED' ? 'Live' : 'Syncing'}
                 </span>
               </div>
             </Tooltip>
@@ -207,7 +203,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
               value={searchQuery}
               onChange={e => onSearchChange(e.target.value)}
               placeholder="Search ticker, news, catalyst..."
-              className="h-7 w-full bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] focus:border-[var(--text-primary)] rounded pl-8 pr-10 text-xs font-mono text-[var(--text-primary)] placeholder-[var(--text-muted)] transition outline-none"
+              className="h-8 w-full bg-[var(--bg-section-alt)] border border-transparent focus:border-[var(--border-strong)] rounded-md pl-8 pr-10 text-xs font-sans text-[var(--text-primary)] placeholder-[var(--text-muted)] transition outline-none"
             />
             {searchQuery ? (
               <button
@@ -226,29 +222,27 @@ export const Header: React.FC<HeaderProps> = React.memo(({
         )}
 
         {/* Right Section: Market Status, Exact Time, Theme Toggle, Actions */}
-        <div className="flex items-center gap-2 text-xs font-mono shrink-0">
+        <div className="flex items-center gap-3 text-xs shrink-0">
           {/* Active Session & Market Open Status */}
-          <div className="hidden xl:flex items-center gap-2 h-7 px-2.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] text-[11px] text-[var(--text-secondary)]">
+          <div className="hidden xl:flex items-center gap-2 text-[11px]">
             <span className="w-1.5 h-1.5 rounded-full bg-[var(--bullish)]" />
-            <span className="font-semibold text-[var(--text-primary)] tracking-wide">
-              MARKET OPEN
-            </span>
-            <span className="text-[var(--border-subtle)]">|</span>
-            <span className="text-[var(--text-muted)] tracking-wider">
-              {activeSessionName}
-            </span>
+            <span className="font-semibold text-[var(--text-primary)]">Market open</span>
+            <span className="text-[var(--border-strong)]">/</span>
+            <span className="text-[var(--text-muted)]">{activeSessionName}</span>
           </div>
 
           {/* Current Date & Time (Tabular Numerals) */}
-          <div className="hidden sm:flex items-center gap-2 h-7 px-2.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] text-[11px] tabular-nums">
+          <div className="hidden sm:flex items-center gap-2 text-[11px] tabular-nums">
             <span className="text-[var(--text-muted)] font-mono">{timeState.dateStr}</span>
-            <span className="text-[var(--border-subtle)]">·</span>
-            <span className="font-bold text-[var(--text-primary)] font-mono">
+            <span className="text-[var(--border-strong)]">·</span>
+            <span className="font-semibold text-[var(--text-primary)] font-mono">
               {timeState.wibTime || 'LIVE'}
             </span>
           </div>
 
-          {/* Theme Toggle (Pure White vs Pure Black, absolutely no black line on white and no white line on black) */}
+          <span className="hidden xl:block w-px h-5 bg-[var(--border-hairline)]" />
+
+          {/* Theme Toggle */}
           {onToggleTheme && (
             <ThemeToggle
               theme={theme}
@@ -261,17 +255,17 @@ export const Header: React.FC<HeaderProps> = React.memo(({
           {onOpenAutoTriggerModal && (
             <button
               onClick={onOpenAutoTriggerModal}
-              className={`h-7 px-2 rounded border text-[11px] font-mono flex items-center gap-1.5 transition cursor-pointer ${
+              className={`h-8 px-2.5 rounded-md text-[11px] flex items-center gap-1.5 transition cursor-pointer ${
                 isAutoTriggerActive
                   ? 'badge-warning'
-                  : 'bg-[var(--bg-section-alt)] border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-section-alt)]'
               }`}
               title="News Auto-Trigger Settings"
               id="open-auto-trigger-modal-btn"
             >
               <Zap className={`w-3 h-3 ${isAutoTriggerActive ? 'text-[var(--warning)] animate-pulse' : ''}`} />
               <span className="hidden md:inline">
-                {isAutoTriggerActive ? `TRIGGER (${autoTriggerSecondsRemaining}s)` : 'TRIGGER'}
+                {isAutoTriggerActive ? `Trigger (${autoTriggerSecondsRemaining}s)` : 'Trigger'}
               </span>
             </button>
           )}
@@ -280,12 +274,12 @@ export const Header: React.FC<HeaderProps> = React.memo(({
           <button
             onClick={onTriggerGlobalSync}
             disabled={isSyncing}
-            className="h-7 px-2 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-primary)] text-[11px] font-mono flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50"
+            className="h-8 px-2.5 rounded-md text-[var(--text-primary)] text-[11px] flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50 hover:bg-[var(--bg-section-alt)]"
             title="Synchronize all real-time market feeds"
             id="global-sync-btn"
           >
             <RefreshCw className={`w-3 h-3 ${isSyncing ? 'animate-spin text-[var(--accent)]' : ''}`} />
-            <span className="hidden sm:inline font-semibold">{isSyncing ? 'SYNCING' : 'SYNC'}</span>
+            <span className="hidden sm:inline font-semibold">{isSyncing ? 'Syncing' : 'Sync'}</span>
           </button>
         </div>
       </div>

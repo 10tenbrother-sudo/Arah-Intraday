@@ -18,6 +18,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { api } from '../lib/api';
+import { PageHeader } from './shared/PageHeader';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   AIAnalysis,
@@ -129,6 +130,12 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
 
   return (
     <div className="space-y-4 font-sans">
+      <PageHeader
+        eyebrow="MAIN · AI ANALYSIS"
+        title="AI analysis"
+        description="Model-driven reads of the market regime, central-bank language, G8 macro conditions, and the unified cross-asset context."
+      />
+
       {/* Sub-Navigation Tabs for Intelligence Layer */}
       <div className="flex items-center gap-1.5 border-b pb-2 overflow-x-auto" style={{ borderColor: 'var(--border-subtle)' }}>
         <button
@@ -236,6 +243,13 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
                 {overview && (
                   <span className="text-[11px] text-[var(--text-secondary)]">
                     CONFIDENCE: <strong className="text-[var(--text-primary)]">{((overview.confidence || 0.9) * 100).toFixed(0)}%</strong>
+                  </span>
+                )}
+                {/* The synthesis is cached server-side until RE-SYNTHESIZE runs, so
+                    the read can be hours old while live prices move on. */}
+                {overview?.created_at && (
+                  <span className="text-[11px] text-[var(--text-muted)]">
+                    AS OF <strong className="text-[var(--text-secondary)]">{new Date(overview.created_at).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' })} WIB</strong>
                   </span>
                 )}
                 <button
@@ -426,9 +440,9 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
 
                   {/* 5-Step Causal Framework */}
                   <div className="space-y-2 pt-1 font-mono">
-                    <div className="metadata-label text-[10px] text-[var(--text-primary)] flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5 text-[13px] font-semibold text-[var(--text-primary)]">
                       <Activity className="w-3.5 h-3.5 text-[var(--accent)]" />
-                      <span>5-STEP CAUSAL PIPELINE</span>
+                      <span>Causal pipeline</span>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
@@ -674,10 +688,10 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
                 {/* AI Explanation Provenance Box */}
                 <div className="p-3 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-2 font-mono text-xs">
                   <div className="flex items-center justify-between text-[var(--text-secondary)] border-b pb-1.5" style={{ borderColor: 'var(--border-subtle)' }}>
-                    <span className="metadata-label text-[10px] text-[var(--text-primary)]">
-                      RIGOROUS CAUSAL EXPLANATION & DATA PROVENANCE
+                    <span className="text-[13px] font-semibold text-[var(--text-primary)]">
+                      Explanation and provenance
                     </span>
-                    <span className="text-[var(--bullish)] font-bold">CONFIDENCE: {unifiedContext.confidence}%</span>
+                    <span className="text-[var(--bullish)] font-semibold tabular-nums">{unifiedContext.confidence}% confidence</span>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">

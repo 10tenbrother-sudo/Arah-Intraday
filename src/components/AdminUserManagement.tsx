@@ -137,7 +137,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
         });
       }
     } catch (err: any) {
-      showToast(err.message || 'Gagal memuat daftar pengguna.', 'error');
+      showToast(err.message || 'Could not load the user list.', 'error');
     } finally {
       setLoading(false);
     }
@@ -179,13 +179,13 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
       });
 
       if (res.success) {
-        showToast(`Akses akun ${res.user.email} berhasil diperbarui.`);
+        showToast(`Access for ${res.user.email} updated.`);
         setEditingUser(null);
         loadUsers();
         onUserModified?.();
       }
     } catch (err: any) {
-      showToast(err.message || 'Gagal memperbarui data user.', 'error');
+      showToast(err.message || 'Could not update the user record.', 'error');
     } finally {
       setLoading(false);
     }
@@ -200,8 +200,8 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
       const res = await api.createAdminUser(createForm);
       if (res.success) {
         showToast(
-          `User ${res.user.email} berhasil didaftarkan.` +
-          (res.initial_password ? ` Password sementara: ${res.initial_password}` : '')
+          `User ${res.user.email} created.` +
+          (res.initial_password ? ` Temporary password: ${res.initial_password}` : '')
         );
         setShowCreateModal(false);
         setCreateForm({
@@ -217,7 +217,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
         onUserModified?.();
       }
     } catch (err: any) {
-      showToast(err.message || 'Gagal membuat pengguna baru.', 'error');
+      showToast(err.message || 'Could not create the new user.', 'error');
     } finally {
       setLoading(false);
     }
@@ -230,13 +230,13 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
       setLoading(true);
       const res = await api.deleteAdminUser(deletingUser.id);
       if (res.success) {
-        showToast(res.message || `User ${deletingUser.email} berhasil dihapus.`);
+        showToast(res.message || `User ${deletingUser.email} deleted.`);
         setDeletingUser(null);
         loadUsers();
         onUserModified?.();
       }
     } catch (err: any) {
-      showToast(err.message || 'Gagal menghapus user.', 'error');
+      showToast(err.message || 'Could not delete the user.', 'error');
     } finally {
       setLoading(false);
     }
@@ -251,7 +251,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
         loadUsers();
       }
     } catch (err: any) {
-      showToast(err.message || 'Gagal mengubah status verifikasi.', 'error');
+      showToast(err.message || 'Could not change the verification status.', 'error');
     }
   };
 
@@ -264,11 +264,11 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
       const res = await api.resetAdminUserPassword(passwordResetUser.id, resetPasswordInput || undefined);
       if (res.success) {
         setGeneratedTempPass(res.temporary_password || resetPasswordInput);
-        showToast(`Password untuk ${passwordResetUser.email} berhasil diperbarui.`);
+        showToast(`Password for ${passwordResetUser.email} updated.`);
         loadUsers();
       }
     } catch (err: any) {
-      showToast(err.message || 'Gagal mereset password.', 'error');
+      showToast(err.message || 'Could not reset the password.', 'error');
     } finally {
       setLoading(false);
     }
@@ -282,29 +282,29 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
   };
 
   return (
-    <div className="space-y-4 font-sans text-slate-100" id="admin-user-management-module">
+    <div className="space-y-4 font-sans text-[var(--text-primary)]" id="admin-user-management-module">
       {/* Toast Notification */}
       {toastMessage && (
         <div
           className={`p-3 rounded-lg flex items-center justify-between text-xs font-mono border transition-all ${
             toastMessage.type === 'error'
-              ? 'bg-rose-950/90 text-rose-300 border-rose-800/80'
+              ? 'bg-[var(--bearish-bg)] text-[var(--bearish)] border-[var(--bearish-border)]'
               : toastMessage.type === 'info'
-              ? 'bg-cyan-950/90 text-cyan-300 border-cyan-800/80'
-              : 'bg-emerald-950/90 text-emerald-300 border-emerald-800/80'
+              ? 'bg-[var(--accent-subtle)] text-[var(--accent)] border-[var(--accent)]'
+              : 'bg-[var(--bullish-bg)] text-[var(--bullish)] border-[var(--bullish-border)]'
           }`}
         >
           <div className="flex items-center gap-2">
             {toastMessage.type === 'error' ? (
-              <AlertTriangle className="w-4 h-4 shrink-0 text-rose-400" />
+              <AlertTriangle className="w-4 h-4 shrink-0 text-[var(--bearish)]" />
             ) : (
-              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-[var(--bullish)]" />
             )}
             <span>{toastMessage.text}</span>
           </div>
           <button
             onClick={() => setToastMessage(null)}
-            className="text-slate-400 hover:text-slate-200 ml-3 cursor-pointer"
+            className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] ml-3 cursor-pointer"
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -313,89 +313,89 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
 
       {/* 1. Header Overview & Metrics Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 font-mono">
-        <div className="p-3.5 rounded-lg bg-slate-900/70 border border-slate-800 space-y-1">
-          <div className="flex items-center justify-between text-slate-400 text-xs">
+        <div className="p-3.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-1">
+          <div className="flex items-center justify-between text-[var(--text-secondary)] text-xs">
             <span className="flex items-center gap-1.5">
-              <Users className="w-3.5 h-3.5 text-cyan-400" />
+              <Users className="w-3.5 h-3.5 text-[var(--accent)]" />
               <span>TOTAL PENGGUNA</span>
             </span>
-            <span className="text-[10px] text-slate-500">Database</span>
+            <span className="text-[10px] text-[var(--text-muted)]">Database</span>
           </div>
-          <div className="text-xl font-bold text-slate-100">{metrics.total}</div>
-          <div className="text-[11px] text-slate-400 flex items-center gap-1">
-            <span className="text-emerald-400 font-semibold">{metrics.verified}</span>
+          <div className="text-xl font-bold text-[var(--text-primary)]">{metrics.total}</div>
+          <div className="text-[11px] text-[var(--text-secondary)] flex items-center gap-1">
+            <span className="text-[var(--bullish)] font-semibold">{metrics.verified}</span>
             <span>aktif & terverifikasi</span>
           </div>
         </div>
 
-        <div className="p-3.5 rounded-lg bg-slate-900/70 border border-slate-800 space-y-1">
-          <div className="flex items-center justify-between text-slate-400 text-xs">
+        <div className="p-3.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-1">
+          <div className="flex items-center justify-between text-[var(--text-secondary)] text-xs">
             <span className="flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+              <ShieldCheck className="w-3.5 h-3.5 text-[var(--warning)]" />
               <span>ADMINISTRATOR</span>
             </span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-950 text-amber-300 border border-amber-800/60">
+            <span className="text-[10px] px-1.5 py-0.2 rounded bg-[var(--warning-bg)] text-[var(--warning)] border border-[var(--warning-border)]">
               Role
             </span>
           </div>
-          <div className="text-xl font-bold text-amber-300">{metrics.admins}</div>
-          <div className="text-[11px] text-slate-400">
+          <div className="text-xl font-bold text-[var(--warning)]">{metrics.admins}</div>
+          <div className="text-[11px] text-[var(--text-secondary)]">
             <span>Akses otorisasi sistem penuh</span>
           </div>
         </div>
 
-        <div className="p-3.5 rounded-lg bg-slate-900/70 border border-slate-800 space-y-1">
-          <div className="flex items-center justify-between text-slate-400 text-xs">
+        <div className="p-3.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-1">
+          <div className="flex items-center justify-between text-[var(--text-secondary)] text-xs">
             <span className="flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+              <Sparkles className="w-3.5 h-3.5 text-[var(--accent)]" />
               <span>PRO & INSTITUTIONAL</span>
             </span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded bg-purple-950 text-purple-300 border border-purple-800/60">
+            <span className="text-[10px] px-1.5 py-0.2 rounded bg-[var(--bg-section-alt)] text-[var(--accent)] border border-[var(--border-subtle)]">
               Premium
             </span>
           </div>
-          <div className="text-xl font-bold text-purple-300">
+          <div className="text-xl font-bold text-[var(--accent)]">
             {metrics.pro + metrics.institutional}
           </div>
-          <div className="text-[11px] text-slate-400">
+          <div className="text-[11px] text-[var(--text-secondary)]">
             <span>{metrics.institutional} Institutional • {metrics.pro} Pro</span>
           </div>
         </div>
 
-        <div className="p-3.5 rounded-lg bg-slate-900/70 border border-slate-800 space-y-1">
-          <div className="flex items-center justify-between text-slate-400 text-xs">
+        <div className="p-3.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-1">
+          <div className="flex items-center justify-between text-[var(--text-secondary)] text-xs">
             <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+              <CheckCircle2 className="w-3.5 h-3.5 text-[var(--bullish)]" />
               <span>VERIFIKASI EMAIL</span>
             </span>
-            <span className="text-[10px] text-slate-500">
+            <span className="text-[10px] text-[var(--text-muted)]">
               {metrics.total > 0 ? Math.round((metrics.verified / metrics.total) * 100) : 0}%
             </span>
           </div>
-          <div className="text-xl font-bold text-emerald-400">{metrics.verified}</div>
-          <div className="text-[11px] text-slate-400 flex items-center gap-1">
-            <span className="text-amber-400 font-semibold">{metrics.unverified}</span>
+          <div className="text-xl font-bold text-[var(--bullish)]">{metrics.verified}</div>
+          <div className="text-[11px] text-[var(--text-secondary)] flex items-center gap-1">
+            <span className="text-[var(--warning)] font-semibold">{metrics.unverified}</span>
             <span>belum terverifikasi</span>
           </div>
         </div>
       </div>
 
       {/* 2. Control Toolbar & Search Filters */}
-      <div className="p-3 rounded-lg bg-slate-900/60 border border-slate-800 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+      <div className="p-3 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
         {/* Search Input */}
         <div className="relative flex-1">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-[var(--text-secondary)] absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Cari user berdasarkan nama, email, atau ID..."
+            placeholder="Search users by name, email, or ID..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-8 py-1.5 text-xs font-mono text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-cyan-600 transition"
+            className="w-full bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-lg pl-9 pr-8 py-1.5 text-xs font-mono text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -408,9 +408,9 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
           <select
             value={roleFilter}
             onChange={e => setRoleFilter(e.target.value as any)}
-            className="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-cyan-600"
+            className="bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-lg px-2.5 py-1.5 text-xs text-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent)]"
           >
-            <option value="ALL">Semua Role</option>
+            <option value="ALL">All roles</option>
             <option value="ADMIN">ADMIN</option>
             <option value="USER">USER</option>
           </select>
@@ -419,9 +419,9 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
           <select
             value={planFilter}
             onChange={e => setPlanFilter(e.target.value as any)}
-            className="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-cyan-600"
+            className="bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-lg px-2.5 py-1.5 text-xs text-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent)]"
           >
-            <option value="ALL">Semua Tier</option>
+            <option value="ALL">All tiers</option>
             <option value="FREE">FREE</option>
             <option value="PRO">PRO</option>
             <option value="INSTITUTIONAL">INSTITUTIONAL</option>
@@ -431,9 +431,9 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
           <select
             value={verifiedFilter}
             onChange={e => setVerifiedFilter(e.target.value as any)}
-            className="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-cyan-600"
+            className="bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-lg px-2.5 py-1.5 text-xs text-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent)]"
           >
-            <option value="ALL">Semua Verifikasi</option>
+            <option value="ALL">All verification</option>
             <option value="true">Verified Saja</option>
             <option value="false">Unverified Saja</option>
           </select>
@@ -442,59 +442,59 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
           <button
             onClick={loadUsers}
             disabled={loading}
-            title="Muat ulang data pengguna"
-            className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700 transition cursor-pointer disabled:opacity-50"
+            title="Reload user data"
+            className="p-1.5 bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-secondary)] rounded-lg border border-[var(--border-strong)] transition cursor-pointer disabled:opacity-50"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-cyan-400' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-[var(--accent)]' : ''}`} />
           </button>
 
           {/* Test SMTP Connection Button */}
           <button
             onClick={() => setShowSmtpModal(true)}
-            className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-750 text-cyan-300 border border-cyan-800/60 rounded-lg font-semibold flex items-center gap-1.5 shadow-sm transition cursor-pointer"
-            title="Uji coba koneksi SMTP server email"
+            className="px-2.5 py-1.5 bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--accent)] border border-[var(--accent)] rounded-lg font-semibold flex items-center gap-1.5 shadow-sm transition cursor-pointer"
+            title="Test the email SMTP server connection"
             id="admin-test-smtp-button"
           >
-            <Mail className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Tes SMTP</span>
+            <Mail className="w-3.5 h-3.5 text-[var(--accent)]" />
+            <span>SMTP test</span>
           </button>
 
           {/* Add User Button */}
           <button
             onClick={() => setShowCreateModal(true)}
-            className="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg font-semibold flex items-center gap-1.5 shadow-sm transition cursor-pointer"
+            className="px-3 py-1.5 bg-[var(--accent)] hover:bg-[var(--accent)] text-white rounded-lg font-semibold flex items-center gap-1.5 shadow-sm transition cursor-pointer"
           >
             <UserPlus className="w-3.5 h-3.5" />
-            <span>Tambah User</span>
+            <span>Add user</span>
           </button>
         </div>
       </div>
 
       {/* 3. Users Data Table */}
-      <div className="rounded-xl border border-slate-800 bg-slate-900/40 overflow-hidden">
+      <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left font-mono text-xs">
-            <thead className="bg-slate-900/90 text-slate-400 border-b border-slate-800">
+            <thead className="bg-[var(--bg-surface)] text-[var(--text-secondary)] border-b border-[var(--border-subtle)]">
               <tr>
                 <th className="p-3 font-semibold">User & Identitas</th>
                 <th className="p-3 font-semibold">Role Authority</th>
                 <th className="p-3 font-semibold">Subscription Tier</th>
-                <th className="p-3 font-semibold">Status Akun</th>
-                <th className="p-3 font-semibold">Email Verifikasi</th>
-                <th className="p-3 font-semibold text-right">Kelola Akses</th>
+                <th className="p-3 font-semibold">Account status</th>
+                <th className="p-3 font-semibold">Verification email</th>
+                <th className="p-3 font-semibold text-right">Manage access</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60 text-slate-300">
+            <tbody className="divide-y divide-[var(--border-subtle)] text-[var(--text-secondary)]">
               {users.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-slate-500">
+                  <td colSpan={6} className="p-8 text-center text-[var(--text-muted)]">
                     {loading ? (
-                      <div className="flex items-center justify-center gap-2 text-cyan-400">
+                      <div className="flex items-center justify-center gap-2 text-[var(--accent)]">
                         <RefreshCw className="w-4 h-4 animate-spin" />
-                        <span>Memuat data pengguna...</span>
+                        <span>Loading user data...</span>
                       </div>
                     ) : (
-                      'Tidak ada akun pengguna yang sesuai dengan filter.'
+                      'No user accounts match the current filter.'
                     )}
                   </td>
                 </tr>
@@ -502,26 +502,26 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
                 users.map(u => {
                   const isCurrentAccount = currentUser?.id === u.id || currentUser?.email?.toLowerCase() === u.email.toLowerCase();
                   return (
-                    <tr key={u.id} className="hover:bg-slate-800/30 transition">
+                    <tr key={u.id} className="hover:bg-[var(--bg-section-alt)] transition">
                       {/* User Info */}
                       <td className="p-3">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-bold text-cyan-300 shrink-0">
+                          <div className="w-8 h-8 rounded-full bg-[var(--bg-section-alt)] border border-[var(--border-strong)] flex items-center justify-center text-xs font-bold text-[var(--accent)] shrink-0">
                             {(u.name || u.email).substring(0, 2).toUpperCase()}
                           </div>
                           <div>
                             <div className="flex items-center gap-1.5">
-                              <span className="font-semibold text-slate-100">{u.name || 'Unnamed Trader'}</span>
+                              <span className="font-semibold text-[var(--text-primary)]">{u.name || 'Unnamed Trader'}</span>
                               {isCurrentAccount && (
-                                <span className="text-[9px] px-1.5 py-0.2 rounded bg-cyan-950 text-cyan-300 border border-cyan-800/80 font-bold">
+                                <span className="text-[9px] px-1.5 py-0.2 rounded bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent)] font-bold">
                                   AKUN ANDA
                                 </span>
                               )}
                             </div>
-                            <div className="text-[11px] text-slate-400 flex items-center gap-1">
+                            <div className="text-[11px] text-[var(--text-secondary)] flex items-center gap-1">
                               <span>{u.email}</span>
                             </div>
-                            <div className="text-[9px] text-slate-600 mt-0.5">ID: {u.id}</div>
+                            <div className="text-[9px] text-[var(--text-muted)] mt-0.5">ID: {u.id}</div>
                           </div>
                         </div>
                       </td>
@@ -531,14 +531,14 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
                         <span
                           className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold border ${
                             u.role === 'ADMIN'
-                              ? 'bg-amber-500/10 text-amber-300 border-amber-500/30'
-                              : 'bg-slate-800 text-slate-300 border-slate-700'
+                              ? 'bg-[var(--warning-bg)] text-[var(--warning-strong)] border-[var(--warning-border)]'
+                              : 'bg-[var(--bg-section-alt)] text-[var(--text-secondary)] border-[var(--border-strong)]'
                           }`}
                         >
                           {u.role === 'ADMIN' ? (
-                            <Shield className="w-2.5 h-2.5 text-amber-400" />
+                            <Shield className="w-2.5 h-2.5 text-[var(--warning)]" />
                           ) : (
-                            <Users className="w-2.5 h-2.5 text-slate-400" />
+                            <Users className="w-2.5 h-2.5 text-[var(--text-secondary)]" />
                           )}
                           <span>{u.role}</span>
                         </span>
@@ -549,10 +549,10 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
                         <span
                           className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
                             u.plan === 'INSTITUTIONAL'
-                              ? 'bg-purple-500/20 text-purple-300 border-purple-500/40'
+                              ? 'bg-[var(--accent-subtle)] text-[var(--accent-strong)] border-[var(--accent-border)]'
                               : u.plan === 'PRO'
-                              ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
-                              : 'bg-slate-800 text-slate-400 border-slate-700'
+                              ? 'bg-[var(--accent-subtle)] text-[var(--accent-strong)] border-[var(--accent-border)]'
+                              : 'bg-[var(--bg-section-alt)] text-[var(--text-secondary)] border-[var(--border-strong)]'
                           }`}
                         >
                           {u.plan || 'FREE'}
@@ -564,10 +564,10 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
                         <span
                           className={`text-[11px] font-semibold ${
                             u.subscription_status === 'active'
-                              ? 'text-emerald-400'
+                              ? 'text-[var(--bullish)]'
                               : u.subscription_status === 'trialing'
-                              ? 'text-cyan-400'
-                              : 'text-rose-400'
+                              ? 'text-[var(--accent)]'
+                              : 'text-[var(--bearish)]'
                           }`}
                         >
                           {u.subscription_status || 'active'}
@@ -578,18 +578,18 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
                       <td className="p-3">
                         <div className="flex items-center gap-1.5">
                           {u.is_verified ? (
-                            <span className="inline-flex items-center gap-1 text-[11px] text-emerald-400 font-semibold">
-                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                            <span className="inline-flex items-center gap-1 text-[11px] text-[var(--bullish)] font-semibold">
+                              <CheckCircle2 className="w-3.5 h-3.5 text-[var(--bullish)]" />
                               <span>Verified</span>
                             </span>
                           ) : (
                             <button
                               onClick={() => handleToggleVerification(u)}
-                              title="Klik untuk verifikasi instan akun ini"
-                              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-950/80 text-amber-300 border border-amber-800/80 text-[10px] hover:bg-amber-900 transition cursor-pointer"
+                              title="Click to instantly verify this account"
+                              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[var(--warning-bg)] text-[var(--warning)] border border-[var(--warning-border)] text-[10px] hover:bg-[var(--warning-bg)] transition cursor-pointer"
                             >
-                              <AlertTriangle className="w-3 h-3 text-amber-400" />
-                              <span>Verifikasi Sekarang</span>
+                              <AlertTriangle className="w-3 h-3 text-[var(--warning)]" />
+                              <span>Verify now</span>
                             </button>
                           )}
                         </div>
@@ -606,7 +606,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
                               setGeneratedTempPass(null);
                             }}
                             title="Reset Password User"
-                            className="p-1.5 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded border border-slate-700 transition cursor-pointer"
+                            className="p-1.5 bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--warning)] rounded border border-[var(--border-strong)] transition cursor-pointer"
                           >
                             <Key className="w-3.5 h-3.5" />
                           </button>
@@ -614,8 +614,8 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
                           {/* Edit Details */}
                           <button
                             onClick={() => handleOpenEdit(u)}
-                            title="Ubah Role & Paket Langganan"
-                            className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded border border-slate-700 transition cursor-pointer"
+                            title="Change role & subscription plan"
+                            className="p-1.5 bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-primary)] rounded border border-[var(--border-strong)] transition cursor-pointer"
                           >
                             <Edit2 className="w-3.5 h-3.5" />
                           </button>
@@ -624,11 +624,11 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
                           <button
                             onClick={() => setDeletingUser(u)}
                             disabled={isCurrentAccount}
-                            title={isCurrentAccount ? 'Tidak dapat menghapus akun admin Anda sendiri' : 'Hapus akun user ini'}
+                            title={isCurrentAccount ? 'You cannot delete your own admin account' : 'Delete this user account'}
                             className={`p-1.5 rounded border transition ${
                               isCurrentAccount
-                                ? 'bg-slate-900 text-slate-600 border-slate-800 cursor-not-allowed opacity-40'
-                                : 'bg-rose-950/60 hover:bg-rose-900 text-rose-300 border-rose-800/80 cursor-pointer'
+                                ? 'bg-[var(--bg-surface)] text-[var(--text-muted)] border-[var(--border-subtle)] cursor-not-allowed opacity-40'
+                                : 'bg-[var(--bearish-bg)] hover:bg-[var(--bearish-bg)] text-[var(--bearish)] border-[var(--bearish-border)] cursor-pointer'
                             }`}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -649,17 +649,17 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
       {/* ========================================================================= */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade">
-          <div className="w-full max-w-md bg-slate-950 border border-slate-800 rounded-xl p-5 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div className="w-full max-w-md bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-xl p-5 shadow-[var(--shadow-overlay)] space-y-4">
+            <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-3">
               <div className="flex items-center gap-2">
-                <UserPlus className="w-5 h-5 text-cyan-400" />
-                <h3 className="text-sm font-mono font-bold text-slate-100 uppercase tracking-wider">
+                <UserPlus className="w-5 h-5 text-[var(--accent)]" />
+                <h3 className="text-sm font-mono font-bold text-[var(--text-primary)] uppercase tracking-wider">
                   TAMBAH PENGGUNA BARU
                 </h3>
               </div>
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="text-slate-400 hover:text-slate-200"
+                className="text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -667,44 +667,44 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
 
             <form onSubmit={handleCreateUser} className="space-y-3 font-mono text-xs">
               <div>
-                <label className="block text-slate-400 mb-1">Nama Lengkap</label>
+                <label className="block text-[var(--text-secondary)] mb-1">Nama Lengkap</label>
                 <input
                   type="text"
                   placeholder="e.g. Budi Trader"
                   value={createForm.name}
                   onChange={e => setCreateForm({ ...createForm, name: e.target.value })}
-                  className="w-full bg-slate-900 border border-slate-800 rounded px-3 py-2 text-slate-200 outline-none focus:border-cyan-500"
+                  className="w-full bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded px-3 py-2 text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-400 mb-1">Email <span className="text-rose-400">*</span></label>
+                <label className="block text-[var(--text-secondary)] mb-1">Email <span className="text-[var(--bearish)]">*</span></label>
                 <input
                   type="email"
                   required
                   placeholder="trader@marketintel.pro"
                   value={createForm.email}
                   onChange={e => setCreateForm({ ...createForm, email: e.target.value })}
-                  className="w-full bg-slate-900 border border-slate-800 rounded px-3 py-2 text-slate-200 outline-none focus:border-cyan-500"
+                  className="w-full bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded px-3 py-2 text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-400 mb-1">
-                  Password (Opsional - otomatis dibuat bila kosong)
+                <label className="block text-[var(--text-secondary)] mb-1">
+                  Password (optional — generated when left blank)
                 </label>
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    placeholder="Minimal 6 karakter"
+                    placeholder="At least 6 characters"
                     value={createForm.password}
                     onChange={e => setCreateForm({ ...createForm, password: e.target.value })}
-                    className="flex-1 bg-slate-900 border border-slate-800 rounded px-3 py-2 text-slate-200 outline-none focus:border-cyan-500"
+                    className="flex-1 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded px-3 py-2 text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
                   />
                   <button
                     type="button"
                     onClick={() => setCreateForm({ ...createForm, password: `Trader_${Math.random().toString(36).slice(-6)}!26` })}
-                    className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-[10px]"
+                    className="px-2 py-1 bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-secondary)] rounded text-[10px]"
                   >
                     Generate
                   </button>
@@ -713,11 +713,11 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-400 mb-1">Role Authority</label>
+                  <label className="block text-[var(--text-secondary)] mb-1">Role Authority</label>
                   <select
                     value={createForm.role}
                     onChange={e => setCreateForm({ ...createForm, role: e.target.value as any })}
-                    className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-2 text-slate-200 outline-none focus:border-cyan-500"
+                    className="w-full bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded px-2.5 py-2 text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
                   >
                     <option value="USER">USER</option>
                     <option value="ADMIN">ADMIN</option>
@@ -725,11 +725,11 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-slate-400 mb-1">Subscription Tier</label>
+                  <label className="block text-[var(--text-secondary)] mb-1">Subscription Tier</label>
                   <select
                     value={createForm.plan}
                     onChange={e => setCreateForm({ ...createForm, plan: e.target.value as any })}
-                    className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-2 text-slate-200 outline-none focus:border-cyan-500"
+                    className="w-full bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded px-2.5 py-2 text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
                   >
                     <option value="FREE">FREE</option>
                     <option value="PRO">PRO</option>
@@ -744,28 +744,26 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
                   id="create-is-verified"
                   checked={createForm.is_verified}
                   onChange={e => setCreateForm({ ...createForm, is_verified: e.target.checked })}
-                  className="rounded bg-slate-900 border-slate-800 text-cyan-600 focus:ring-0 cursor-pointer"
+                  className="rounded bg-[var(--bg-surface)] border-[var(--border-subtle)] text-[var(--accent)] focus:ring-0 cursor-pointer"
                 />
-                <label htmlFor="create-is-verified" className="text-slate-300 cursor-pointer">
-                  Langsung verifikasi email akun ini (tidak perlu konfirmasi)
+                <label htmlFor="create-is-verified" className="text-[var(--text-secondary)] cursor-pointer">
+                  Verify this account email immediately (no confirmation needed)
                 </label>
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-slate-800">
+              <div className="flex justify-end gap-2 pt-3 border-t border-[var(--border-subtle)]">
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded transition cursor-pointer"
-                >
-                  Batal
-                </button>
+                  className="px-3 py-1.5 bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-secondary)] rounded transition cursor-pointer"
+                >Cancel</button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-4 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50"
+                  className="px-4 py-1.5 bg-[var(--accent)] hover:bg-[var(--accent)] text-white font-semibold rounded flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50"
                 >
                   {loading && <RefreshCw className="w-3 h-3 animate-spin" />}
-                  <span>Buat Akun</span>
+                  <span>Create account</span>
                 </button>
               </div>
             </form>
@@ -778,17 +776,17 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
       {/* ========================================================================= */}
       {editingUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade">
-          <div className="w-full max-w-md bg-slate-950 border border-slate-800 rounded-xl p-5 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div className="w-full max-w-md bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-xl p-5 shadow-[var(--shadow-overlay)] space-y-4">
+            <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-3">
               <div className="flex items-center gap-2">
-                <Edit2 className="w-4 h-4 text-cyan-400" />
-                <h3 className="text-sm font-mono font-bold text-slate-100 uppercase tracking-wider">
+                <Edit2 className="w-4 h-4 text-[var(--accent)]" />
+                <h3 className="text-sm font-mono font-bold text-[var(--text-primary)] uppercase tracking-wider">
                   KELOLA AKSES PENGGUNA
                 </h3>
               </div>
               <button
                 onClick={() => setEditingUser(null)}
-                className="text-slate-400 hover:text-slate-200 cursor-pointer"
+                className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -796,33 +794,33 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
 
             <form onSubmit={handleSaveEdit} className="space-y-3 font-mono text-xs">
               <div>
-                <label className="block text-slate-400 mb-1">Nama Lengkap</label>
+                <label className="block text-[var(--text-secondary)] mb-1">Nama Lengkap</label>
                 <input
                   type="text"
                   value={editForm.name}
                   onChange={e => setEditForm({ ...editForm, name: e.target.value })}
-                  className="w-full bg-slate-900 border border-slate-800 rounded px-3 py-2 text-slate-200 outline-none focus:border-cyan-500"
+                  className="w-full bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded px-3 py-2 text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-400 mb-1">Email</label>
+                <label className="block text-[var(--text-secondary)] mb-1">Email</label>
                 <input
                   type="email"
                   required
                   value={editForm.email}
                   onChange={e => setEditForm({ ...editForm, email: e.target.value })}
-                  className="w-full bg-slate-900 border border-slate-800 rounded px-3 py-2 text-slate-200 outline-none focus:border-cyan-500"
+                  className="w-full bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded px-3 py-2 text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-400 mb-1">Role Authority</label>
+                  <label className="block text-[var(--text-secondary)] mb-1">Role Authority</label>
                   <select
                     value={editForm.role}
                     onChange={e => setEditForm({ ...editForm, role: e.target.value as any })}
-                    className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-2 text-slate-200 outline-none focus:border-cyan-500"
+                    className="w-full bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded px-2.5 py-2 text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
                   >
                     <option value="USER">USER</option>
                     <option value="ADMIN">ADMIN</option>
@@ -830,11 +828,11 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-slate-400 mb-1">Subscription Tier</label>
+                  <label className="block text-[var(--text-secondary)] mb-1">Subscription Tier</label>
                   <select
                     value={editForm.plan}
                     onChange={e => setEditForm({ ...editForm, plan: e.target.value as any })}
-                    className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-2 text-slate-200 outline-none focus:border-cyan-500"
+                    className="w-full bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded px-2.5 py-2 text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
                   >
                     <option value="FREE">FREE</option>
                     <option value="PRO">PRO</option>
@@ -844,11 +842,11 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
               </div>
 
               <div>
-                <label className="block text-slate-400 mb-1">Status Langganan</label>
+                <label className="block text-[var(--text-secondary)] mb-1">Status Langganan</label>
                 <select
                   value={editForm.subscription_status}
                   onChange={e => setEditForm({ ...editForm, subscription_status: e.target.value })}
-                  className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-2 text-slate-200 outline-none focus:border-cyan-500"
+                  className="w-full bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded px-2.5 py-2 text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
                 >
                   <option value="active">Active</option>
                   <option value="trialing">Trialing</option>
@@ -863,28 +861,26 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
                   id="edit-is-verified"
                   checked={editForm.is_verified}
                   onChange={e => setEditForm({ ...editForm, is_verified: e.target.checked })}
-                  className="rounded bg-slate-900 border-slate-800 text-cyan-600 focus:ring-0 cursor-pointer"
+                  className="rounded bg-[var(--bg-surface)] border-[var(--border-subtle)] text-[var(--accent)] focus:ring-0 cursor-pointer"
                 />
-                <label htmlFor="edit-is-verified" className="text-slate-300 cursor-pointer">
+                <label htmlFor="edit-is-verified" className="text-[var(--text-secondary)] cursor-pointer">
                   Status Terverifikasi (Email Verified)
                 </label>
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-slate-800">
+              <div className="flex justify-end gap-2 pt-3 border-t border-[var(--border-subtle)]">
                 <button
                   type="button"
                   onClick={() => setEditingUser(null)}
-                  className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded transition cursor-pointer"
-                >
-                  Batal
-                </button>
+                  className="px-3 py-1.5 bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-secondary)] rounded transition cursor-pointer"
+                >Cancel</button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-4 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50"
+                  className="px-4 py-1.5 bg-[var(--accent)] hover:bg-[var(--accent)] text-white font-semibold rounded flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50"
                 >
                   {loading && <RefreshCw className="w-3 h-3 animate-spin" />}
-                  <span>Simpan Perubahan</span>
+                  <span>Save changes</span>
                 </button>
               </div>
             </form>
@@ -897,30 +893,30 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
       {/* ========================================================================= */}
       {deletingUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade">
-          <div className="w-full max-w-md bg-slate-950 border border-rose-900/80 rounded-xl p-5 shadow-2xl space-y-4">
-            <div className="flex items-center gap-3 text-rose-400">
-              <div className="p-2 rounded-full bg-rose-950 border border-rose-800">
-                <Trash2 className="w-5 h-5 text-rose-400" />
+          <div className="w-full max-w-md bg-[var(--bg-canvas)] border border-[var(--bearish-border)] rounded-xl p-5 shadow-[var(--shadow-overlay)] space-y-4">
+            <div className="flex items-center gap-3 text-[var(--bearish)]">
+              <div className="p-2 rounded-full bg-[var(--bearish-bg)] border border-[var(--bearish-border)]">
+                <Trash2 className="w-5 h-5 text-[var(--bearish)]" />
               </div>
               <div>
-                <h3 className="text-sm font-mono font-bold text-slate-100 uppercase tracking-wider">
+                <h3 className="text-sm font-mono font-bold text-[var(--text-primary)] uppercase tracking-wider">
                   HAPUS AKUN USER
                 </h3>
-                <p className="text-[11px] font-mono text-rose-300">Tindakan ini tidak dapat dibatalkan</p>
+                <p className="text-[11px] font-mono text-[var(--bearish)]">This action cannot be undone</p>
               </div>
             </div>
 
-            <div className="bg-rose-950/30 border border-rose-900/50 rounded-lg p-3 font-mono text-xs space-y-2 text-slate-300">
+            <div className="bg-[var(--bearish-bg)] border border-[var(--bearish-border)] rounded-lg p-3 font-mono text-xs space-y-2 text-[var(--text-secondary)]">
               <div>
-                Apakah Anda yakin ingin menghapus akun berikut secara permanen?
+                Delete the following account permanently?
               </div>
-              <div className="p-2 rounded bg-slate-900/80 border border-slate-800 space-y-1">
-                <div className="text-slate-100 font-bold">{deletingUser.name || 'Trader'}</div>
-                <div className="text-cyan-400">{deletingUser.email}</div>
-                <div className="text-[10px] text-slate-500">ID: {deletingUser.id} • Role: {deletingUser.role}</div>
+              <div className="p-2 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-1">
+                <div className="text-[var(--text-primary)] font-bold">{deletingUser.name || 'Trader'}</div>
+                <div className="text-[var(--accent)]">{deletingUser.email}</div>
+                <div className="text-[10px] text-[var(--text-muted)]">ID: {deletingUser.id} • Role: {deletingUser.role}</div>
               </div>
-              <p className="text-[11px] text-slate-400">
-                Seluruh data watchlist, token verifikasi, preferensi antarmuka, dan sesi login pengguna ini akan dihapus dari sistem.
+              <p className="text-[11px] text-[var(--text-secondary)]">
+                All watchlist data, verification tokens, interface preferences, and login sessions for this user will be removed from the system.
               </p>
             </div>
 
@@ -928,18 +924,16 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
               <button
                 type="button"
                 onClick={() => setDeletingUser(null)}
-                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs font-mono transition cursor-pointer"
-              >
-                Batal
-              </button>
+                className="px-3 py-1.5 bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-secondary)] rounded text-xs font-mono transition cursor-pointer"
+              >Cancel</button>
               <button
                 type="button"
                 onClick={handleDeleteUser}
                 disabled={loading}
-                className="px-4 py-1.5 bg-rose-600 hover:bg-rose-500 text-white font-mono text-xs font-semibold rounded flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50"
+                className="px-4 py-1.5 bg-[var(--bearish)] hover:bg-[var(--bearish)] text-white font-mono text-xs font-semibold rounded flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50"
               >
                 {loading && <RefreshCw className="w-3 h-3 animate-spin" />}
-                <span>Hapus Permanen</span>
+                <span>Delete permanently</span>
               </button>
             </div>
           </div>
@@ -951,11 +945,11 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
       {/* ========================================================================= */}
       {passwordResetUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade">
-          <div className="w-full max-w-md bg-slate-950 border border-slate-800 rounded-xl p-5 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div className="w-full max-w-md bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-xl p-5 shadow-[var(--shadow-overlay)] space-y-4">
+            <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-3">
               <div className="flex items-center gap-2">
-                <Key className="w-4 h-4 text-amber-400" />
-                <h3 className="text-sm font-mono font-bold text-slate-100 uppercase tracking-wider">
+                <Key className="w-4 h-4 text-[var(--warning)]" />
+                <h3 className="text-sm font-mono font-bold text-[var(--text-primary)] uppercase tracking-wider">
                   RESET PASSWORD USER
                 </h3>
               </div>
@@ -964,67 +958,65 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
                   setPasswordResetUser(null);
                   setGeneratedTempPass(null);
                 }}
-                className="text-slate-400 hover:text-slate-200 cursor-pointer"
+                className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <div className="font-mono text-xs space-y-3">
-              <div className="p-2.5 rounded bg-slate-900 border border-slate-800">
-                <span className="text-slate-400">Target Akun: </span>
-                <span className="text-slate-200 font-bold">{passwordResetUser.email}</span>
+              <div className="p-2.5 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
+                <span className="text-[var(--text-secondary)]">Target account: </span>
+                <span className="text-[var(--text-primary)] font-bold">{passwordResetUser.email}</span>
               </div>
 
               {generatedTempPass ? (
-                <div className="p-3.5 rounded-lg bg-emerald-950/60 border border-emerald-800/80 space-y-2">
-                  <div className="text-emerald-300 font-semibold flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <div className="p-3.5 rounded-lg bg-[var(--bullish-bg)] border border-[var(--bullish-border)] space-y-2">
+                  <div className="text-[var(--bullish)] font-semibold flex items-center gap-1.5">
+                    <CheckCircle2 className="w-4 h-4 text-[var(--bullish)]" />
                     <span>Password Baru Berhasil Disimpan:</span>
                   </div>
-                  <div className="flex items-center justify-between bg-slate-950 p-2 rounded border border-emerald-800">
-                    <span className="text-sm font-mono font-bold text-emerald-400 select-all">
+                  <div className="flex items-center justify-between bg-[var(--bg-canvas)] p-2 rounded border border-[var(--bullish-border)]">
+                    <span className="text-sm font-mono font-bold text-[var(--bullish)] select-all">
                       {generatedTempPass}
                     </span>
                     <button
                       onClick={() => copyToClipboard(generatedTempPass, 'temp_pass')}
-                      className="flex items-center gap-1 px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[10px] cursor-pointer"
+                      className="flex items-center gap-1 px-2 py-1 rounded bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-primary)] text-[10px] cursor-pointer"
                     >
-                      {hasCopied === 'temp_pass' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                      {hasCopied === 'temp_pass' ? <Check className="w-3 h-3 text-[var(--bullish)]" /> : <Copy className="w-3 h-3" />}
                       <span>{hasCopied === 'temp_pass' ? 'Tersalin' : 'Salin'}</span>
                     </button>
                   </div>
-                  <p className="text-[10px] text-slate-400">
-                    Berikan kata sandi ini kepada pengguna untuk masuk ke terminal.
+                  <p className="text-[10px] text-[var(--text-secondary)]">
+                    Give this password to the user so they can sign in to the terminal.
                   </p>
                 </div>
               ) : (
                 <form onSubmit={handleExecutePasswordReset} className="space-y-3">
                   <div>
-                    <label className="block text-slate-400 mb-1">
-                      Password Baru (Kosongkan untuk membuat password otomatis)
+                    <label className="block text-[var(--text-secondary)] mb-1">
+                      New password (leave blank to generate one automatically)
                     </label>
                     <input
                       type="text"
                       placeholder="e.g. TraderNewPass#2026"
                       value={resetPasswordInput}
                       onChange={e => setResetPasswordInput(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-800 rounded px-3 py-2 text-slate-200 outline-none focus:border-amber-500"
+                      className="w-full bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded px-3 py-2 text-[var(--text-primary)] outline-none focus:border-[var(--warning-border)]"
                     />
                   </div>
 
-                  <div className="flex justify-end gap-2 pt-2 border-t border-slate-800">
+                  <div className="flex justify-end gap-2 pt-2 border-t border-[var(--border-subtle)]">
                     <button
                       type="button"
                       onClick={() => setPasswordResetUser(null)}
-                      className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded transition cursor-pointer"
-                    >
-                      Batal
-                    </button>
+                      className="px-3 py-1.5 bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-secondary)] rounded transition cursor-pointer"
+                    >Cancel</button>
                     <button
                       type="submit"
                       disabled={loading}
-                      className="px-4 py-1.5 bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold rounded flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50"
+                      className="px-4 py-1.5 bg-[var(--warning)] hover:bg-[var(--warning)] text-[var(--text-primary)] font-bold rounded flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50"
                     >
                       {loading && <RefreshCw className="w-3 h-3 animate-spin" />}
                       <span>Reset Password Sekarang</span>
@@ -1042,17 +1034,17 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({
       {/* ========================================================================= */}
       {showSmtpModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto animate-fade">
-          <div className="w-full max-w-3xl bg-slate-950 border border-cyan-800/80 rounded-2xl p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div className="w-full max-w-3xl bg-[var(--bg-canvas)] border border-[var(--accent)] rounded-2xl p-6 shadow-[var(--shadow-overlay)] space-y-4 max-h-[92vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-3">
               <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-cyan-400" />
-                <h3 className="text-sm font-bold text-slate-100 font-mono uppercase tracking-wider">
-                  UJI KONEKSI SMTP SERVER
+                <Mail className="w-4 h-4 text-[var(--accent)]" />
+                <h3 className="text-sm font-bold text-[var(--text-primary)] font-mono uppercase tracking-wider">
+                  SMTP SERVER CONNECTION TESTER
                 </h3>
               </div>
               <button
                 onClick={() => setShowSmtpModal(false)}
-                className="text-slate-400 hover:text-slate-200 cursor-pointer p-1 rounded-lg hover:bg-slate-800"
+                className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer p-1 rounded-lg hover:bg-[var(--bg-section-alt)]"
               >
                 <X className="w-4 h-4" />
               </button>

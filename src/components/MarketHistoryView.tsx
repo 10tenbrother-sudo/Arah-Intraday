@@ -20,7 +20,6 @@ import {
   Filter,
   Sliders,
   Scale,
-  Save,
   Sparkles,
   ArrowUpRight,
   ArrowDownRight,
@@ -28,6 +27,7 @@ import {
   CalendarDays,
 } from 'lucide-react';
 import { api } from '../lib/api';
+import { PageHeader } from './shared/PageHeader';
 import {
   DailyMarketSnapshot,
   MarketMemoryInsight,
@@ -49,7 +49,6 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
   const [historicalEvents, setHistoricalEvents] = useState<MarketEvent[]>([]);
   const [historicalMacro, setHistoricalMacro] = useState<EconomicEvent[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [compareDate, setCompareDate] = useState<string | null>('2026-09-19');
   const [compareSnapshot, setCompareSnapshot] = useState<DailyMarketSnapshot | null>(null);
   const [isCompareMode, setIsCompareMode] = useState<boolean>(false);
@@ -131,27 +130,6 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
       })
       .catch(err => console.error('[History] Error fetching compare detail:', err));
   }, [compareDate, isCompareMode]);
-
-  const handleGenerateSnapshot = async () => {
-    setIsGenerating(true);
-    setStatusMessage('Compiling daily market snapshot from all real feeds...');
-    try {
-      const res = await api.generateDailySnapshot(selectedDate);
-      if (res.success && res.snapshot) {
-        setActiveSnapshot(res.snapshot);
-        // Refresh snapshots list
-        const updated = await api.getDailySnapshots('ALL', undefined, 30);
-        setSnapshots(updated.snapshots);
-        setStatusMessage(`Daily snapshot for ${selectedDate} saved permanently to database.`);
-        setTimeout(() => setStatusMessage(null), 4000);
-      }
-    } catch (err: any) {
-      setStatusMessage(`Error saving snapshot: ${err?.message || 'Failed'}`);
-      setTimeout(() => setStatusMessage(null), 4000);
-    } finally {
-      setIsGenerating(false);
-    }
-  };
 
   // 14 Target assets
   const target14Keys = [
@@ -245,41 +223,40 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
   return (
     <div className="space-y-4 pb-12 font-sans">
       {/* 1. ARCHITECTURAL PIPELINE BANNER: NEWS → MACRO → CS → REACTION → AI → BIAS → HISTORY */}
-      <div className="terminal-panel p-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b pb-3 mb-3" style={{ borderColor: 'var(--border-subtle)' }}>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-xs bg-[var(--accent)]" />
-              <h1 className="section-title text-xs sm:text-sm text-[var(--text-primary)]">
-                MARKET INTELLIGENCE ARCHITECTURE & PERMANENT MEMORY
-              </h1>
+      <PageHeader
+        eyebrow="RESEARCH · HISTORICAL DATA"
+        title="Market intelligence architecture"
+        description="Continuous multi-session archive · Zero simulated loss · Institutional persistence dossier."
+        actions={
+          <>
+            <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-md bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-[11px] font-mono text-[var(--text-secondary)]">
+              <span className="w-2 h-2 rounded-full bg-[var(--bullish)] animate-pulse" />
+              <span className="font-semibold text-[var(--text-primary)]">AUTO-ARCHIVE ACTIVE</span>
+              <span className="text-[var(--text-muted)]">·</span>
+              <span className="text-[var(--text-muted)]">OPEN → CLOSE (04:00 WIB)</span>
             </div>
-            <p className="text-xs text-[var(--text-secondary)] mt-1 font-mono">
-              Continuous multi-session archive &bull; Zero simulated loss &bull; Institutional persistence dossier.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2 font-mono">
-            <button
-              onClick={handleGenerateSnapshot}
-              disabled={isGenerating}
-              className="px-3 py-1.5 rounded bg-[var(--accent)] text-white hover:opacity-90 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50 shadow-xs"
-            >
-              <Save className={`w-3.5 h-3.5 ${isGenerating ? 'animate-spin' : ''}`} />
-              <span>{isGenerating ? 'CAPTURING...' : 'SNAPSHOT SESSION'}</span>
-            </button>
             <button
               onClick={loadInitialData}
               disabled={isLoading}
-              className="p-1.5 rounded bg-[var(--bg-surface)] hover:bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition cursor-pointer disabled:opacity-50"
+              className="h-8 w-8 rounded-md bg-[var(--bg-surface)] hover:bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition cursor-pointer disabled:opacity-50 flex items-center justify-center"
               title="Reload memory database"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-[var(--accent)]' : ''}`} />
             </button>
-          </div>
-        </div>
+          </>
+        }
+      />
 
+      <div className="terminal-panel p-4 space-y-3">
         {/* Pipeline Step Visualizer */}
+        <div className="section-head flex-wrap gap-y-2">
+          <span className="metadata-label text-[10px] text-[var(--text-muted)]">
+            Memory pipeline
+          </span>
+          <span className="metadata-label text-[9.5px] text-[var(--text-muted)]">
+            Step 7 · permanent memory
+          </span>
+        </div>
         <div className="overflow-x-auto pb-1">
           <div className="flex items-center min-w-[760px] text-[11px] font-mono">
             {[

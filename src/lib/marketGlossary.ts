@@ -9,207 +9,207 @@ export interface GlossaryItem {
 
 export const MARKET_GLOSSARY: Record<string, GlossaryItem> = {
   WIB: {
-    term: 'Waktu Indonesia Barat (WIB)',
+    term: 'Western Indonesian Time (WIB)',
     shortLabel: 'WIB',
     category: 'TIMING',
-    definition: 'Zona Waktu Indonesia Barat (UTC+7 / Jakarta time). Jam acuan baku untuk memantau pembukaan dan penutupan sesi bursa internasional.',
-    formulaOrInterpretation: 'WIB = UTC + 7 Jam. Sesi London buka ~14:00/15:00 WIB, New York buka ~19:00/20:00 WIB.',
-    whyItMatters: 'Memudahkan trader di Indonesia mengetahui jadwal rilis makro dan overlap likuiditas bursa tanpa perlu konversi manual.'
+    definition: 'UTC+7 / Jakarta time. The desk reference clock for tracking international session opens and closes.',
+    formulaOrInterpretation: 'WIB = UTC + 7h. London opens around 14:00-15:00 WIB, New York around 19:00-20:00 WIB.',
+    whyItMatters: 'Lets traders track macro release schedules and liquidity overlaps without manual conversion.'
   },
   UTC: {
     term: 'Coordinated Universal Time (UTC)',
     shortLabel: 'UTC',
     category: 'TIMING',
-    definition: 'Standar waktu global universal tanpa daylight saving time yang digunakan oleh institusi keuangan dan feed berita perbankan.',
-    formulaOrInterpretation: 'UTC+0. Seluruh stempel data mentah disimpan dalam UTC sebelum dikonversi ke waktu lokal trader.',
-    whyItMatters: 'Mencegah perbedaan waktu saat sinkronisasi feed antar bursa (Tokyo, London, New York).'
+    definition: 'The global time standard without daylight saving, used by financial institutions and banking news feeds.',
+    formulaOrInterpretation: 'UTC+0. All raw data is stamped in UTC before conversion to the trader local time.',
+    whyItMatters: 'Prevents timing mismatches when synchronising feeds across exchanges (Tokyo, London, New York).'
   },
   CCY: {
-    term: 'Currency (Mata Uang)',
+    term: 'Currency',
     shortLabel: 'CCY',
     category: 'CURRENCY',
-    definition: 'Kode standar internasional 3-huruf (ISO 4217) yang merepresentasikan mata uang sovereign (USD, EUR, GBP, JPY, AUD, CAD, CHF, NZD).',
-    whyItMatters: 'Menentukan aset atau pasangan mata uang mana yang akan langsung terpengaruh oleh data ekonomi terkait.'
+    definition: 'Three-letter international standard code (ISO 4217) representing a sovereign currency (USD, EUR, GBP, JPY, AUD, CAD, CHF, NZD).',
+    whyItMatters: 'Determines which asset or pair is directly affected by a given economic release.'
   },
   ACTUAL: {
-    term: 'Nilai Aktual (Actual Release)',
+    term: 'Actual Release',
     shortLabel: 'ACTUAL',
     category: 'MACRO',
-    definition: 'Angka resmi yang diterbitkan langsung oleh badan statistik nasional (misal: US BLS, BEA, Eurostat, ONS).',
-    formulaOrInterpretation: 'Dibandingkan langsung dengan Konsensus/Forecast untuk menghitung deviasi kejutan (Surprise).',
-    whyItMatters: 'Merupakan katalis utama pergerakan harga instan (re-pricing) di pasar keuangan global.'
+    definition: 'The official figure published directly by a national statistics body (for example US BLS, BEA, Eurostat, ONS).',
+    formulaOrInterpretation: 'Compared directly against consensus/forecast to compute the surprise deviation.',
+    whyItMatters: 'The primary catalyst for instant re-pricing across global financial markets.'
   },
   FORECAST: {
-    term: 'Konsensus / Forecast',
+    term: 'Consensus / Forecast',
     shortLabel: 'FORECAST',
     category: 'MACRO',
-    definition: 'Estimasi median dari survei puluhan ekonom institusional dan bank investasi sebelum data resmi dirilis.',
-    formulaOrInterpretation: 'Harga pasar umumnya telah memperhitungkan (priced in) angka forecast ini.',
-    whyItMatters: 'Jika nilai aktual sama persis dengan forecast, reaksi harga seringkali minimal karena sudah diantisipasi pasar.'
+    definition: 'Median estimate from surveys of institutional economists and investment banks ahead of the official release.',
+    formulaOrInterpretation: 'Market price has generally already priced this forecast in.',
+    whyItMatters: 'If the actual matches the forecast exactly, the price reaction is often minimal because the market anticipated it.'
   },
   PREVIOUS: {
-    term: 'Nilai Sebelumnya (Previous)',
+    term: 'Previous Reading',
     shortLabel: 'PREVIOUS',
     category: 'MACRO',
-    definition: 'Angka hasil rilis pada periode pelaporan sebelumnya (bulan lalu / kuartal lalu), termasuk revisi resmi terbaru.',
-    formulaOrInterpretation: 'Digunakan untuk mengukur arah tren makro (akselerasi vs deselerasi ekonomi).',
-    whyItMatters: 'Revisi besar pada angka previous sering memicu volatilitas lanjutan meski angka aktual sesuai forecast.'
+    definition: 'The figure from the prior reporting period (last month / last quarter), including the latest official revision.',
+    formulaOrInterpretation: 'Used to gauge the direction of the macro trend (acceleration versus deceleration).',
+    whyItMatters: 'Large revisions to the previous figure often trigger follow-through volatility even when the actual meets forecast.'
   },
   SURPRISE: {
-    term: 'Macro Surprise (Deviasi Kejutan)',
+    term: 'Macro Surprise',
     shortLabel: 'SURPRISE',
     category: 'MACRO',
-    definition: 'Selisih matematis antara angka Aktual dan angka Konsensus/Forecast.',
-    formulaOrInterpretation: 'BEAT = Aktual lebih tinggi dari konsensus. MISS = Aktual lebih rendah dari konsensus.',
-    whyItMatters: 'Semakin besar deviasi kejutan (Surprise), semakin tajam pergerakan volatilitas dan order flow institusi.'
+    definition: 'The mathematical gap between the actual figure and the consensus/forecast.',
+    formulaOrInterpretation: 'BEAT = actual above consensus. MISS = actual below consensus.',
+    whyItMatters: 'The larger the surprise, the sharper the volatility and institutional order flow.'
   },
   BEAT: {
-    term: 'Data Beat (Melampaui Ekspektasi)',
+    term: 'Data Beat',
     shortLabel: 'BEAT',
     category: 'MACRO',
-    definition: 'Hasil data ekonomi aktual keluar lebih kuat/tinggi daripada proyeksi konsensus analis.',
-    whyItMatters: 'Biasanya memicu penguatan mata uang negara terkait (misal: NFP Beat -> USD menguat).'
+    definition: 'The actual economic figure came in stronger or higher than the analyst consensus.',
+    whyItMatters: 'Typically strengthens the related currency (for example an NFP beat supports USD).'
   },
   MISS: {
-    term: 'Data Miss (Meleset di Bawah Ekspektasi)',
+    term: 'Data Miss',
     shortLabel: 'MISS',
     category: 'MACRO',
-    definition: 'Hasil data ekonomi aktual keluar lebih lemah/rendah daripada proyeksi konsensus analis.',
-    whyItMatters: 'Biasanya memicu pelemahan mata uang terkait atau memicu ekspektasi pemangkasan suku bunga acuan.'
+    definition: 'The actual economic figure came in weaker or lower than the analyst consensus.',
+    whyItMatters: 'Typically weakens the related currency or raises expectations of a policy rate cut.'
   },
   IMPACT: {
-    term: 'Tingkat Dampak Makro (Impact Tier)',
+    term: 'Impact Tier',
     shortLabel: 'IMPACT',
     category: 'MACRO',
-    definition: 'Klasifikasi potensi volatilitas yang dapat ditimbulkan rilis berita pada instrumen terkait.',
-    formulaOrInterpretation: 'CRITICAL (merah): CPI, NFP, Suku Bunga. HIGH (kuning): Retail Sales, GDP, PMI. MEDIUM (biru): Trade Balance.',
-    whyItMatters: 'Membantu trader mengelola risiko posisi dan menghindari pelebaran spread tiba-tiba.'
+    definition: 'Classification of the volatility a news release can generate in the related instruments.',
+    formulaOrInterpretation: 'CRITICAL (red): CPI, NFP, policy rates. HIGH (amber): retail sales, GDP, PMI. MEDIUM (blue): trade balance.',
+    whyItMatters: 'Helps traders manage position risk and avoid sudden spread widening.'
   },
   OVERALL_BIAS: {
-    term: 'Intraday Market Bias (Arah Kecenderungan)',
+    term: 'Intraday Market Bias',
     shortLabel: 'BIAS',
     category: 'INTELLIGENCE',
-    definition: 'Sintesis arah tren intraday institusional: BULLISH (naik), BEARISH (turun), NEUTRAL (sideways), atau MIXED (tarik-menarik).',
-    formulaOrInterpretation: 'Dihitung dari kombinasi order flow, diferensial suku bunga, dan tren teknikal multi-timeframe.',
-    whyItMatters: 'Mengarahkan trader untuk trading searah dengan momentum dominan institusi (trend following).'
+    definition: 'Synthesis of the institutional intraday trend direction: BULLISH, BEARISH, NEUTRAL (sideways), or MIXED (two-way).',
+    formulaOrInterpretation: 'Derived from order flow, rate differentials, and multi-timeframe technical trend.',
+    whyItMatters: 'Steers traders to trade with the dominant institutional momentum (trend following).'
   },
   CONFIDENCE: {
-    term: 'Confidence Score (Tingkat Keyakinan Algoritmik)',
+    term: 'Confidence Score',
     shortLabel: 'CONF',
     category: 'INTELLIGENCE',
-    definition: 'Persentase tingkat keyakinan sistem (0 - 100%) terhadap arah bias yang dianalisis.',
-    formulaOrInterpretation: 'Semakin banyak variabel makro dan likuiditas yang searah, semakin tinggi skor confidence (>80% = Tinggi).',
-    whyItMatters: 'Membantu trader memfilter sinyal berprobabilitas tinggi vs sinyal spekulatif.'
+    definition: 'The system level of confidence (0 - 100%) in the analysed bias direction.',
+    formulaOrInterpretation: 'The more macro and liquidity variables agree, the higher the confidence score (>80% = high).',
+    whyItMatters: 'Helps traders filter high-probability signals from speculative ones.'
   },
   CHANGE_24H: {
     term: '24H Percentage Change',
     shortLabel: '24H CHG',
     category: 'PRICE_ACTION',
-    definition: 'Persentase perubahan harga saat ini dibandingkan dengan level penutupan 24 jam sebelumnya.',
-    formulaOrInterpretation: '((Harga Sekarang - Harga 24 Jam Lalu) / Harga 24 Jam Lalu) * 100%',
-    whyItMatters: 'Mengidentifikasi aset mana yang sedang mengalami aliran dana masuk (inflow) atau keluar (outflow) terkuat.'
+    definition: 'Percentage change in the current price versus the close 24 hours earlier.',
+    formulaOrInterpretation: '((Current Price - Price 24h Ago) / Price 24h Ago) * 100%',
+    whyItMatters: 'Identifies which assets are seeing the strongest inflow or outflow of funds.'
   },
   RANGE_24H: {
     term: '24H Price Range (High / Low)',
     shortLabel: '24H RANGE',
     category: 'PRICE_ACTION',
-    definition: 'Rentang harga tertinggi (High) dan terendah (Low) yang tercapai dalam kurun waktu 24 jam terakhir.',
-    whyItMatters: 'Menunjukkan batas volatilitas harian dan posisi harga saat ini terhadap batas ekstrem harian.'
+    definition: 'The highest and lowest prices reached over the past 24 hours.',
+    whyItMatters: 'Shows the daily volatility envelope and where price sits relative to the daily extremes.'
   },
   SPREAD: {
-    term: 'Bid-Ask Spread (Spread Likuiditas)',
+    term: 'Bid-Ask Spread',
     shortLabel: 'SPREAD',
     category: 'EXECUTION',
-    definition: 'Selisih harga antara penawaran beli tertinggi (Bid) dan harga jual terendah (Ask) dari penyedia likuiditas.',
-    whyItMatters: 'Biaya transaksi langsung. Saat berita makro rilis, spread dapat melebar drastis.'
+    definition: 'The difference between the highest bid and lowest ask from liquidity providers.',
+    whyItMatters: 'A direct transaction cost. Around macro releases the spread can widen sharply.'
   },
   ATR: {
     term: 'Average True Range (ATR)',
     shortLabel: 'ATR',
     category: 'PRICE_ACTION',
-    definition: 'Indikator teknikal yang mengukur rentang rata-rata pergerakan harga harian dalam periode tertentu (biasanya 14 hari).',
-    formulaOrInterpretation: 'ATR tinggi = pasar sedang sangat volatil; ATR rendah = fase konsolidasi/kompresi.',
-    whyItMatters: 'Digunakan institusi untuk menentukan jarak Stop Loss yang rasional agar tidak ter-sweep noise pasar.'
+    definition: 'A technical indicator measuring the average daily price range over a set period (usually 14 days).',
+    formulaOrInterpretation: 'High ATR = highly volatile market; low ATR = consolidation / compression phase.',
+    whyItMatters: 'Institutions use it to set rational stop-loss distance without getting swept by market noise.'
   },
   ADR: {
     term: 'Average Daily Range (ADR Usage)',
     shortLabel: 'ADR',
     category: 'PRICE_ACTION',
-    definition: 'Persentase kapasitas pergerakan harian rata-rata yang telah dihabiskan oleh harga pada sesi hari ini.',
-    formulaOrInterpretation: 'Jika ADR Usage > 90%, aset mendekati titik jenuh dan potensi retracement meningkat.',
-    whyItMatters: 'Mencegah trader mengejar harga yang sudah mengalami overextension (terlalu jauh dari mean).'
+    definition: 'The percentage of the average daily range already consumed by price in the current session.',
+    formulaOrInterpretation: 'If ADR usage > 90%, the asset is near exhaustion and retracement risk rises.',
+    whyItMatters: 'Stops traders chasing price that is already overextended relative to its mean.'
   },
   REACTION_HORIZONS: {
     term: 'Reaction Horizons (R1M, R5M, R15M, R1H, R4H)',
     shortLabel: 'REACTION',
     category: 'MACRO',
-    definition: 'Persentase pergerakan harga riil pada aset acuan utama yang tercatat setelah rilis berita pada jendela waktu 1 menit, 5 menit, 15 menit, 1 jam, dan 4 jam.',
-    whyItMatters: 'Membuktikan apakah rilis berita memicu pergerakan tren berkelanjutan atau hanya lonjakan spike sesaat.'
+    definition: 'The real price move recorded in the primary benchmark asset after a news release, measured over 1 minute, 5 minutes, 15 minutes, 1 hour, and 4 hours.',
+    whyItMatters: 'Proves whether a release drove a sustained trend or only a momentary spike.'
   },
   PRIMARY_ASSET: {
-    term: 'Primary Benchmark Asset (Aset Acuan)',
+    term: 'Primary Benchmark Asset',
     shortLabel: 'BENCHMARK',
     category: 'MACRO',
-    definition: 'Instrumen paling likuid yang dipantau sistem untuk mengukur transmisi dampak berita (contoh: DXY untuk USD, US10Y untuk Yield, EURUSD untuk Eurozone).',
-    whyItMatters: 'Menjadi acuan standar untuk mengukur korelasi lintas pasar (intermarket analysis).'
+    definition: 'The most liquid instrument the system tracks to measure news transmission (for example DXY for USD, US10Y for yields, EURUSD for the Eurozone).',
+    whyItMatters: 'Serves as the standard reference for cross-market correlation analysis.'
   },
   FUNDAMENTAL_IMPLICATION: {
-    term: 'Fundamental Implication (Implikasi Makro)',
+    term: 'Fundamental Implication',
     shortLabel: 'FUNDAMENTAL',
     category: 'INTELLIGENCE',
-    definition: 'Analisis tesis teoritis jangka menengah mengenai arah kebijakan suku bunga bank sentral (Hawkish vs Dovish) akibat data ekonomi terbaru.',
-    whyItMatters: 'Membantu trader memahami arah tren besar (macro regime) di luar pergerakan scalping jangka pendek.'
+    definition: 'Medium-term theoretical analysis of central bank policy direction (hawkish versus dovish) implied by the latest economic data.',
+    whyItMatters: 'Helps traders understand the macro regime beyond short-term scalping moves.'
   },
   ACTUAL_MARKET_REACTION: {
-    term: 'Actual Market Reaction (Reaksi Riil Likuiditas)',
-    shortLabel: 'REAKSI PASAR',
+    term: 'Actual Market Reaction',
+    shortLabel: 'MARKET REACTION',
     category: 'INTELLIGENCE',
-    definition: 'Catatan empiris pergerakan harga, volatilitas spread, dan absorpsi likuiditas yang diamati langsung di pasar saat peristiwa terjadi.',
-    whyItMatters: 'Memverifikasi apakah pergerakan pasar nyata sejalan dengan teori fundamental atau terjadi deviasi aliran dana (flow mismatch).'
+    definition: 'Empirical record of price movement, spread volatility, and liquidity absorption observed live as the event unfolded.',
+    whyItMatters: 'Verifies whether the real market move matched the fundamental theory or showed a flow mismatch.'
   },
   CURRENCY_STRENGTH: {
-    term: 'Currency Strength Score (Skor Kekuatan Mata Uang)',
+    term: 'Currency Strength Score',
     shortLabel: 'STRENGTH',
     category: 'CURRENCY',
-    definition: 'Skor kekuatan relatif (skala 0.0 - 10.0) yang mengukur performa suatu mata uang terhadap 7 mata uang utama lainnya.',
-    formulaOrInterpretation: 'Skor > 7.0 = Kuat (Strong); 4.5 - 5.5 = Netral; < 3.0 = Lemah (Weak).',
-    whyItMatters: 'Membantu memasangkan mata uang terkuat dengan mata uang terlemah untuk peluang trading tren dengan probabilitas tertinggi.'
+    definition: 'A relative strength score (0.0 - 10.0 scale) measuring one currency against the other seven majors.',
+    formulaOrInterpretation: 'Score > 7.0 = strong; 4.5 - 5.5 = neutral; < 3.0 = weak.',
+    whyItMatters: 'Helps pair the strongest currency against the weakest for the highest-probability trend trades.'
   },
   DIVERGENCE_DELTA: {
-    term: 'Divergence Delta (Diferensial Kekuatan)',
+    term: 'Divergence Delta',
     shortLabel: 'DELTA',
     category: 'CURRENCY',
-    definition: 'Selisih matematis antara skor kekuatan Base Currency dan Quote Currency pada suatu pasangan mata uang.',
-    formulaOrInterpretation: 'Delta = Skor Base - Skor Quote. Delta >= +4.0 (Strong Buy); Delta <= -4.0 (Strong Sell); Delta dekat 0 (Chop/Sideways).',
-    whyItMatters: 'Pasangan dengan delta tinggi memiliki momentum tren paling bersih, sedangkan delta rendah rawan false breakout.'
+    definition: 'The mathematical gap between the base and quote currency strength scores of a pair.',
+    formulaOrInterpretation: 'Delta = base score - quote score. Delta >= +4.0 (strong buy); <= -4.0 (strong sell); near 0 (chop/sideways).',
+    whyItMatters: 'High-delta pairs carry the cleanest trend momentum, while low-delta pairs are prone to false breakouts.'
   },
   PRIME_PAIR: {
     term: 'Prime Trade Opportunity',
     shortLabel: 'PRIME',
     category: 'EXECUTION',
-    definition: 'Klasifikasi pasangan mata uang dengan disparitas kekuatan fundamental tinggi (> 4.0 delta) yang ideal untuk strategi trend-following.',
-    whyItMatters: 'Menghemat waktu analisa trader dengan langsung menyaring pasangan paling menguntungkan.'
+    definition: 'Pairs with high fundamental strength dispersion (delta above 4.0) that suit trend-following strategies.',
+    whyItMatters: 'Saves analysis time by filtering straight to the most favourable pairs.'
   },
   CHOP_AVOID: {
     term: 'Chop / Whipsaw Avoid Tier',
     shortLabel: 'CHOP',
     category: 'EXECUTION',
-    definition: 'Kondisi di mana kedua mata uang memiliki kekuatan yang seimbang sehingga harga bergerak bolak-balik tanpa tren jelas.',
-    whyItMatters: 'Memperingatkan trader agar tidak menggunakan strategi breakout atau menahan posisi ayunan (swing) pada instrumen ini.'
+    definition: 'A condition where both currencies are evenly matched, so price moves back and forth without a clear trend.',
+    whyItMatters: 'Warns traders away from breakout strategies or holding swing positions in these instruments.'
   },
   SSE_STATUS: {
     term: 'Server-Sent Events (SSE) Live Feed Status',
     shortLabel: 'SSE',
     category: 'EXECUTION',
-    definition: 'Indikator status koneksi streaming real-time antara antarmuka pengguna (UI) dan server backend.',
-    formulaOrInterpretation: 'LIVE (hijau) = Streaming aktif; RECONNECTING (kuning) = Sedang memulihkan sambungan; OFFLINE (merah) = Gagal terhubung.',
-    whyItMatters: 'Memastikan data harga, spread, dan kalender yang dilihat trader adalah data mutakhir tanpa jeda.'
+    definition: 'Connection status indicator for the real-time stream between the user interface and the backend server.',
+    formulaOrInterpretation: 'LIVE (green) = streaming; RECONNECTING (amber) = restoring the connection; OFFLINE (red) = failed.',
+    whyItMatters: 'Ensures the prices, spreads, and calendar a trader sees are current without delay.'
   },
   FRESHNESS: {
-    term: 'Data Freshness & Provenance (Kesegaran Data)',
+    term: 'Data Freshness & Provenance',
     shortLabel: 'FRESHNESS',
     category: 'INTELLIGENCE',
-    definition: 'Validasi usia data dan sumber institusional resmi (TradingView, FairEconomy, Central Banks) untuk menjamin keaslian metrik.',
-    whyItMatters: 'Menjamin trader tidak mengambil keputusan finansial berdasarkan data kadaluarsa atau estimasi palsu.'
+    definition: 'Validation of data age and official institutional sources (TradingView, FairEconomy, central banks) to guarantee metric authenticity.',
+    whyItMatters: 'Ensures traders do not make financial decisions on stale data or fabricated estimates.'
   }
 };

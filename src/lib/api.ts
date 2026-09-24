@@ -20,6 +20,7 @@ import {
   HistoricalCurrencyComparison,
   SmtpStatusResponse,
   SmtpTestResponse,
+  MarketAlertPublicConfig,
 } from '../types';
 
 export const API_BASE = '/api';
@@ -261,7 +262,7 @@ export const api = {
     method: 'POST',
     body: JSON.stringify(credentials),
   }),
-  firebaseLogin: (payload: { email: string; name?: string; uid: string; photoURL?: string }) =>
+  firebaseLogin: (payload: { idToken: string }) =>
     request<{ user: User; token: string; success: boolean }>('/auth/firebase-login', {
       method: 'POST',
       body: JSON.stringify(payload),
@@ -272,7 +273,6 @@ export const api = {
     message: string;
     email: string;
     token?: string;
-    code?: string;
     verificationUrl?: string;
     user: User;
   }>('/auth/register', {
@@ -335,7 +335,7 @@ export const api = {
     method: 'POST',
     body: JSON.stringify({ email }),
   }),
-  resetPassword: (payload: { token?: string; newPassword: string; email?: string; directReset?: boolean }) => request<{
+  resetPassword: (payload: { token: string; newPassword: string }) => request<{
     success: boolean;
     message: string;
     token: string;
@@ -357,15 +357,7 @@ export const api = {
     method: 'POST',
     body: JSON.stringify({ token }),
   }),
-  quickLogin: (email?: string) => request<{
-    success: boolean;
-    message: string;
-    token: string;
-    user: User;
-  }>('/auth/quick-login', {
-    method: 'POST',
-    body: JSON.stringify({ email }),
-  }),
+
 
   // Admin
   getSystemHealth: () => request<any>('/admin/system-health'),
@@ -507,5 +499,37 @@ export const api = {
     request<SmtpTestResponse>('/admin/smtp/test', {
       method: 'POST',
       body: JSON.stringify(payload || {}),
+    }),
+
+  // Real-Time Market Bias Alerts (Telegram & WhatsApp)
+  getAlertConfig: () =>
+    request<{ success: boolean; config: MarketAlertPublicConfig }>('/alerts/config'),
+  updateAlertConfig: (payload: Partial<{
+    telegramBotToken: string;
+    telegramChatId: string;
+    whatsappPhone: string;
+    whatsappApiKey: string;
+    enabled: boolean;
+    minConfirmations: number;
+    instruments: string[];
+    cooldownMinutes: number;
+  }>) =>
+    request<{ success: boolean; config: MarketAlertPublicConfig }>('/alerts/config', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  testTelegramAlert: (payload?: { token?: string; chatId?: string }) =>
+    request<{ success: boolean; message: string }>('/alerts/test-telegram', {
+      method: 'POST',
+      body: JSON.stringify(payload || {}),
+    }),
+  testWhatsappAlert: (payload?: { phone?: string; apiKey?: string }) =>
+    request<{ success: boolean; message: string }>('/alerts/test-whatsapp', {
+      method: 'POST',
+      body: JSON.stringify(payload || {}),
+    }),
+  triggerAlertScan: () =>
+    request<{ success: boolean; dispatched_count: number; message: string; alerts: any[] }>('/alerts/scan', {
+      method: 'POST',
     }),
 };

@@ -503,7 +503,7 @@ export interface IntradayPairConfluence {
   priceAction: {
     bias: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
     structure: 'SESSION_BREAKOUT' | 'RETEST_SUPPORT' | 'RETEST_RESISTANCE' | 'CHOP_RANGE';
-    actionableZone: string; // e.g. 'Pullback ke 1.0830 - 1.0850'
+    actionableZone: string; // e.g. 'Pullback to 1.0830 - 1.0850'
     score: number; // -100 to +100
   };
 
@@ -556,6 +556,19 @@ export interface ArahMarketTodayData {
   }>;
   pairs: IntradayPairConfluence[];
   generatedAt: string;
+}
+
+export interface MarketAlertPublicConfig {
+  telegramChatId: string;
+  telegramBotTokenMasked: string;
+  hasTelegramToken: boolean;
+  whatsappPhone: string;
+  hasWhatsappKey: boolean;
+  enabled: boolean;
+  minConfirmations: number;
+  instruments: string[];
+  cooldownMinutes: number;
+  lastAlertsSent: Record<string, { action: string; sentAt: string; price: number; bias?: string }>;
 }
 
 

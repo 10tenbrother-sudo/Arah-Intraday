@@ -1,9 +1,26 @@
 import { Router, Response } from 'express';
-import { AuthService, requireAuth, AuthenticatedRequest } from '../auth/authService.js';
+import { AuthService, requireAuth, requireAdmin, AuthenticatedRequest, toPublicUser } from '../auth/authService.js';
 import { db } from '../db/database.js';
 import { getOrCreateUser } from '../../src/db/users.ts';
+import { adminAuth } from '../../src/lib/firebase-admin.ts';
+import firebaseConfig from '../../firebase-applet-config.json';
+import { mailService, MailService } from '../services/mailService.js';
+import { authLimiter, credentialLimiter } from '../middleware/rateLimit.js';
 
 export const authRouter = Router();
+
+/**
+ * Verification/reset links are only echoed back outside production, so local
+ * development stays usable without an SMTP server while a deployed instance
+ * never hands a token to whoever happened to call the endpoint.
+ */
+function exposeLink<T extends { verificationUrl?: string; resetUrl?: string; magicUrl?: string }>(
+  payload: T
+): T {
+  if (MailService.linksVisibleToCaller()) return payload;
+  const { verificationUrl, resetUrl, magicUrl, ...rest } = payload;
+  return rest as T;
+}
 
 function getBaseUrl(req: any): string {
   if (process.env.APP_URL) {
@@ -16,69 +33,50 @@ function getBaseUrl(req: any): string {
   return `${protocol}://${host}`;
 }
 
-authRouter.post('/register', async (req, res) => {
+authRouter.post('/register', credentialLimiter, async (req, res) => {
   try {
     const { email, password, name } = req.body;
     if (!email || !password) {
-      res.status(400).json({ error: 'Alamat email dan kata sandi wajib diisi.' });
+      res.status(400).json({ error: 'Email address and password are required.' });
       return;
     }
 
     const baseUrl = getBaseUrl(req);
     const result = await AuthService.register(email, password, name || 'Trader', baseUrl);
 
-    res.status(201).json({
+    res.status(201).json(exposeLink({
       success: true,
       status: result.status,
       message: result.message,
       email: result.user.email,
       token: result.token,
       verificationUrl: result.verificationUrl,
-      user: {
-        id: result.user.id,
-        email: result.user.email,
-        name: result.user.name,
-        role: result.user.role,
-        is_verified: result.user.is_verified,
-        verification_status: result.user.verification_status,
-        plan: result.user.plan || 'FREE',
-        subscription_status: result.user.subscription_status || 'active',
-      },
-    });
+      user: toPublicUser(result.user),
+    }));
   } catch (err: any) {
     if (err.code === 'EMAIL_NOT_VERIFIED') {
-      res.status(403).json({
+      res.status(403).json(exposeLink({
         error: err.message,
         code: 'EMAIL_NOT_VERIFIED',
         email: err.email,
         verificationUrl: err.verificationUrl,
-      });
+      }));
       return;
     }
     res.status(400).json({ error: err.message });
   }
 });
 
-authRouter.post('/login', (req, res) => {
+authRouter.post('/login', credentialLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
-      res.status(400).json({ error: 'Alamat email dan kata sandi wajib diisi.' });
+      res.status(400).json({ error: 'Email address and password are required.' });
       return;
     }
-    const result = AuthService.login(email, password);
+    const result = await AuthService.login(email, password);
     res.json({
-      user: {
-        id: result.user.id,
-        email: result.user.email,
-        name: result.user.name,
-        role: result.user.role,
-        is_verified: result.user.is_verified,
-        verification_status: result.user.verification_status,
-        plan: result.user.plan || 'FREE',
-        subscription_status: result.user.subscription_status || 'active',
-        subscription_expires_at: result.user.subscription_expires_at,
-      },
+      user: toPublicUser(result.user),
       token: result.token,
     });
   } catch (err: any) {
@@ -86,27 +84,27 @@ authRouter.post('/login', (req, res) => {
     const baseUrl = getBaseUrl(req);
 
     if (err.code === 'EMAIL_NOT_VERIFIED') {
-      const user = db.getUserByEmail(err.email || cleanEmail);
+      const user = await db.getUserByEmail(err.email || cleanEmail);
       let verificationUrl: string | undefined;
       if (user) {
-        let tokenRecord = db.getLatestPendingVerificationToken(user.id);
+        let tokenRecord = await db.getLatestPendingVerificationToken(user.id);
         if (!tokenRecord) {
-          tokenRecord = db.createVerificationToken(user.id, user.email, 24);
+          tokenRecord = await db.createVerificationToken(user.id, user.email, 24);
         }
         verificationUrl = `${baseUrl}/api/auth/verify-email?token=${encodeURIComponent(tokenRecord.token)}`;
       }
-      res.status(403).json({
+      res.status(403).json(exposeLink({
         error: err.message,
         code: 'EMAIL_NOT_VERIFIED',
         email: err.email || cleanEmail,
         verificationUrl,
-      });
+      }));
       return;
     }
 
-    const existingUser = cleanEmail ? db.getUserByEmail(cleanEmail) : null;
+    const existingUser = cleanEmail ? await db.getUserByEmail(cleanEmail) : null;
     res.status(401).json({
-      error: err.message || 'Otentikasi gagal. Silakan periksa kembali email dan kata sandi Anda.',
+      error: err.message || 'Authentication failed. Check your email and password.',
       code: err.code || (existingUser ? 'INVALID_PASSWORD' : 'USER_NOT_FOUND'),
       email: cleanEmail,
       userExists: Boolean(existingUser),
@@ -114,22 +112,96 @@ authRouter.post('/login', (req, res) => {
   }
 });
 
-authRouter.post('/firebase-login', async (req, res) => {
+authRouter.post('/firebase-login', credentialLimiter, async (req, res) => {
   try {
-    const { email, name, uid } = req.body;
-    if (!email || !uid) {
-      res.status(400).json({ error: 'Alamat email dan UID Firebase wajib disertakan.' });
+    const { idToken } = req.body;
+    if (!idToken || typeof idToken !== 'string') {
+      res.status(400).json({ error: 'A Firebase ID token is required.' });
       return;
     }
-    const cleanEmail = email.toLowerCase().trim();
-    let user = db.getUserByEmail(cleanEmail);
+
+    // Verify the identity token issued by Firebase or Google.
+    // checkRevoked is omitted/false: checkRevoked=true performs an account lookup
+    // against Identity Toolkit using IAM credentials, which fails with auth/internal-error
+    // when service account credentials are not configured.
+    let decoded: { uid: string; email?: string; name?: string } | null = null;
+    try {
+      const tokenResult = await adminAuth.verifyIdToken(idToken, false);
+      decoded = {
+        uid: tokenResult.uid,
+        email: tokenResult.email,
+        name: typeof tokenResult.name === 'string' ? tokenResult.name : undefined,
+      };
+    } catch (verifyErr: any) {
+      console.warn('[Auth] adminAuth.verifyIdToken notice:', verifyErr?.code || verifyErr?.message);
+
+      // Fallback 1: Verify with Firebase Identity Toolkit accounts:lookup REST API using the web apiKey
+      if (firebaseConfig.apiKey) {
+        try {
+          const lookupUrl = `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${firebaseConfig.apiKey}`;
+          const lookupRes = await fetch(lookupUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ idToken }),
+          });
+          if (lookupRes.ok) {
+            const data: any = await lookupRes.json();
+            const fbUser = data.users?.[0];
+            if (fbUser && fbUser.email) {
+              decoded = {
+                uid: fbUser.localId,
+                email: fbUser.email,
+                name: fbUser.displayName,
+              };
+            }
+          }
+        } catch (lookupErr: any) {
+          console.warn('[Auth] Identity Toolkit fallback notice:', lookupErr?.message);
+        }
+      }
+
+      // Fallback 2: Verify with Google OAuth tokeninfo
+      if (!decoded) {
+        try {
+          const gRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`);
+          if (gRes.ok) {
+            const gData: any = await gRes.json();
+            if (gData.email && (gData.email_verified === 'true' || gData.email_verified === true)) {
+              decoded = {
+                uid: gData.sub || gData.user_id,
+                email: gData.email,
+                name: gData.name,
+              };
+            }
+          }
+        } catch (gErr: any) {
+          console.warn('[Auth] Google tokeninfo fallback notice:', gErr?.message);
+        }
+      }
+    }
+
+    if (!decoded || !decoded.email) {
+      res.status(401).json({ error: 'Invalid or expired Google sign-in token. Please sign in again.' });
+      return;
+    }
+
+    if (!decoded.email) {
+      res.status(400).json({ error: 'That Google account has no verified email address.' });
+      return;
+    }
+
+    const cleanEmail = decoded.email.toLowerCase().trim();
+    const uid = decoded.uid;
+    const displayName = typeof decoded.name === 'string' ? decoded.name : undefined;
+
+    let user = await db.getUserByEmail(cleanEmail);
     if (!user) {
       user = {
         id: uid,
         email: cleanEmail,
         password_hash: '',
         salt: '',
-        name: name || cleanEmail.split('@')[0] || 'Trader',
+        name: displayName || cleanEmail.split('@')[0] || 'Trader',
         role: 'USER',
         is_verified: true,
         verification_status: 'verified',
@@ -138,9 +210,9 @@ authRouter.post('/firebase-login', async (req, res) => {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
-      db.insertUser(user);
+      await db.insertUser(user);
     } else {
-      user = db.updateUser(user.id, {
+      user = await db.updateUser(user.id, {
         is_verified: true,
         verification_status: 'verified',
         updated_at: new Date().toISOString(),
@@ -149,7 +221,7 @@ authRouter.post('/firebase-login', async (req, res) => {
 
     // Also sync to Cloud SQL PostgreSQL
     try {
-      await getOrCreateUser(uid, cleanEmail, name);
+      await getOrCreateUser(uid, cleanEmail, displayName);
     } catch (sqlErr) {
       console.warn('[Cloud SQL] User sync notice:', sqlErr);
     }
@@ -158,16 +230,7 @@ authRouter.post('/firebase-login', async (req, res) => {
     res.json({
       success: true,
       token,
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-        is_verified: user.is_verified,
-        verification_status: user.verification_status,
-        plan: user.plan || 'PRO',
-        subscription_status: user.subscription_status || 'active',
-      },
+      user: toPublicUser(user),
     });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
@@ -179,22 +242,22 @@ authRouter.post('/firebase-login', async (req, res) => {
  * If opened in browser (Accept: text/html), serves a stylized redirect card.
  * If requested via API/Fetch, responds with JSON.
  */
-authRouter.get('/verify-email', (req, res) => {
+authRouter.get('/verify-email', async (req, res) => {
   const token = req.query.token as string | undefined;
 
   if (!token) {
     if (req.accepts('html')) {
-      res.status(400).send(renderVerificationResultHtml(false, 'Parameter token verifikasi tidak ditemukan.'));
+      res.status(400).send(renderVerificationResultHtml(false, 'No verification token parameter found.'));
       return;
     }
-    res.status(400).json({ error: 'Parameter token verifikasi wajib disertakan.' });
+    res.status(400).json({ error: 'A verification token parameter is required.' });
     return;
   }
 
-  const result = AuthService.verifyEmail(token);
+  const result = await AuthService.verifyEmail(token);
 
   if (!result.success || !result.user || !result.token) {
-    const errorMsg = result.error || 'Token verifikasi tidak valid atau telah kedaluwarsa.';
+    const errorMsg = result.error || 'That verification token is invalid or has expired.';
     if (req.accepts('html')) {
       res.status(400).send(renderVerificationResultHtml(false, errorMsg));
       return;
@@ -204,13 +267,13 @@ authRouter.get('/verify-email', (req, res) => {
   }
 
   if (req.accepts('html')) {
-    res.send(renderVerificationResultHtml(true, 'Alamat email Anda berhasil diverifikasi! Akun trading Anda kini telah aktif.', result.token, result.user));
+    res.send(renderVerificationResultHtml(true, 'Your email address is verified. Your trading account is now active.', result.token, result.user));
     return;
   }
 
   res.json({
     success: true,
-    message: 'Email berhasil diverifikasi. Akun Anda telah aktif.',
+    message: 'Email verified. Your account is now active.',
     token: result.token,
     user: {
       id: result.user.id,
@@ -226,22 +289,22 @@ authRouter.get('/verify-email', (req, res) => {
 /**
  * Verifies email via POST (programmatic verification from UI)
  */
-authRouter.post('/verify-email', (req, res) => {
+authRouter.post('/verify-email', async (req, res) => {
   const { token } = req.body;
   if (!token) {
-    res.status(400).json({ error: 'Token verifikasi wajib disertakan.' });
+    res.status(400).json({ error: 'A verification token is required.' });
     return;
   }
 
-  const result = AuthService.verifyEmail(token);
+  const result = await AuthService.verifyEmail(token);
   if (!result.success || !result.user || !result.token) {
-    res.status(400).json({ error: result.error || 'Token tidak valid atau telah kedaluwarsa.' });
+    res.status(400).json({ error: result.error || 'That token is invalid or has expired.' });
     return;
   }
 
   res.json({
     success: true,
-    message: 'Email berhasil diverifikasi. Akun Anda telah aktif.',
+    message: 'Email verified. Your account is now active.',
     token: result.token,
     user: {
       id: result.user.id,
@@ -257,16 +320,16 @@ authRouter.post('/verify-email', (req, res) => {
 /**
  * Checks verification status by email (for auto-polling in UI)
  */
-authRouter.get('/check-status', (req, res) => {
+authRouter.get('/check-status', async (req, res) => {
   const email = ((req.query.email as string) || '').toLowerCase().trim();
   if (!email) {
-    res.status(400).json({ error: 'Parameter email wajib disertakan.' });
+    res.status(400).json({ error: 'Email parameter is required.' });
     return;
   }
 
-  const user = db.getUserByEmail(email);
+  const user = await db.getUserByEmail(email);
   if (!user) {
-    res.status(404).json({ error: 'Pengguna tidak ditemukan.' });
+    res.status(404).json({ error: 'User not found.' });
     return;
   }
 
@@ -294,65 +357,55 @@ authRouter.get('/check-status', (req, res) => {
 /**
  * Verifies email via 6-digit OTP code (typed directly in UI)
  */
-authRouter.post('/verify-code', (req, res) => {
+authRouter.post('/verify-code', credentialLimiter, async (req, res) => {
   const { email, code } = req.body;
   if (!email || !code) {
-    res.status(400).json({ error: 'Alamat email dan 6-digit kode verifikasi wajib disertakan.' });
+    res.status(400).json({ error: 'Email address and the 6-digit verification code are required.' });
     return;
   }
 
-  const result = AuthService.verifyCode(email, code);
+  const result = await AuthService.verifyCode(email, code);
   if (!result.success || !result.user || !result.token) {
-    res.status(400).json({ error: result.error || 'Kode verifikasi tidak sesuai atau telah kedaluwarsa.' });
+    res.status(400).json({ error: result.error || 'That verification code is incorrect or has expired.' });
     return;
   }
 
   res.json({
     success: true,
-    message: 'Email berhasil diverifikasi! Akun Anda telah aktif.',
+    message: 'Email verified. Your account is now active.',
     token: result.token,
-    user: {
-      id: result.user.id,
-      email: result.user.email,
-      name: result.user.name,
-      role: result.user.role,
-      is_verified: true,
-      verification_status: 'verified',
-      plan: result.user.plan || 'FREE',
-      subscription_status: result.user.subscription_status || 'active',
-    },
+    user: toPublicUser(result.user),
   });
 });
 
 /**
  * Resends verification email for a registered user pending verification
  */
-authRouter.post('/resend-verification', async (req, res) => {
+authRouter.post('/resend-verification', authLimiter, async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) {
-      res.status(400).json({ error: 'Alamat email wajib diisi.' });
+      res.status(400).json({ error: 'Email address is required.' });
       return;
     }
 
     const baseUrl = getBaseUrl(req);
     const result = await AuthService.resendVerification(email, baseUrl);
 
-    res.json({
+    res.json(exposeLink({
       success: true,
       message: result.message,
-      code: result.code,
       verificationUrl: result.verificationUrl,
-    });
+    }));
   } catch (err: any) {
     res.status(400).json({ error: err.message });
   }
 });
 
-authRouter.get('/me', requireAuth, (req: AuthenticatedRequest, res: Response) => {
+authRouter.get('/me', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   const user = req.user!;
-  const preferences = db.getUserPreferences(user.id);
-  const watchlist = db.getUserWatchlist(user.id);
+  const preferences = await db.getUserPreferences(user.id);
+  const watchlist = await db.getUserWatchlist(user.id);
 
   res.json({
     user: {
@@ -372,17 +425,17 @@ authRouter.get('/me', requireAuth, (req: AuthenticatedRequest, res: Response) =>
   });
 });
 
-authRouter.patch('/profile', requireAuth, (req: AuthenticatedRequest, res: Response) => {
+authRouter.patch('/profile', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   const user = req.user!;
   const { name, avatar_url } = req.body;
-  const updated = db.updateUser(user.id, { name, avatar_url });
-  res.json({ user: updated });
+  const updated = await db.updateUser(user.id, { name, avatar_url });
+  res.json({ user: updated ? toPublicUser(updated) : null });
 });
 
-authRouter.put('/preferences', requireAuth, (req: AuthenticatedRequest, res: Response) => {
+authRouter.put('/preferences', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   const user = req.user!;
   const { timezone, language, theme, default_market_view, density, audio_alerts } = req.body;
-  const prefs = db.upsertUserPreferences({
+  const prefs = await db.upsertUserPreferences({
     user_id: user.id,
     timezone: timezone || 'UTC',
     language: language || 'en',
@@ -399,16 +452,16 @@ authRouter.put('/preferences', requireAuth, (req: AuthenticatedRequest, res: Res
 /**
  * Request Password Reset (Sends email with reset link)
  */
-authRouter.post('/forgot-password', async (req, res) => {
+authRouter.post(['/forgot-password', '/request-password-reset'], authLimiter, async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) {
-      res.status(400).json({ error: 'Alamat email wajib diisi.' });
+      res.status(400).json({ error: 'Email address is required.' });
       return;
     }
     const baseUrl = getBaseUrl(req);
     const result = await AuthService.requestPasswordReset(email, baseUrl);
-    res.json(result);
+    res.json(exposeLink(result));
   } catch (err: any) {
     res.status(400).json({ error: err.message, code: err.code });
   }
@@ -417,28 +470,22 @@ authRouter.post('/forgot-password', async (req, res) => {
 /**
  * Reset Password using Token or Direct Recovery
  */
-authRouter.post('/reset-password', (req, res) => {
+authRouter.post('/reset-password', credentialLimiter, async (req, res) => {
   try {
-    const { token, newPassword, email, directReset } = req.body;
-
-    if (directReset && email && newPassword) {
-      const result = AuthService.directPasswordReset(email, newPassword);
-      res.json({
-        success: true,
-        message: 'Kata sandi berhasil diperbarui. Anda telah otomatis masuk.',
-        user: result.user,
-        token: result.token,
-      });
-      return;
-    }
+    const { token, newPassword } = req.body;
 
     if (!token || !newPassword) {
-      res.status(400).json({ error: 'Token verifikasi dan kata sandi baru wajib disertakan.' });
+      res.status(400).json({ error: 'Verification token and new password are required.' });
       return;
     }
 
-    const result = AuthService.resetPassword(token, newPassword);
-    res.json(result);
+    const result = await AuthService.resetPassword(token, newPassword);
+    res.json({
+      success: result.success,
+      message: result.message,
+      token: result.token,
+      user: toPublicUser(result.user),
+    });
   } catch (err: any) {
     res.status(400).json({ error: err.message });
   }
@@ -446,30 +493,29 @@ authRouter.post('/reset-password', (req, res) => {
 
 /**
  * Password Reset Legacy/Compatibility Endpoint
+ *
+ * Only the token-based path is honoured. Resetting from an email alone let any
+ * caller overwrite any account's password, so it is no longer accepted.
  */
-authRouter.post('/password-reset', (req, res) => {
+authRouter.post('/password-reset', credentialLimiter, async (req, res) => {
   try {
-    const { token, newPassword, password, email } = req.body;
+    const { token, newPassword, password } = req.body;
     const targetPassword = newPassword || password;
 
-    if (token && targetPassword) {
-      const result = AuthService.resetPassword(token, targetPassword);
-      res.json(result);
-      return;
-    }
-
-    if (email && targetPassword) {
-      const result = AuthService.directPasswordReset(email, targetPassword);
-      res.json({
-        success: true,
-        message: 'Kata sandi berhasil diperbarui.',
-        user: result.user,
-        token: result.token,
+    if (!token || !targetPassword) {
+      res.status(400).json({
+        error: 'A reset token and a new password are required. Request a reset link first.',
       });
       return;
     }
 
-    res.status(400).json({ error: 'Parameter tidak lengkap untuk pengaturan ulang kata sandi.' });
+    const result = await AuthService.resetPassword(token, targetPassword);
+    res.json({
+      success: result.success,
+      message: result.message,
+      token: result.token,
+      user: toPublicUser(result.user),
+    });
   } catch (err: any) {
     res.status(400).json({ error: err.message });
   }
@@ -478,16 +524,16 @@ authRouter.post('/password-reset', (req, res) => {
 /**
  * Passwordless Magic Link Request
  */
-authRouter.post('/magic-link', async (req, res) => {
+authRouter.post('/magic-link', authLimiter, async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) {
-      res.status(400).json({ error: 'Alamat email wajib diisi.' });
+      res.status(400).json({ error: 'Email address is required.' });
       return;
     }
     const baseUrl = getBaseUrl(req);
     const result = await AuthService.requestMagicLink(email, baseUrl);
-    res.json(result);
+    res.json(exposeLink(result));
   } catch (err: any) {
     res.status(400).json({ error: err.message });
   }
@@ -496,20 +542,20 @@ authRouter.post('/magic-link', async (req, res) => {
 /**
  * Direct Magic Link verification via browser GET
  */
-authRouter.get('/magic-link', (req, res) => {
+authRouter.get(['/magic-link', '/verify-magic-link'], async (req, res) => {
   const token = req.query.token as string | undefined;
   if (!token) {
     if (req.accepts('html')) {
-      res.status(400).send(renderVerificationResultHtml(false, 'Parameter token masuk tidak ditemukan.'));
+      res.status(400).send(renderVerificationResultHtml(false, 'No sign-in token parameter found.'));
       return;
     }
-    res.status(400).json({ error: 'Parameter token masuk wajib disertakan.' });
+    res.status(400).json({ error: 'A sign-in token parameter is required.' });
     return;
   }
 
-  const result = AuthService.verifyMagicLink(token);
+  const result = await AuthService.verifyMagicLink(token);
   if (!result.success || !result.user || !result.token) {
-    const errorMsg = result.error || 'Tautan masuk tidak valid atau telah kedaluwarsa.';
+    const errorMsg = result.error || 'That sign-in link is invalid or has expired.';
     if (req.accepts('html')) {
       res.status(400).send(renderVerificationResultHtml(false, errorMsg));
       return;
@@ -522,7 +568,7 @@ authRouter.get('/magic-link', (req, res) => {
     res.send(
       renderVerificationResultHtml(
         true,
-        `Selamat datang kembali, ${result.user.name}! Mengalihkan ke terminal trading...`,
+        `Welcome back, ${result.user.name}! Redirecting to trading terminal...`,
         result.token,
         result.user.name
       )
@@ -532,37 +578,37 @@ authRouter.get('/magic-link', (req, res) => {
 
   res.json({
     success: true,
-    message: 'Berhasil masuk melalui tautan instan.',
+    message: 'Signed in via instant link.',
     token: result.token,
-    user: result.user,
+    user: toPublicUser(result.user),
   });
 });
 
 /**
  * Magic Link verification via programmatic POST
  */
-authRouter.post('/magic-link-verify', (req, res) => {
+authRouter.post(['/magic-link-verify', '/verify-magic-link'], async (req, res) => {
   const { token } = req.body;
   if (!token) {
-    res.status(400).json({ error: 'Token wajib disertakan.' });
+    res.status(400).json({ error: 'Token is required.' });
     return;
   }
-  const result = AuthService.verifyMagicLink(token);
+  const result = await AuthService.verifyMagicLink(token);
   if (!result.success || !result.user || !result.token) {
-    res.status(400).json({ error: result.error || 'Tautan masuk tidak valid atau telah kedaluwarsa.' });
+    res.status(400).json({ error: result.error || 'That sign-in link is invalid or has expired.' });
     return;
   }
   res.json({
     success: true,
-    message: 'Berhasil masuk.',
+    message: 'Signed in.',
     token: result.token,
-    user: result.user,
+    user: toPublicUser(result.user),
   });
 });
 
-authRouter.get('/accounts', (req, res) => {
+authRouter.get('/accounts', requireAdmin, async (_req, res) => {
   try {
-    const users = db.getAllUsers().map(u => ({
+    const users = (await db.getAllUsers()).map(u => ({
       email: u.email,
       name: u.name,
       role: u.role,
@@ -577,57 +623,15 @@ authRouter.get('/accounts', (req, res) => {
 
 /**
  * Emergency Quick Login / Demo Trader Login
+ *
+ * Removed: it issued a session (admin, for known addresses) from an email alone,
+ * with no password and no token. Use POST /login or /firebase-login instead.
  */
-authRouter.post('/quick-login', (req, res) => {
-  try {
-    const { email } = req.body;
-    const cleanEmail = (email || 'danwil028@gmail.com').toLowerCase().trim();
-    let user = db.getUserByEmail(cleanEmail);
-    const isAdminAccount = cleanEmail === 'danwil028@gmail.com' || cleanEmail === 'wildanmn1933@gmail.com' || cleanEmail === 'admin@marketintel.pro';
-
-    if (!user) {
-      // Auto register user if not found for seamless recovery
-      const pass = AuthService.hashPassword('Trader123!');
-      user = {
-        id: `usr_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-        email: cleanEmail,
-        password_hash: pass.hash,
-        salt: pass.salt,
-        name: cleanEmail.split('@')[0] || 'Trader',
-        role: isAdminAccount ? 'ADMIN' : 'USER',
-        is_verified: true,
-        verification_status: 'verified',
-        plan: isAdminAccount ? 'INSTITUTIONAL' : 'FREE',
-        subscription_status: 'active',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      db.insertUser(user);
-    } else {
-      const updates: any = {};
-      if (!user.is_verified) {
-        updates.is_verified = true;
-        updates.verification_status = 'verified';
-      }
-      if (isAdminAccount && user.role !== 'ADMIN') {
-        updates.role = 'ADMIN';
-        updates.plan = 'INSTITUTIONAL';
-      }
-      if (Object.keys(updates).length > 0) {
-        user = db.updateUser(user.id, updates) || user;
-      }
-    }
-
-    const token = AuthService.generateToken(user);
-    res.json({
-      success: true,
-      message: `Berhasil masuk sebagai ${user.name} (${user.email}).`,
-      token,
-      user,
-    });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
-  }
+authRouter.post('/quick-login', credentialLimiter, (_req, res) => {
+  res.status(410).json({
+    error: 'This endpoint has been disabled. Please sign in with email and password or Google Sign-In.',
+    code: 'ENDPOINT_REMOVED',
+  });
 });
 
 function renderVerificationResultHtml(success: boolean, message: string, token?: string, user?: any): string {
@@ -645,10 +649,10 @@ function renderVerificationResultHtml(success: boolean, message: string, token?:
 
   return `
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>${success ? 'Email Terverifikasi' : 'Verifikasi Gagal'} • ArahMarket</title>
+  <title>${success ? 'Email Verified' : 'Verification Failed'} • ArahMarket</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
@@ -737,17 +741,17 @@ function renderVerificationResultHtml(success: boolean, message: string, token?:
 <body>
   <div class="card">
     <div class="icon">${success ? '✓' : '✕'}</div>
-    <h1>${success ? 'Akun Berhasil Diaktifkan!' : 'Verifikasi Gagal'}</h1>
+    <h1>${success ? 'Account activated!' : 'Verification failed'}</h1>
     ${userSafe && userSafe.email ? `<div class="account-badge">${userSafe.email}</div>` : ''}
     <p>${message}</p>
     
-    <a href="/" id="action-btn" class="btn">${success ? 'Buka Terminal Trading' : 'Kembali ke Beranda'}</a>
+    <a href="/" id="action-btn" class="btn">${success ? 'Open the trading terminal' : 'Back to home'}</a>
 
     ${
       success
         ? `
     <div class="hint-box">
-      <strong>Langkah Selanjutnya:</strong> Anda dapat langsung kembali ke tab <strong>ArahMarket</strong> di browser Anda. Layar terminal akan otomatis mengenali akun Anda yang telah aktif.
+      <strong>Next step:</strong> you can return to the <strong>ArahMarket</strong> tab in your browser. The terminal will automatically recognise your now-active account.
     </div>
     `
         : ''

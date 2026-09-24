@@ -18,6 +18,8 @@ import { userRouter } from './server/routes/userRoutes.js';
 import { adminRouter } from './server/routes/adminRoutes.js';
 import { streamRouter } from './server/routes/streamRoutes.js';
 import { historyRouter } from './server/routes/historyRoutes.js';
+import { alertRouter } from './server/routes/alertRoutes.js';
+import { MarketAlertService } from './server/services/marketAlertService.js';
 
 import { MarketDataService } from './server/ingestion/marketData.js';
 import { TelegramIngestionService } from './server/ingestion/telegram.js';
@@ -25,7 +27,8 @@ import { CurrencyStrengthService } from './server/ingestion/currencyStrength.js'
 import { MacroDataService } from './server/ingestion/macroData.js';
 import { IntradayMarketMapEngine } from './server/intelligence/intradayMarketMap.js';
 import { requireAuth, AuthRequest } from './src/middleware/auth.ts';
-import { getOrCreateUser, getUserById } from './src/db/users.ts';
+import { requireAuth as requireJwtAuth, requireAdmin as requireJwtAdmin } from './server/auth/authService.js';
+import { getOrCreateUser, getUserById, isCloudSqlConfigured } from './src/db/users.ts';
 
 async function startServer() {
   const app = express();
@@ -61,6 +64,7 @@ async function startServer() {
   app.use('/api/admin', adminRouter);
   app.use('/api/stream', streamRouter);
   app.use('/api/history', historyRouter);
+  app.use('/api/alerts', alertRouter);
 
   // Cloud SQL relational database endpoints
   app.get('/api/cloudsql/me', requireAuth, async (req: AuthRequest, res) => {
@@ -70,7 +74,7 @@ async function startServer() {
         return;
       }
       const user = await getOrCreateUser(req.user.uid, req.user.email || '', req.user.name);
-      res.json({ success: true, user });
+      res.json({ success: true, user, mirror_configured: isCloudSqlConfigured() });
     } catch (err: any) {
       console.error('Failed to get Cloud SQL user:', err);
       res.status(500).json({ error: err.message || 'Database error' });
@@ -78,7 +82,7 @@ async function startServer() {
   });
 
   // Unified global synchronization across all ingested elements and external sources
-  app.post('/api/sync', async (req, res) => {
+  app.post('/api/sync', requireJwtAuth, requireJwtAdmin, async (req, res) => {
     try {
       const [mktResult, macroResult, csResult, tgResult] = await Promise.allSettled([
         MarketDataService.updateMarketPrices(),
@@ -103,12 +107,12 @@ async function startServer() {
   });
 
   // Source Transparency & Integrity Audit Endpoint
-  app.get('/api/sources', (req, res) => {
+  app.get('/api/sources', async (req, res) => {
     try {
-      const sources = db.getAllSources();
-      const channels = db.getAllTelegramChannels();
-      const events = db.getAllEvents(100);
-      const news = db.getAllNews(100);
+      const sources = await db.getAllSources();
+      const channels = await db.getAllTelegramChannels();
+      const events = await db.getAllEvents(100);
+      const news = await db.getAllNews(100);
 
       res.json({
         total_sources: sources.length,
@@ -203,66 +207,82 @@ async function startServer() {
       });
     }, 60000);
 
-    // Automated Daily Market Snapshot Generator (every 10 minutes)
-    setInterval(() => {
+    // Automated Daily Market Snapshot Generator (every 5 minutes)
+    // Continuously records open-to-close progression and locks daily close (04:00 WIB / 21:00 UTC)
+    const runDailySnapshotSync = async () => {
       try {
         const todayStr = new Date().toISOString().slice(0, 10);
-        const existing = db.getDailySnapshotByDate(todayStr);
-        if (!existing) {
-          console.log(`[Scheduler] Generating automated daily snapshot for ${todayStr}...`);
-          // Trigger generation
-          const map = IntradayMarketMapEngine.getIntradayMarketMap();
-          const strengths = db.getCurrencyStrength();
-          const biases: Record<string, any> = {};
-          map.forEach((item: any) => {
-            biases[item.symbol] = {
-              symbol: item.symbol,
-              bias: item.overall_bias,
-              score: item.direction_score,
-              price: item.price,
-              change_24h_pct: item.change_24h_pct,
-              strength_label: item.direction_score > 30 ? 'Strong' : item.direction_score < -30 ? 'Weak' : 'Moderate',
-              major_catalyst: item.today_key_catalyst,
-              last_updated: item.last_updated,
-            };
-          });
-
-          db.saveDailySnapshot({
-            id: `snapshot_${todayStr}`,
-            date: todayStr,
-            timestamp: new Date().toISOString(),
-            title: `Daily Market Snapshot: ${todayStr}`,
-            market_biases: biases,
-            currency_strength: strengths.map((s, idx) => ({
-              currency: s.currency,
-              score: s.strength_score,
-              rank: idx + 1,
-              direction: s.change_direction,
-            })),
-            major_catalysts: map.slice(0, 5).map((m: any) => ({
-              event_name: m.today_key_catalyst,
-              currency: m.symbol === 'XAUUSD' ? 'USD' : m.symbol,
-              impact: 'HIGH',
-              actual: m.current_market_reaction,
-            })),
-            market_reaction_summary: 'Automated end-of-session daily snapshot recorded permanently.',
-            ai_summary: `Multi-asset regime recorded for ${todayStr}.`,
-            ai_why: ['Automated capture of live telemetry into permanent memory database.'],
-            ai_risk: ['Standard session volatility boundaries apply.'],
-            ai_context: [`Archived session ${todayStr}.`],
-            historical_insights: [`Daily snapshot committed to memory.`],
-            created_at: new Date().toISOString(),
-          } as any);
+        const map = await IntradayMarketMapEngine.getIntradayMarketMap();
+        const strengths = await db.getCurrencyStrength();
+        const biases: Record<string, any> = {};
+        for (const item of map) {
+          biases[item.symbol] = {
+            symbol: item.symbol,
+            bias: item.overall_bias,
+            score: item.direction_score,
+            price: item.price,
+            change_24h_pct: item.change_24h_pct,
+            strength_label: item.direction_score > 30 ? 'Strong' : item.direction_score < -30 ? 'Weak' : 'Moderate',
+            major_catalyst: item.today_key_catalyst,
+            last_updated: item.last_updated,
+          };
         }
+
+        await db.saveDailySnapshot({
+          id: `snapshot_${todayStr}`,
+          date: todayStr,
+          timestamp: new Date().toISOString(),
+          title: `Daily Market Snapshot: ${todayStr}`,
+          market_biases: biases,
+          currency_strength: strengths.map((s, idx) => ({
+            currency: s.currency,
+            score: s.strength_score,
+            rank: idx + 1,
+            direction: s.change_direction,
+          })),
+          major_catalysts: map.slice(0, 5).map((m: any) => ({
+            event_name: m.today_key_catalyst,
+            currency: m.symbol === 'XAUUSD' ? 'USD' : m.symbol,
+            impact: 'HIGH',
+            actual: m.current_market_reaction,
+          })),
+          market_reaction_summary: 'Automated live open-to-close session archive recorded permanently into PostgreSQL.',
+          ai_summary: `Multi-asset regime tracked continuously from session open to 04:00 WIB daily close.`,
+          ai_why: [
+            'Continuous telemetry recorded from Sydney open through NY close (04:00 WIB / 21:00 UTC).',
+            'Grounded in verified live G8 currency strength feed and cross-asset price action.',
+          ],
+          ai_risk: ['Standard session volatility boundaries apply.'],
+          ai_context: [`Archived session ${todayStr}.`],
+          historical_insights: [`Daily snapshot committed to persistent relational memory.`],
+          created_at: new Date().toISOString(),
+        } as any);
       } catch (err: any) {
-        console.warn('[Scheduler] Daily snapshot generation notice:', err.message);
+        console.warn('[Scheduler] Daily snapshot sync notice:', err.message);
       }
-    }, 600000);
+    };
+
+    setTimeout(runDailySnapshotSync, 15000);
+    setInterval(runDailySnapshotSync, 300000);
+
+    // Automated Market Bias Alert Scanner for Telegram & WA (runs every 2 minutes)
+    setInterval(() => {
+      MarketAlertService.checkAndDispatchAlerts().catch(err => {
+        console.warn('[Scheduler] Market alert notice:', err.message);
+      });
+    }, 120000);
   } catch (err: any) {
     console.error('[System] Error during server initialization:', err);
   }
 
-  // 3. Vite Middleware (SPA handling)
+  // 3. Unmatched API paths must 404 as JSON, not fall through to the SPA.
+  // Without this an unknown /api/* route returned index.html with HTTP 200,
+  // so a client typo looked like a successful call with a broken body.
+  app.use('/api', (req, res) => {
+    res.status(404).json({ error: 'Not found', path: req.originalUrl });
+  });
+
+  // 4. Vite Middleware (SPA handling)
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
       server: { middlewareMode: true },

@@ -6,10 +6,11 @@ import {
   Minus,
   RefreshCw,
   Star,
-  Activity,
   LineChart,
 } from 'lucide-react';
 import { Tooltip, MetricTooltip } from './Tooltip';
+import { PageHeader } from './shared/PageHeader';
+import { D3Sparkline } from './ui/D3Sparkline';
 
 interface MarketDataGridProps {
   prices: MarketPrice[];
@@ -20,6 +21,8 @@ interface MarketDataGridProps {
   isRefreshing: boolean;
   onSelectSymbol: (symbol: string) => void;
   onOpenChart?: (symbol: string) => void;
+  /** 'page' owns the view title; 'embedded' renders a section header instead. */
+  variant?: 'page' | 'embedded';
 }
 
 export const MarketDataGrid: React.FC<MarketDataGridProps> = React.memo(({
@@ -31,6 +34,7 @@ export const MarketDataGrid: React.FC<MarketDataGridProps> = React.memo(({
   isRefreshing,
   onSelectSymbol,
   onOpenChart,
+  variant = 'page',
 }) => {
   const [filterType, setFilterType] = useState<string>('ALL');
 
@@ -65,61 +69,95 @@ export const MarketDataGrid: React.FC<MarketDataGridProps> = React.memo(({
     }
   };
 
+  const chartAndRefresh = (
+    <>
+      {onOpenChart && (
+        <button
+          onClick={() => onOpenChart('US30')}
+          className="h-8 px-3 rounded-md text-[11px] font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-section-alt)] flex items-center gap-1.5 transition cursor-pointer"
+        >
+          <LineChart className="w-3.5 h-3.5" />
+          <span>Chart</span>
+        </button>
+      )}
+
+      <button
+        onClick={onRefresh}
+        disabled={isRefreshing}
+        title="Refresh prices"
+        className="h-8 w-8 rounded-md text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-section-alt)] flex items-center justify-center transition cursor-pointer disabled:opacity-50"
+        id="refresh-surveillance-btn"
+      >
+        <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-[var(--accent)]' : ''}`} />
+      </button>
+    </>
+  );
+
+  const assetClassFilter = (
+    <div className="flex items-center gap-0.5 p-0.5 rounded-md bg-[var(--bg-section-alt)]">
+      {['ALL', 'COMMODITIES', 'CRYPTO', 'INDICES', 'FOREX', 'BONDS'].map(f => (
+        <button
+          key={f}
+          onClick={() => setFilterType(f)}
+          className={`h-7 px-2.5 rounded text-[11px] font-medium transition cursor-pointer ${
+            filterType === f
+              ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm'
+              : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+          }`}
+        >
+          {f === 'ALL' ? 'All' : f.charAt(0) + f.slice(1).toLowerCase()}
+        </button>
+      ))}
+    </div>
+  );
+
   return (
-    <div className="terminal-panel p-3.5 sm:p-4 space-y-3 font-sans" id="market-data-grid-root">
-      {/* Header & Asset Class Filters */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2.5 border-b" style={{ borderColor: 'var(--border-hairline)' }}>
-        <div className="flex items-center gap-2 flex-wrap">
-          <Activity className="w-3.5 h-3.5 text-[var(--accent)]" />
-          <h2 className="metadata-label text-[11px] text-[var(--text-primary)]">
-            LIVE MARKET SURVEILLANCE ({prices.length})
-          </h2>
-          <div className="flex items-center gap-1.5 ml-1">
+    <section className="space-y-4 font-sans" id="market-data-grid-root">
+      {variant === 'page' ? (
+        <PageHeader
+          eyebrow="MAIN · MARKET SURVEILLANCE"
+          title="Market surveillance"
+          description="Live quotes across FX, commodities, indices, crypto and yields, with intraday bias read straight from the feed."
+          actions={chartAndRefresh}
+        />
+      ) : (
+        <div className="section-head flex-wrap gap-y-2">
+          <div className="flex items-center gap-2">
+            <h2 className="section-title text-base text-[var(--text-primary)]">
+              Market surveillance
+            </h2>
+            <span className="num text-[11px] text-[var(--text-muted)]">
+              {filteredPrices.length} of {prices.length}
+            </span>
             <span className="w-1.5 h-1.5 rounded-full bg-[var(--bullish)]" />
-            <span className="text-[9px] font-mono font-semibold px-1 py-0 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] text-[var(--text-secondary)]">
-              SYNCED
+            <span className="metadata-label text-[9px] text-[var(--text-muted)]">
+              Streaming
             </span>
           </div>
-        </div>
-
-        <div className="flex items-center gap-1.5 flex-wrap font-mono text-xs">
-          {onOpenChart && (
-            <button
-              onClick={() => onOpenChart('US30')}
-              className="h-6 px-2 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-primary)] flex items-center gap-1 text-[10.5px] font-semibold transition cursor-pointer"
-            >
-              <LineChart className="w-3 h-3 text-[var(--accent)]" />
-              <span>TV CHART</span>
-            </button>
-          )}
-
-          <div className="flex items-center border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] p-0.5 rounded text-[10.5px]">
-            {['ALL', 'COMMODITIES', 'CRYPTO', 'INDICES', 'FOREX', 'BONDS'].map(f => (
-              <button
-                key={f}
-                onClick={() => setFilterType(f)}
-                className={`h-5 px-1.5 rounded font-semibold transition cursor-pointer ${
-                  filterType === f
-                    ? 'bg-[var(--active-bg)] text-[var(--active-text)] border border-[var(--active-border)] shadow-xs'
-                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-                }`}
-              >
-                {f}
-              </button>
-            ))}
+          <div className="flex items-center gap-2 flex-wrap">
+            {chartAndRefresh}
+            {assetClassFilter}
           </div>
-
-          <button
-            onClick={onRefresh}
-            disabled={isRefreshing}
-            title="Refresh prices"
-            className="h-6 w-6 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] flex items-center justify-center transition cursor-pointer"
-            id="refresh-surveillance-btn"
-          >
-            <RefreshCw className={`w-3 h-3 ${isRefreshing ? 'animate-spin text-[var(--accent)]' : ''}`} />
-          </button>
         </div>
-      </div>
+      )}
+
+      {variant === 'page' && (
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-2">
+            <span className="metadata-label text-[10px] text-[var(--text-muted)]">
+              Instruments
+            </span>
+            <span className="num text-[11px] text-[var(--text-muted)]">
+              {filteredPrices.length} of {prices.length}
+            </span>
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--bullish)]" />
+            <span className="metadata-label text-[9px] text-[var(--text-muted)]">
+              Streaming
+            </span>
+          </div>
+          {assetClassFilter}
+        </div>
+      )}
 
       {/* Grid of Market Instrument Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5">
@@ -134,16 +172,6 @@ export const MarketDataGrid: React.FC<MarketDataGridProps> = React.memo(({
           const sparkPoints = item.sparkline_1h && item.sparkline_1h.length > 1
             ? item.sparkline_1h
             : [item.price * 0.998, item.price];
-          const minSpark = Math.min(...sparkPoints);
-          const maxSpark = Math.max(...sparkPoints);
-          const sparkRange = maxSpark - minSpark || 1;
-          const svgPoints = sparkPoints
-            .map((val, idx) => {
-              const x = (idx / (sparkPoints.length - 1)) * 64;
-              const y = 20 - ((val - minSpark) / sparkRange) * 18;
-              return `${x},${y}`;
-            })
-            .join(' ');
 
           const formattedPrice = isUnavailable ? (
             'UNAVAILABLE'
@@ -160,29 +188,29 @@ export const MarketDataGrid: React.FC<MarketDataGridProps> = React.memo(({
             <div
               key={item.symbol}
               onClick={() => onSelectSymbol(item.symbol)}
-              className="terminal-panel p-2.5 hover:border-[var(--text-primary)] transition cursor-pointer flex flex-col justify-between space-y-2 select-none"
+              className="group rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3 hover:border-[var(--active-border)] hover:shadow-[var(--shadow-raised)] transition cursor-pointer flex flex-col justify-between gap-2.5 select-none"
             >
               <div>
                 {/* Header: Symbol + Name + Controls */}
-                <div className="flex items-center justify-between mb-1 font-mono">
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-bold text-xs text-[var(--text-primary)]">{item.symbol}</span>
-                    <span className="text-[9px] px-1 py-0 rounded border border-[var(--border-subtle)] text-[var(--text-muted)]">
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className="font-mono font-bold text-sm text-[var(--text-primary)]">{item.symbol}</span>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[var(--bg-section-alt)] text-[var(--text-muted)] tracking-wide">
                       {item.asset_type}
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-0.5 shrink-0">
                     {onOpenChart && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           onOpenChart(item.tv_symbol || item.symbol);
                         }}
-                        className="p-1 rounded text-[var(--text-muted)] hover:text-[var(--text-primary)] transition cursor-pointer"
+                        className="p-1.5 rounded-md text-[var(--text-muted)] hover:text-[var(--accent)] hover:bg-[var(--accent-subtle)] transition cursor-pointer"
                         title={`Open TradingView Chart (${item.tv_symbol || item.symbol})`}
                       >
-                        <LineChart className="w-3 h-3 text-[var(--accent)]" />
+                        <LineChart className="w-3.5 h-3.5" />
                       </button>
                     )}
 
@@ -191,80 +219,84 @@ export const MarketDataGrid: React.FC<MarketDataGridProps> = React.memo(({
                         e.stopPropagation();
                         onToggleWatchlist(item.symbol, item.asset_type);
                       }}
-                      className={`p-1 rounded transition cursor-pointer ${
-                        isBookmarked ? 'text-amber-400' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+                      title={isBookmarked ? `Remove ${item.symbol} from watchlist` : `Add ${item.symbol} to watchlist`}
+                      aria-label={isBookmarked ? `Remove ${item.symbol} from watchlist` : `Add ${item.symbol} to watchlist`}
+                      aria-pressed={isBookmarked}
+                      className={`p-1.5 rounded-md transition cursor-pointer ${
+                        isBookmarked ? 'text-[var(--warning)]' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                       }`}
                     >
-                      <Star className="w-3 h-3" fill={isBookmarked ? 'currentColor' : 'none'} />
+                      <Star className="w-3.5 h-3.5" fill={isBookmarked ? 'currentColor' : 'none'} />
                     </button>
                   </div>
                 </div>
 
-                <div className="text-[10px] text-[var(--text-secondary)] truncate mb-1.5" title={item.display_name}>
+                <div className="text-[11px] text-[var(--text-muted)] truncate mb-2" title={item.display_name}>
                   {item.display_name}
                 </div>
 
                 {/* Price + 24h Change + Sparkline */}
-                <div className="flex items-center justify-between gap-2 mb-2 font-mono">
+                <div className="flex items-end justify-between gap-3">
                   <div>
-                    <div className="text-sm font-bold text-[var(--text-primary)] tabular-nums">
+                    <div className="text-lg font-semibold text-[var(--text-primary)] tabular-nums leading-tight">
                       {formattedPrice}
                     </div>
                     {!isUnavailable && (
                       <div
-                        className={`flex items-center gap-1 text-[10.5px] font-semibold tabular-nums mt-0.5 ${
+                        className={`flex items-center gap-1 text-[11px] font-semibold tabular-nums mt-0.5 ${
                           isPos ? 'text-[var(--bullish)]' : isNeg ? 'text-[var(--bearish)]' : 'text-[var(--text-muted)]'
                         }`}
                       >
-                        {isPos ? <TrendingUp className="w-2.5 h-2.5" /> : isNeg ? <TrendingDown className="w-2.5 h-2.5" /> : <Minus className="w-2.5 h-2.5" />}
+                        {isPos ? <TrendingUp className="w-3 h-3" /> : isNeg ? <TrendingDown className="w-3 h-3" /> : <Minus className="w-3 h-3" />}
                         <span>{isPos ? '+' : ''}{item.change_24h_pct.toFixed(2)}%</span>
                       </div>
                     )}
                   </div>
 
-                  {/* Sparkline curve */}
+                  {/* D3 Sparkline curve */}
                   {!isUnavailable && (
-                    <svg className="w-16 h-6 shrink-0 overflow-visible" viewBox="0 0 64 22">
-                      <polyline
-                        fill="none"
-                        stroke={isPos ? 'var(--bullish)' : isNeg ? 'var(--bearish)' : 'var(--text-muted)'}
-                        strokeWidth="1.5"
-                        points={svgPoints}
-                      />
-                    </svg>
+                    <D3Sparkline
+                      data={sparkPoints}
+                      width={68}
+                      height={24}
+                      isPositive={isPos}
+                      showArea={true}
+                      showEndDot={true}
+                      className="opacity-90 group-hover:opacity-100 transition-opacity"
+                    />
                   )}
                 </div>
-
-                {/* Intraday Bias Strip */}
-                {biasData && (
-                  <div className="flex items-center justify-between px-1.5 py-0.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] text-[10px] font-mono">
-                    <div className="flex items-center gap-1">
-                      <span className="text-[var(--text-muted)] text-[9px]">BIAS:</span>
-                      <span className={`px-1 py-0 rounded text-[9px] font-bold ${getBiasBadgeClass(biasData.overall_bias)}`}>
-                        {biasData.overall_bias}
-                      </span>
-                    </div>
-
-                    <div className="text-[var(--text-muted)] tabular-nums text-[9.5px]">
-                      CONF: <strong className="text-[var(--text-primary)]">{biasData.confidence}%</strong>
-                    </div>
-                  </div>
-                )}
               </div>
 
+              {/* Intraday Bias Strip */}
+              {biasData && (
+                <div className="flex items-center justify-between text-[10px]">
+                  <div className="flex items-center gap-1.5">
+                    <span className="metadata-label text-[9px] text-[var(--text-muted)]">Bias</span>
+                    <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-semibold ${getBiasBadgeClass(biasData.overall_bias)}`}>
+                      {biasData.overall_bias}
+                    </span>
+                  </div>
+
+                  <div className="text-[var(--text-muted)] tabular-nums text-[10px]">
+                    Conf <strong className="text-[var(--text-secondary)] font-semibold">{biasData.confidence}%</strong>
+                  </div>
+                </div>
+              )}
+
               {/* Card Footer: Provenance & Status */}
-              <div className="pt-1.5 border-t text-[9px] font-mono flex items-center justify-between text-[var(--text-muted)]" style={{ borderColor: 'var(--border-hairline)' }}>
-                <span className="truncate max-w-[100px]">{item.source}</span>
-                <div className="flex items-center gap-1">
-                  <span className={`w-1 h-1 rounded-full ${item.status === 'LIVE' ? 'bg-[var(--bullish)]' : 'bg-[var(--warning)]'}`} />
-                  <span>{item.status}</span>
+              <div className="pt-2 border-t text-[10px] flex items-center justify-between text-[var(--text-muted)]" style={{ borderColor: 'var(--border-hairline)' }}>
+                <span className="truncate max-w-[110px]">{item.source}</span>
+                <div className="flex items-center gap-1.5">
+                  <span className={`w-1.5 h-1.5 rounded-full ${item.status === 'LIVE' ? 'bg-[var(--bullish)]' : 'bg-[var(--warning)]'}`} />
+                  <span className="metadata-label text-[9px]">{item.status}</span>
                 </div>
               </div>
             </div>
           );
         })}
       </div>
-    </div>
+    </section>
   );
 });
 

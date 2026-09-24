@@ -170,29 +170,29 @@ const PRIMARY_INSTRUMENTS: TVSymbolMeta[] = [
     description: 'Canadian Dollar / Swiss Franc FX Live Stream',
     category: 'FOREX',
   },
-  // Major Indices & Non-Delayed CFDs
+  // Major Indices & CFDs
   {
     symbolKey: 'US30',
-    tvSymbol: 'FOREXCOM:US30',
-    label: 'US30 (Dow 30)',
-    description: 'Wall St 30 Non-Delayed CFD',
-    snapshotUrl: 'https://www.tradingview.com/x/McUWwa6F/',
+    tvSymbol: 'OANDA:US30USD',
+    label: 'US30 (OANDA CFD)',
+    description: 'Dow Jones 30 Index CFD (OANDA) - Real-Time Feed',
+    snapshotUrl: 'https://www.tradingview.com/chart/?symbol=OANDA%3AUS30USD',
     category: 'INDICES',
   },
   {
     symbolKey: 'US500',
-    tvSymbol: 'CAPITALCOM:SPX500',
-    label: 'SPX500 (S&P 500)',
-    description: 'US 500 Non-Delayed CFD',
-    snapshotUrl: 'https://www.tradingview.com/x/mMOtpRJZ/',
+    tvSymbol: 'OANDA:SPX500USD',
+    label: 'US500 (OANDA CFD)',
+    description: 'S&P 500 Index CFD (OANDA) - Real-Time Feed',
+    snapshotUrl: 'https://www.tradingview.com/chart/?symbol=OANDA%3ASPX500USD',
     category: 'INDICES',
   },
   {
     symbolKey: 'US100',
-    tvSymbol: 'SKILLING:US100',
-    label: 'US100 (Nasdaq 100)',
-    description: 'US Tech 100 Non-Delayed CFD',
-    snapshotUrl: 'https://www.tradingview.com/x/pWHPW2sk/',
+    tvSymbol: 'OANDA:NAS100USD',
+    label: 'US100 (OANDA CFD)',
+    description: 'Nasdaq-100 Index CFD (OANDA) - Real-Time Feed',
+    snapshotUrl: 'https://www.tradingview.com/chart/?symbol=OANDA%3ANAS100USD',
     category: 'INDICES',
   },
   {
@@ -214,9 +214,10 @@ const PRIMARY_INSTRUMENTS: TVSymbolMeta[] = [
   // Commodities & Crypto
   {
     symbolKey: 'XAUUSD',
-    tvSymbol: 'TVC:GOLD',
-    label: 'XAUUSD (Gold)',
-    description: 'Spot Gold / US Dollar Real-Time',
+    tvSymbol: 'OANDA:XAUUSD',
+    label: 'XAUUSD (OANDA Spot)',
+    description: 'Spot Gold / US Dollar Real-Time CFD',
+    snapshotUrl: 'https://www.tradingview.com/chart/?symbol=OANDA%3AXAUUSD',
     category: 'CRYPTO_COMMODITY',
   },
   {
@@ -228,6 +229,58 @@ const PRIMARY_INSTRUMENTS: TVSymbolMeta[] = [
     category: 'CRYPTO_COMMODITY',
   },
 ];
+
+export interface BrokerOption {
+  label: string;
+  tvSymbol: string;
+  type: 'FUTURES' | 'SPOT_CFD' | 'CASH_INDEX';
+  badge: string;
+}
+
+export const INSTRUMENT_BROKERS: Record<string, BrokerOption[]> = {
+  US100: [
+    { label: 'OANDA CFD', tvSymbol: 'OANDA:NAS100USD', type: 'SPOT_CFD', badge: 'MATCHES SURVEILLANCE' },
+    { label: 'Forex.com CFD', tvSymbol: 'FOREXCOM:NAS100', type: 'SPOT_CFD', badge: 'SPOT CFD' },
+    { label: 'FP Markets CFD', tvSymbol: 'FPMARKETS:US100', type: 'SPOT_CFD', badge: 'SPOT CFD' },
+    { label: 'Pepperstone CFD', tvSymbol: 'PEPPERSTONE:NAS100', type: 'SPOT_CFD', badge: 'SPOT CFD' },
+    { label: 'CME Futures (NQ1!)', tvSymbol: 'CME_MINI:NQ1!', type: 'FUTURES', badge: 'FUTURES' },
+    { label: 'Cash Index (NDX)', tvSymbol: 'NASDAQ:NDX', type: 'CASH_INDEX', badge: 'INDEX' },
+  ],
+  US30: [
+    { label: 'OANDA CFD', tvSymbol: 'OANDA:US30USD', type: 'SPOT_CFD', badge: 'MATCHES SURVEILLANCE' },
+    { label: 'Forex.com CFD', tvSymbol: 'FOREXCOM:US30', type: 'SPOT_CFD', badge: 'SPOT CFD' },
+    { label: 'FP Markets CFD', tvSymbol: 'FPMARKETS:US30', type: 'SPOT_CFD', badge: 'SPOT CFD' },
+    { label: 'Pepperstone CFD', tvSymbol: 'PEPPERSTONE:US30', type: 'SPOT_CFD', badge: 'SPOT CFD' },
+    { label: 'CBOT Futures (YM1!)', tvSymbol: 'CBOT_MINI:YM1!', type: 'FUTURES', badge: 'FUTURES' },
+    { label: 'Cash Index (DJI)', tvSymbol: 'DJ:DJI', type: 'CASH_INDEX', badge: 'INDEX' },
+  ],
+  US500: [
+    { label: 'OANDA CFD', tvSymbol: 'OANDA:SPX500USD', type: 'SPOT_CFD', badge: 'MATCHES SURVEILLANCE' },
+    { label: 'Forex.com CFD', tvSymbol: 'FOREXCOM:SPX500', type: 'SPOT_CFD', badge: 'SPOT CFD' },
+    { label: 'FP Markets CFD', tvSymbol: 'FPMARKETS:US500', type: 'SPOT_CFD', badge: 'SPOT CFD' },
+    { label: 'Pepperstone CFD', tvSymbol: 'PEPPERSTONE:SPX500', type: 'SPOT_CFD', badge: 'SPOT CFD' },
+    { label: 'CME Futures (ES1!)', tvSymbol: 'CME_MINI:ES1!', type: 'FUTURES', badge: 'FUTURES' },
+    { label: 'Cash Index (SPX)', tvSymbol: 'SP:SPX', type: 'CASH_INDEX', badge: 'INDEX' },
+  ],
+  XAUUSD: [
+    { label: 'OANDA Spot CFD', tvSymbol: 'OANDA:XAUUSD', type: 'SPOT_CFD', badge: 'MATCHES SURVEILLANCE' },
+    { label: 'Forex.com Spot', tvSymbol: 'FOREXCOM:XAUUSD', type: 'SPOT_CFD', badge: 'SPOT' },
+    { label: 'FP Markets Spot', tvSymbol: 'FPMARKETS:XAUUSD', type: 'SPOT_CFD', badge: 'SPOT' },
+    { label: 'Pepperstone Spot', tvSymbol: 'PEPPERSTONE:XAUUSD', type: 'SPOT_CFD', badge: 'SPOT' },
+    { label: 'Spot Gold (TVC)', tvSymbol: 'TVC:GOLD', type: 'SPOT_CFD', badge: 'TVC' },
+    { label: 'COMEX Futures (GC1!)', tvSymbol: 'COMEX:GC1!', type: 'FUTURES', badge: 'FUTURES' },
+  ],
+  BTC: [
+    { label: 'Bitstamp', tvSymbol: 'BITSTAMP:BTCUSD', type: 'SPOT_CFD', badge: 'MATCHES SURVEILLANCE' },
+    { label: 'Binance', tvSymbol: 'BINANCE:BTCUSDT', type: 'SPOT_CFD', badge: 'SPOT' },
+    { label: 'Coinbase', tvSymbol: 'COINBASE:BTCUSD', type: 'SPOT_CFD', badge: 'SPOT' },
+    { label: 'CME BTC Futures', tvSymbol: 'CME:BTC1!', type: 'FUTURES', badge: 'FUTURES' },
+  ],
+  USD: [
+    { label: 'TVC Dollar Index', tvSymbol: 'TVC:DXY', type: 'CASH_INDEX', badge: 'MATCHES SURVEILLANCE' },
+    { label: 'ICE US Dollar Futures', tvSymbol: 'ICEUS:DX1!', type: 'FUTURES', badge: 'FUTURES' },
+  ],
+};
 
 const CURRENCY_FULL_NAMES: Record<string, string> = {
   USD: 'US Dollar',
@@ -395,6 +448,17 @@ export const TradingViewChartModal: React.FC<TradingViewChartModalProps> = ({
     selectedMeta.tvSymbol
   )}&interval=${interval}&theme=dark&style=1&timezone=Asia%2FJakarta&locale=id&hide_side_toolbar=0&allow_symbol_change=1&saveimage=1&details=1&calendar=1&hotlist=0`;
 
+  // Check if current instrument has broker variants
+  const activeSymbolKey = selectedMeta.symbolKey.toUpperCase();
+  const availableBrokers = INSTRUMENT_BROKERS[activeSymbolKey] || (
+    activeSymbolKey.length === 6 ? [
+      { label: 'FX Live Stream', tvSymbol: `FX:${activeSymbolKey}`, type: 'SPOT_CFD' as const, badge: 'MATCHES SURVEILLANCE' },
+      { label: 'OANDA', tvSymbol: `OANDA:${activeSymbolKey}`, type: 'SPOT_CFD' as const, badge: 'SPOT CFD' },
+      { label: 'Forex.com', tvSymbol: `FOREXCOM:${activeSymbolKey}`, type: 'SPOT_CFD' as const, badge: 'SPOT CFD' },
+      { label: 'Pepperstone', tvSymbol: `PEPPERSTONE:${activeSymbolKey}`, type: 'SPOT_CFD' as const, badge: 'SPOT CFD' },
+    ] : []
+  );
+
   // Selected instrument list with active item guaranteed to appear first if not in standard list
   const quickInstruments = React.useMemo(() => {
     const list = [...PRIMARY_INSTRUMENTS];
@@ -437,7 +501,7 @@ export const TradingViewChartModal: React.FC<TradingViewChartModalProps> = ({
           {currentPrice && (
             <div className="flex items-center gap-3 font-mono text-xs">
               <div>
-                <span className="text-[var(--text-muted)] mr-1.5 uppercase tracking-wider text-[10px]">LAST:</span>
+                <span className="text-[var(--text-muted)] mr-1.5 uppercase tracking-wider text-[10px]">SURVEILLANCE:</span>
                 <span className="text-[var(--text-primary)] font-bold text-sm tabular-nums">
                   {currentPrice.price.toLocaleString(undefined, {
                     minimumFractionDigits: 2,
@@ -453,6 +517,10 @@ export const TradingViewChartModal: React.FC<TradingViewChartModalProps> = ({
                 {currentPrice.change_24h_pct >= 0 ? '+' : ''}
                 {currentPrice.change_24h_pct.toFixed(2)}%
               </span>
+              <div className="hidden lg:flex items-center gap-1.5 px-2 py-0.5 rounded bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] text-[10px]">
+                <span className="text-[var(--text-muted)]">FEED:</span>
+                <span className="text-[var(--text-primary)] font-semibold">{currentPrice.source}</span>
+              </div>
             </div>
           )}
 
@@ -462,7 +530,7 @@ export const TradingViewChartModal: React.FC<TradingViewChartModalProps> = ({
               href={`https://www.tradingview.com/chart/?symbol=${encodeURIComponent(selectedMeta.tvSymbol)}`}
               target="_blank"
               rel="noreferrer"
-              className="px-2.5 py-1 rounded border border-[var(--border-subtle)] text-xs font-mono bg-[var(--bg-section-alt)] text-[var(--text-primary)] hover:border-[var(--text-primary)] flex items-center gap-1.5 transition cursor-pointer"
+              className="px-2.5 py-1 rounded border border-[var(--border-subtle)] text-xs font-mono bg-[var(--bg-section-alt)] text-[var(--text-primary)] hover:border-[var(--border-strong)] flex items-center gap-1.5 transition cursor-pointer"
               title={`Open ${selectedMeta.label} on TradingView`}
             >
               <ExternalLink className="w-3.5 h-3.5 text-[var(--accent)]" />
@@ -568,6 +636,63 @@ export const TradingViewChartModal: React.FC<TradingViewChartModalProps> = ({
             ))}
           </div>
         </div>
+
+        {/* Broker / Feed Source Sub-Toolbar */}
+        {availableBrokers.length > 0 && (
+          <div className="px-3 py-1.5 bg-[var(--bg-surface)] border-b flex flex-wrap items-center justify-between gap-2 text-xs font-mono" style={{ borderColor: 'var(--border-subtle)' }}>
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+              <span className="metadata-label text-[10px] text-[var(--text-muted)] uppercase tracking-wider mr-1 flex items-center gap-1">
+                FEED / BROKER:
+              </span>
+              {availableBrokers.map((b) => {
+                const isSelected = selectedMeta.tvSymbol === b.tvSymbol;
+                return (
+                  <button
+                    key={b.tvSymbol}
+                    onClick={() => {
+                      setSelectedMeta({
+                        ...selectedMeta,
+                        tvSymbol: b.tvSymbol,
+                        description: `${selectedMeta.label} via ${b.label}`,
+                      });
+                    }}
+                    className={`px-2 py-0.5 rounded text-[11px] font-mono transition cursor-pointer flex items-center gap-1.5 ${
+                      isSelected
+                        ? 'bg-[var(--accent)] text-white font-bold shadow-xs'
+                        : 'bg-[var(--bg-section-alt)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)]'
+                    }`}
+                  >
+                    <span>{b.label}</span>
+                    <span className={`text-[9px] px-1 py-0.2 rounded font-sans uppercase font-semibold ${
+                      isSelected
+                        ? 'bg-white/20 text-white'
+                        : b.type === 'FUTURES'
+                        ? 'bg-[var(--bullish)]/15 text-[var(--bullish)]'
+                        : 'bg-[var(--accent)]/15 text-[var(--accent)]'
+                    }`}>
+                      {b.type === 'FUTURES' ? 'FUTURES' : b.type === 'SPOT_CFD' ? 'SPOT CFD' : 'INDEX'}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="text-[11px] text-[var(--text-muted)] hidden md:flex items-center gap-1.5 font-mono">
+              <span>Chart Feed:</span>
+              <span className="text-[var(--text-primary)] font-bold">{selectedMeta.tvSymbol}</span>
+              {selectedMeta.tvSymbol.startsWith('CME_') || selectedMeta.tvSymbol.startsWith('CBOT_') || selectedMeta.tvSymbol === 'TVC:GOLD' || selectedMeta.tvSymbol.startsWith('FX:') ? (
+                <span className="text-[var(--bullish)] font-semibold flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3" />
+                  (Surveillance Matched)
+                </span>
+              ) : (
+                <span className="text-[var(--accent)] font-semibold">
+                  (Broker Spread / Spot CFD)
+                </span>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Main Interactive Real-time Chart Stage */}
         <div className="flex-1 w-full bg-[var(--bg-surface)] relative overflow-hidden">

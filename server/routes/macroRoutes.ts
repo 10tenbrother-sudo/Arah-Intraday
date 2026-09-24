@@ -7,8 +7,8 @@ import { ArahMarketEngine } from '../intelligence/arahMarketEngine.js';
 export const macroRouter = Router();
 
 // GET Today's Key Catalysts
-macroRouter.get('/today-catalysts', (req, res) => {
-  const catalysts = IntradayMarketMapEngine.getTodayKeyCatalysts();
+macroRouter.get('/today-catalysts', async (req, res) => {
+  const catalysts = await IntradayMarketMapEngine.getTodayKeyCatalysts();
   res.json({
     catalysts,
     count: catalysts.length,
@@ -17,9 +17,9 @@ macroRouter.get('/today-catalysts', (req, res) => {
 });
 
 // GET Arah Market (convenience alias under /api/macro/arah-market)
-macroRouter.get('/arah-market', (req, res) => {
+macroRouter.get('/arah-market', async (req, res) => {
   try {
-    const data = ArahMarketEngine.getArahMarketToday();
+    const data = await ArahMarketEngine.getArahMarketToday();
     res.json({
       success: true,
       data,
@@ -31,8 +31,8 @@ macroRouter.get('/arah-market', (req, res) => {
 });
 
 // GET Intraday Market Map (convenience alias under /api/macro/intraday-market-map)
-macroRouter.get('/intraday-market-map', (req, res) => {
-  const map = IntradayMarketMapEngine.getIntradayMarketMap();
+macroRouter.get('/intraday-market-map', async (req, res) => {
+  const map = await IntradayMarketMapEngine.getIntradayMarketMap();
   res.json({
     market_map: map,
     count: map.length,
@@ -41,15 +41,15 @@ macroRouter.get('/intraday-market-map', (req, res) => {
 });
 
 // GET economic calendar releases
-macroRouter.get('/calendar', (req, res) => {
+macroRouter.get('/calendar', async (req, res) => {
   const limit = parseInt(req.query.limit as string) || 200;
   const status = (req.query.status as any) || 'ALL';
   const currency = (req.query.currency as string) || 'ALL';
 
-  const events = db.getEconomicEvents(limit, { status, currency });
+  const events = await db.getEconomicEvents(limit, { status, currency });
 
   const nowMs = Date.now();
-  const allEvents = db.getEconomicEvents(300);
+  const allEvents = await db.getEconomicEvents(300);
   const totalUpcoming = allEvents.filter(
     e => e.status === 'UPCOMING' || new Date(e.date_time_utc).getTime() >= nowMs
   );

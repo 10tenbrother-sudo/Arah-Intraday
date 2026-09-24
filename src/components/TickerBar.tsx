@@ -1,6 +1,7 @@
 import React from 'react';
 import { MarketPrice } from '../types';
 import { TrendingUp, TrendingDown, Minus, LineChart } from 'lucide-react';
+import { D3Sparkline } from './ui/D3Sparkline';
 
 interface TickerBarProps {
   prices: MarketPrice[];
@@ -17,7 +18,7 @@ export const TickerBar: React.FC<TickerBarProps> = React.memo(({
 }) => {
   return (
     <div
-      className="border-b overflow-x-auto no-scrollbar py-1 px-3 sm:px-4 flex items-center gap-2 shrink-0 select-none text-xs font-mono"
+      className="border-b overflow-x-auto no-scrollbar scroll-hint-x py-1 px-3 sm:px-4 flex items-center gap-2 shrink-0 select-none text-xs font-mono"
       style={{
         backgroundColor: 'var(--bg-surface)',
         borderColor: 'var(--border-subtle)',
@@ -84,6 +85,19 @@ export const TickerBar: React.FC<TickerBarProps> = React.memo(({
               </div>
 
               <span className="font-semibold tabular-nums text-[11px]">{formattedPrice}</span>
+
+              {item.sparkline_1h && item.sparkline_1h.length > 1 && (
+                <D3Sparkline
+                  data={item.sparkline_1h}
+                  width={34}
+                  height={13}
+                  isPositive={isPositive}
+                  strokeWidth={1.2}
+                  showArea={true}
+                  showEndDot={false}
+                  className="opacity-75"
+                />
+              )}
 
               <div
                 className={`flex items-center gap-0.5 text-[10.5px] font-bold tabular-nums ${
